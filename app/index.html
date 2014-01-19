@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<!--
+/*
+* jQuery File Upload Plugin Demo 9.0.0
+* https://github.com/blueimp/jQuery-File-Upload
+*
+* Copyright 2010, Sebastian Tschan
+* https://blueimp.net
+*
+* Licensed under the MIT license:
+* http://www.opensource.org/licenses/MIT
+*/
+-->
+<html lang="en">
+	<head>
+		<!-- Force latest IE rendering engine or ChromeFrame if installed -->
+		<!--[if IE]>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<![endif]-->
+		<meta charset="utf-8">
+		<title>L2JS</title>
+		<meta name="description" content="Showcase for l2js library.">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<!-- Bootstrap styles -->
+		<link rel="stylesheet" href="css/bootstrap.min.css">
+		<!-- Generic page styles -->
+		<link rel="stylesheet" href="css/style.css">
+
+	</head>
+	<body>
+		<div class="navbar navbar-default navbar-fixed-top">
+			<div class="container">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-fixed-top .navbar-collapse">
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="index.html">L2JS</a>
+				</div>
+				<div class="navbar-collapse collapse">
+					<ul class="nav navbar-nav">
+						<li>
+							<a href="../dist/l2js-v0.0.1.js">Download</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<div class="container">
+			<h1>Stochastic L-Systems</h1>
+			<h2 class="lead">Basic use</h2>
+
+			<form role="form">
+				<div class="form-group">
+					<label for="toCompile">Code</label>
+					<textarea id="toCompile" name="toCompile" class="form-control" rows="10">
+${A=0.2;B=1}
+$C=2
+  
+// alphabet
+@{A, S, AS, Da, example2}
+@E		
+
+					</textarea>
+				</div>
+				<div class="form-group">
+					<label for="axiom">Axiom</label>
+					<input type="text" class="form-control" id="axiom" name="axiom" placeholder="Enter axiom">
+				</div>
+				<div class="form-group">
+					<label for="numberOfIterations">Number of iterations</label>
+					<input type="text" class="form-control" id="numberOfIterations" name="numberOfIterations" placeholder="Enter number of iterations">
+				</div>
+				<div class="form-group">
+					<label for="toInterpret">Derived</label>
+					<textarea id="toInterpret" name="toInterpret" class="form-control" rows="10" readonly="readonly"></textarea>
+				</div>
+				<button type="submit" id="compile" class="btn btn-default">
+					Compile
+				</button>
+			
+			</form>
+
+
+		</div>
+
+		<script type="text/javascript" src="js/jquery.min.js"></script>
+		<script type="text/javascript" src="js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="../dist/l2js-v0.0.1.js"></script>
+		<script type="text/javascript" src="js/main.js"></script>
+
+	</body>
+</html>
