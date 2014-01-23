@@ -1,7 +1,9 @@
-var files = require('./l2jsFiles').files, path = require("path"), spawn = require('child_process').spawn;
+var files = require('./l2jsFiles').files, 
+	path = require("path"), 
+	spawn = require('child_process').spawn;
+
 module.exports = function(grunt) {
-	grunt
-			.initConfig({
+	grunt.initConfig({
 				pkg : grunt.file.readJSON('package.json'),
 				bower : {
 					install : {
@@ -21,15 +23,9 @@ module.exports = function(grunt) {
 					}
 				},
 				jison : {
-					l2js: {
-						target : {
-							options : {
-								moduleType: "js"
-							},
-							files : {
-								files: { 'src/parser.js': 'src/grammar.jison' }
-							}
-						}
+					l : {
+						options: { moduleType: 'js' },
+						files: {'src/lparser.js' : 'src/lgrammar.jison'}
 					}
 				},
 				build : {
@@ -178,6 +174,20 @@ module.exports = function(grunt) {
 			done();
 		});
 	}
+	
+	/**
+	 * Generate application module from JISON generated parser 
+	 */
+	function processGrammarFile(filepath, success) {
+		var src = grunt.file.read(filepath);
+		var names = filepath.match(/[\\\/]([^\.]+)\.js$/, filepath);
+		
+
+		src = src.replace(/var\s*parser\s*=\s*\(function\(\)\{/g, 'window.l2js && function(l2js) {l2js.' + names[1] + ' = (function(){');
+		src = src.replace(/\}\)\(\);$/g, '})()})(window.l2js);');
+		
+		grunt.file.write(filepath, src);
+	}
 
 	require("load-grunt-tasks")(grunt);
 
@@ -189,8 +199,14 @@ module.exports = function(grunt) {
 	grunt.registerMultiTask("build", function() {
 		build(this.data, this.async);
 	});
+	
+	grunt.registerTask('wrapparsers', 'wrap jison parsers to app format',
+			function() {
+				grunt.util.async.forEach(files.parsers, processGrammarFile, this.async());
+			});
 
-	grunt.registerTask('buildall', 'uglify all the JS files in parallel',
+
+	grunt.registerTask('buildall', 'buildall the JS files in parallel',
 			function() {
 				var builds = grunt.config('build');
 				builds = Object.keys(builds).map(function(key) {
@@ -211,10 +227,10 @@ module.exports = function(grunt) {
 				}, this.async());
 
 			});
-	grunt.registerTask('package', [ "bower", "clean", "buildall", "test",
+	grunt.registerTask('package', [ "bower", "clean", "grammar", "buildall", "test",
 			"uglifyall", "compress" ]);
 	grunt.registerTask('dev', [ "clean", "buildall" ]);
-	grunt.registerTask('grammar', [ 'jison:l2js' ]);
+	grunt.registerTask('grammar', [ 'jison', 'wrapparsers' ]);
 	grunt.registerTask('test', [ 'tests:unit' ]);
 	grunt.registerTask('default', [ 'package' ]);
 };

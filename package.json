@@ -5,7 +5,6 @@
   "devDependencies": {
     "grunt": "~0.4.1",
     "bower": "~1.2.2",
-    "jison": "~0.4.13",
     "jasmine-node": "~1.11.0",
     "karma": "~0.11",
     "karma-jasmine": "~0.1.0",
@@ -20,7 +19,7 @@
     "grunt-contrib-connect": "~0.5.0",
     "grunt-contrib-copy": "~0.4.1",
     "grunt-contrib-jshint": "~0.6.4",
-  
+  	"grunt-jison": "~1.2.0", 
     "load-grunt-tasks": "~0.2.0"
   },
   "dependencies": {
