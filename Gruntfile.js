@@ -101,7 +101,7 @@ module.exports = function(grunt) {
 	}
 
 	/**
-	 * Process contachted source. Fills metadata in the banner and removes
+	 * Process contacted source. Fills metadata in the banner and removes
 	 * multiple used 'use strict' expression.
 	 * 
 	 * @param src
@@ -128,8 +128,8 @@ module.exports = function(grunt) {
 		var closureRegexStart = /window\.l2js.*\(l2js\)\s*\{/;
 		var closureRegexEnd = /\}\(window.l2js\);\s*$/;
 
-		var processed = src.replace(closureRegexStart, "(function(){\n")
-				.replace(closureRegexEnd, "})();\n");
+		var processed = src.replace(closureRegexStart, "\n")
+				.replace(closureRegexEnd, "\n");
 		return processed;
 	}
 
@@ -183,8 +183,8 @@ module.exports = function(grunt) {
 		var names = filepath.match(/[\\\/]([^\.]+)\.js$/, filepath);
 		
 
-		src = src.replace(/var\s*parser\s*=\s*\(function\(\)\{/g, 'window.l2js && function(l2js) {l2js.' + names[1] + ' = (function(){');
-		src = src.replace(/\}\)\(\);$/g, '})()})(window.l2js);');
+		src = src.replace(/var\s*parser\s*=\s*\(function\(\)\{/g, 'window.l2js && function(l2js) {'+ "\n" +'l2js.' + names[1] + ' = (function(){');
+		src = src.replace(/\}\)\(\);$/g, '})();'+ "\n" +'}(window.l2js);');
 		
 		grunt.file.write(filepath, src);
 	}
