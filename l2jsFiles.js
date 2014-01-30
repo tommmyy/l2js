@@ -2,8 +2,9 @@ l2jsFiles = {
 	"src" : [ "src/l2js.js", 
 	          "src/core.js", 
 	          "src/core/deferred.js",
-	          "src/compiler.js",
+	          "src/nodes.js",
 	          "src/lparser.js",
+	          "src/compiler.js",
 	          "src/facade.js"
 	          ],
 	"parsers": ["src/lparser.js"],

@@ -52,17 +52,21 @@
 			<h2 class="lead">Basic use</h2>
 
 			<form role="form">
+				<button type="submit" id="compile" class="btn btn-default">
+					Compile
+				</button>
 				<div class="form-group">
 					<label for="toCompile">Code</label>
 					<textarea id="toCompile" name="toCompile" class="form-control" rows="10">
-${A=0.2;B=1}
-$C=2
-  
-// alphabet
-@{A, S, AS, Da, example2}
-@E		
+alphabet Alphabet2D {
+F, f
+};
 
-					</textarea>
+lsystem CantorSet using Alphabet2D  {
+F--> F f F;
+f--> f f f;
+};
+main call CantorSet (F, 4);</textarea>
 				</div>
 				<div class="form-group">
 					<label for="axiom">Axiom</label>
@@ -76,18 +80,20 @@ $C=2
 					<label for="toInterpret">Derived</label>
 					<textarea id="toInterpret" name="toInterpret" class="form-control" rows="10" readonly="readonly"></textarea>
 				</div>
-				<button type="submit" id="compile" class="btn btn-default">
-					Compile
-				</button>
-			
-			</form>
 
+			</form>
 
 		</div>
 
 		<script type="text/javascript" src="js/jquery.min.js"></script>
 		<script type="text/javascript" src="js/bootstrap.min.js"></script>
-		<script type="text/javascript" src="../dist/l2js-v0.0.1.js"></script>
+		<script type="text/javascript" src="../src/l2js.js"></script>
+		<script type="text/javascript" src="../src/core.js"></script>
+		<script type="text/javascript" src="../src/core/deferred.js"></script>
+		<script type="text/javascript" src="../src/lnodes.js"></script>
+		<script type="text/javascript" src="../src/lparser.js"></script>
+		<script type="text/javascript" src="../src/compiler.js"></script>
+		<script type="text/javascript" src="../src/facade.js"></script>
 		<script type="text/javascript" src="js/main.js"></script>
 
 	</body>
