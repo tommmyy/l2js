@@ -23,8 +23,10 @@ name							[A-Za-z_][A-Za-z_0-9_]*
 "alphabet"						return 'ALPHABET'
 "using"							return 'USING'
 "call"							return 'CALL'
+"sublsystem"					return 'SUBLSYSTEM'
 "main"							return 'MAIN'
 "-->"							return 'RULE_OP'
+"-h>"							return 'H_RULE_OP'
 "E"								return 'E'
 "PI"							return 'PI'
 "$"{name}						return 'VAR'
@@ -59,7 +61,22 @@ name							[A-Za-z_][A-Za-z_0-9_]*
 program
     : program_entries EOF
         {{ 
-        	var block = new yy.Block(); 
+        
+        	var i;
+			for(i = 0; i < $program_entries.length; i++) {
+				var errMsg,stmt = $program_entries[i];
+				if( stmt instanceof yy.ASTRule) {
+					errMsg = 'Main program should not contain rule declaration.';
+				} else if(stmt instanceof yy.ASTCall && !stmt.isMain) {
+					errMsg = 'In global scope use only main call.';
+				} 
+				
+				if(typeof errMsg !== 'undefined') {
+					throw new yy.ParseError('Parse error on ' + @$.first_line + ':' + @$.last_column + '. ' + errMsg );
+				}
+			}
+        	var block = new yy.ASTBlock(); 
+        	block.isRoot = true;
         	block.entries = $1; 
         	return block; 
         }}
@@ -80,38 +97,68 @@ stmts
 	;	
 
 stmt 
-	: var '=' e
+	:  var '=' e
 		{$$ = $var; $$.e = $e;}
 	| symbol '=' text
 		{$$ = $symbol;$$.e = $3;}	
-	| var
-		{$$ = $var;}
-	| LSYSTEM id USING id '{' stmts '}'
+	| e
+		{$$ = $e;}
+	| LSYSTEM id '(' axiom ')' USING id '{' stmts '}'
 		{{
-			var block = new yy.Block(); 
+			var block = new yy.ASTBlock(); 
 			block.entries = $stmts;
-			$$ = new yy.LSystem($id1, $id2, block);
+			$$ = new yy.ASTLSystem($id1, $id2, $axiom, 1 , block);
+		}}
+	| LSYSTEM id '(' axiom ',' int ')' USING id '{' stmts '}'
+		{{
+			var block = new yy.ASTBlock(); 
+			block.entries = $stmts;
+			$$ = new yy.ASTLSystem($id1, $id2, $axiom, $int, block);
 		}}
 	| ALPHABET id '{' symbols '}'
 		{{
 			$id.type='alphabet';
-			$$ = new yy.Alphabet($id, $symbols);
+			$$ = new yy.ASTAlphabet($id, $symbols);
 		}}
 	| ancestor RULE_OP successors
-		{$$ = new yy.Rule($1, $3);}
+		{$$ = new yy.ASTRule($1, $3);}
+	| ancestor H_RULE_OP successors
+		{$$ = new yy.ASTRule($1, $3, 'h');}
 	| main_call
 		{$$ = $1;}
-	;
+	| call
+		{$$ = $1;}
+	| sublsystem
+		{$$ = $1;}
+	; 
+
+
+sublsystem
+	: SUBLSYSTEM id '(' axiom ')' 
+		{$id.type="lsystem"; $$ = new yy.ASTSubLSystem($id, $axiom);} 
+	| SUBLSYSTEM id '(' axiom ',' int ')' 
+		{$id.type="lsystem"; $$ = new yy.ASTSubLSystem($id, $axiom, $int);}
+	| SUBLSYSTEM id '('  ',' int ')' 
+		{$id.type="lsystem"; $$ = new yy.ASTSubLSystem($id, undefined, $int);}
+	| SUBLSYSTEM id '(' ')' 
+		{$id.type="lsystem"; $$ = new yy.ASTSubLSystem($id);}
+	; 
 
 
 call
-	: CALL id '(' axiom ',' iterations ')' 
-		{$id.type="lsystem"; $$ = new yy.Call($id, $axiom, $iterations);}
+	: CALL id '(' axiom ')' 
+		{$id.type="lsystem"; $$ = new yy.ASTCall($id, $axiom);} 
+	| CALL id '(' axiom ',' int ')' 
+		{$id.type="lsystem"; $$ = new yy.ASTCall($id, $axiom, $int);}
+	| CALL id '('  ',' int ')' 
+		{$id.type="lsystem"; $$ = new yy.ASTCall($id, undefined, $int);}
+	| CALL id '(' ')' 
+		{$id.type="lsystem"; $$ = new yy.ASTCall($id);}
 	; 
 
 main_call	
 	: MAIN call
-		{$$ = $call; $$.main = true;}
+		{$$ = $call; $$.isMain = true;}
 	;
 
 axiom
@@ -125,10 +172,10 @@ iterations
 	;
 	
 ancestor
-	: symbol '(' arguments ')'
-		{$$ = new yy.Ancestor($1, $3);}
+	: symbol '(' params ')'
+		{$$ = new yy.ASTAncestor($1, $3);}
 	| symbol
-		{$$ = new yy.Ancestor($1);}
+		{$$ = new yy.ASTAncestor($1);}
 	;
 
 
@@ -141,9 +188,9 @@ successors
 
 successor
 	: string ':' number
-		{$$ = new yy.Successor($1, $3);}
+		{$$ = new yy.ASTSuccessor($1, $3);}
 	| string
-		{$$ = new yy.Successor($1);}
+		{$$ = new yy.ASTSuccessor($1);}
 	;	
 
 
@@ -156,36 +203,40 @@ string
 	;
 
 module
-	: id '(' elist ')'
-		{$id.type="symbol"; $$ = new yy.Module($id, $elist);}
+	: id '(' arguments ')'
+		{$id.type="symbol"; $$ = new yy.ASTModule($id, $arguments);}
 	| id
-		{$id.type="symbol"; $$ =  new yy.Module($id);}
+		{$id.type="symbol"; $$ =  new yy.ASTModule($id);}
 	| call
 		{$$ = $1;}
 	;
 
-elist
-	: e ',' elist
-		{$$ = $3; $$.unshift($1);}
+arguments
+	: e ',' arguments
+		{$$ = $arguments; $$.unshift($e);}
+	|  ',' arguments
+		{$$ = $arguments; $$.unshift(undefined);}
 	| e
-		{$$ = [$1];}
+		{$$ = [$e];}
 	| /* epsylon */
 		{$$ = [];}
 	;
 
 
-arguments
-	: argument ',' arguments
-		{$$ = $3; $$.unshift($1);}
-	| argument
+params
+	: param ',' params
+		{$$ = $params; $$.unshift($param);}
+	| ',' params
+		{$$ = $params; $$.unshift(null);}
+	| param
 		{$$ = [$1];}
 	| /* epsylon */
 		{$$ = [];}
 	;
 	
-argument
+param
 	: ID
-		{ $$ = new yy.ID($1, 'arg');}
+		{ $$ = new yy.ASTID($1, 'param');}
 	;
 	
 
@@ -205,29 +256,29 @@ symbol
 	
 var
 	: VAR
-		{ $$ = new yy.ID($1, 'var'); }
+		{ $$ = new yy.ASTID($1, 'var'); }
 	;
 	
 id
 	: ID
-		{ $$ = new yy.ID($1); }
+		{ $$ = new yy.ASTID($1); }
 	;
 	
 
 e
 	: e '+' term
-        {$$ = new yy.Operation($2, $1, $3);}
+        {$$ = new yy.ASTOperation($2, $1, $3);}
     | e '-' term
-        {$$ = new yy.Operation($2, $1, $3);}
+        {$$ = new yy.ASTOperation($2, $1, $3);}
     | term
     	{$$ = $term;}
     ;
        
 term
 	: term '*' factor
-        {$$ = new yy.Operation($2, $1, $3);}
+        {$$ = new yy.ASTOperation($2, $1, $3);}
     | term '/' factor
-        {$$ = new yy.Operation($2, $1, $3);}
+        {$$ = new yy.ASTOperation($2, $1, $3);}
     | factor 
     	{$$ = $1;}
     ;
@@ -239,8 +290,10 @@ factor
         {$$ = Math.E;}
     | PI
         {$$ = Math.PI;}
-    | VAR
-    	{$$ = new yy.ID($1, 'var');}
+    | var
+    	{$$ = $1;}
+    | '(' e ')'
+    	{$$ = $e;}
     ;
 
 text
