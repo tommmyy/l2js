@@ -1,4 +1,4 @@
-var files = require('./l2jsFiles').files, 
+var files = require('./files').files, 
 	path = require("path"), 
 	spawn = require('child_process').spawn;
 

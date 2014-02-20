@@ -19,6 +19,7 @@ name							[A-Za-z_][A-Za-z_0-9_]*
 									yytext = this.matches[1];
 									return 'TEXT';
 								%}
+"lscript"						return 'LSCRIPT'
 "lsystem"						return 'LSYSTEM'
 "alphabet"						return 'ALPHABET'
 "using"							return 'USING'
@@ -61,10 +62,10 @@ name							[A-Za-z_][A-Za-z_0-9_]*
 program
     : program_entries EOF
         {{ 
-        
-        	var i;
-			for(i = 0; i < $program_entries.length; i++) {
-				var errMsg,stmt = $program_entries[i];
+        	// TODO: add restrictions only to valid statements
+            /*var i;
+			for(i = 0; i < $stmts.length; i++) {
+				var errMsg,stmt = $stmts[i];
 				if( stmt instanceof yy.ASTRule) {
 					errMsg = 'Main program should not contain rule declaration.';
 				} else if(stmt instanceof yy.ASTCall && !stmt.isMain) {
@@ -74,7 +75,8 @@ program
 				if(typeof errMsg !== 'undefined') {
 					throw new yy.ParseError('Parse error on ' + @$.first_line + ':' + @$.last_column + '. ' + errMsg );
 				}
-			}
+			}*/
+			
         	var block = new yy.ASTBlock(); 
         	block.isRoot = true;
         	block.entries = $1; 
@@ -84,7 +86,7 @@ program
 
 program_entries 
 	: stmts
-		{$$ = $1}
+		{$$ = $1;}
 	;
 	
 stmts 
@@ -103,11 +105,19 @@ stmt
 		{$$ = $symbol;$$.e = $3;}	
 	| e
 		{$$ = $e;}
+	| LSCRIPT id '{' stmts '}'
+		{{
+			// TODO: add restrictions only to valid statements
+			var block = new yy.ASTBlock();
+			block.entries = $stmts;
+			
+			$$ = new yy.ASTLScript($id, block); 
+		}}
 	| LSYSTEM id '(' axiom ')' USING id '{' stmts '}'
 		{{
 			var block = new yy.ASTBlock(); 
 			block.entries = $stmts;
-			$$ = new yy.ASTLSystem($id1, $id2, $axiom, 1 , block);
+			$$ = new yy.ASTLSystem($id1, $id2, $axiom, undefined , block);
 		}}
 	| LSYSTEM id '(' axiom ',' int ')' USING id '{' stmts '}'
 		{{
@@ -126,9 +136,9 @@ stmt
 		{$$ = new yy.ASTRule($1, $3, 'h');}
 	| main_call
 		{$$ = $1;}
-	| call
-		{$$ = $1;}
 	| sublsystem
+		{$$ = $1;}
+	| call
 		{$$ = $1;}
 	; 
 
@@ -209,6 +219,9 @@ module
 		{$id.type="symbol"; $$ =  new yy.ASTModule($id);}
 	| call
 		{$$ = $1;}
+	| sublsystem
+		{$$ = $1;}
+
 	;
 
 arguments
@@ -227,7 +240,7 @@ params
 	: param ',' params
 		{$$ = $params; $$.unshift($param);}
 	| ',' params
-		{$$ = $params; $$.unshift(null);}
+		{$$ = $params; $$.unshift(undefined);}
 	| param
 		{$$ = [$1];}
 	| /* epsylon */
@@ -236,7 +249,7 @@ params
 	
 param
 	: ID
-		{ $$ = new yy.ASTID($1, 'param');}
+		{ $$ = new yy.ASTId($1, 'param');}
 	;
 	
 
@@ -256,12 +269,12 @@ symbol
 	
 var
 	: VAR
-		{ $$ = new yy.ASTID($1, 'var'); }
+		{ $$ = new yy.ASTId($1, 'var'); }
 	;
 	
 id
 	: ID
-		{ $$ = new yy.ASTID($1); }
+		{ $$ = new yy.ASTId($1); }
 	;
 	
 
@@ -293,7 +306,7 @@ factor
     | var
     	{$$ = $1;}
     | '(' e ')'
-    	{$$ = $e;}
+    	{$$ = new yy.ASTBrackets($e);}
     ;
 
 text

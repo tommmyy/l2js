@@ -16,7 +16,7 @@ window.l2js && function(l2js) {
 		this.entries.push(entry);
 	}
 	
-	lnodes.ASTID = function ASTID(id, type, e) {
+	lnodes.ASTId = function ASTId(id, type, e) {
 		this.id = id;
 		this.type = type;
 		this.e = e;
@@ -28,12 +28,21 @@ window.l2js && function(l2js) {
 		this.right = right;
 	}
 	
+	lnodes.ASTBrackets= function ASTBrackets(e){
+		this.e = e;
+	}
+	
 	lnodes.ASTLSystem = function ASTLSystem(id, alphabet, axiom, maxIterations, body){
 		this.id = id;
 		this.body = body;
 		this.alphabet = alphabet;
 		this.axiom = axiom;
 		this.maxIterations = maxIterations;
+	};
+	
+	lnodes.ASTLScript = function ASTLScript(id, body){
+		this.id = id;
+		this.body = body;
 	};
 	
 	lnodes.ASTRule = function ASTRule(ancestor, successors, type) {
@@ -47,14 +56,14 @@ window.l2js && function(l2js) {
 		this.params = params;
 	}
 	
-	lnodes.ASTSuccessor = function ASTSuccessor(string, prob) {
+	lnodes.ASTSuccessor = function ASTSuccessor(string, probability) {
 		this.string = string;
-		this.prob = prob;
+		this.probability = probability;
 	}
 	
-	lnodes.ASTModule = function ASTModule(symbol, elist) {
+	lnodes.ASTModule = function ASTModule(symbol, args) {
 		this.symbol = symbol;
-		this.elist = elist;
+		this.args = args;
 	}
 	
 	lnodes.ASTCall = function ASTCall(lsystem, axiom, maxIterations) {

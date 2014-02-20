@@ -6,7 +6,7 @@
 window.l2js && window.l2js.core && function(l2js) {
 
 	/** Promise */
-	l2js.core.Promise = function(deferred) {
+	l2js.core.Promise = function Promise(deferred) {
 		this.deferred = deferred;
 	}
 	

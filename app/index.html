@@ -58,15 +58,31 @@
 				<div class="form-group">
 					<label for="toCompile">Code</label>
 					<textarea id="toCompile" name="toCompile" class="form-control" rows="10">
-alphabet Alphabet2D {
-F, f
-};
 
-lsystem CantorSet using Alphabet2D  {
-F--> F f F;
-f--> f f f;
-};
-main call CantorSet (F, 4);</textarea>
+$_global=3;
+lscript Script1 {
+	$_script=3;
+	
+	alphabet Alphabet2D {
+		F, f
+	};
+
+	lsystem LSystemExample1(F($_script)) using Alphabet2D  {
+		f --> F f;
+		F --> F f F;
+	};
+	
+	$_script=2;
+	
+	lsystem CantorSet(F(1)) using Alphabet2D  {
+		F(a)--> F(1/$a+$_global) sublsystem LSystemExample1();
+		F(a)-h> F(1/$a+$_script) call LSystemExample1();
+	};
+	
+	main call CantorSet (F($_global), 4); 
+}
+
+</textarea>
 				</div>
 				<div class="form-group">
 					<label for="axiom">Axiom</label>
@@ -90,11 +106,25 @@ main call CantorSet (F, 4);</textarea>
 		<script type="text/javascript" src="../src/l2js.js"></script>
 		<script type="text/javascript" src="../src/core.js"></script>
 		<script type="text/javascript" src="../src/core/deferred.js"></script>
+		<script type="text/javascript" src="../src/utils.js"></script>
 		<script type="text/javascript" src="../src/lnodes.js"></script>
 		<script type="text/javascript" src="../src/lparser.js"></script>
+		<script type="text/javascript" src="../src/alphabet.js"></script>
+		<script type="text/javascript" src="../src/lsystem.js"></script>
+		<script type="text/javascript" src="../src/lscript.js"></script>
+		<script type="text/javascript" src="../src/sublsystem.js"></script>
+		<script type="text/javascript" src="../src/sublscript.js"></script>
+		<script type="text/javascript" src="../src/astcompiler.js"></script>
 		<script type="text/javascript" src="../src/compiler.js"></script>
 		<script type="text/javascript" src="../src/facade.js"></script>
+		
+		
+		
 		<script type="text/javascript" src="js/main.js"></script>
+		
+	<!-- <script type="text/javascript" src="../src/foo.js"></script> -->
+		<!-- <script type="text/javascript" src="../jsprototype.js"></script>
+		 -->
 
 	</body>
 </html>
