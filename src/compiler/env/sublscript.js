@@ -6,12 +6,15 @@
  **/
 
 window.l2js && window.l2js.utils && function(l2js) {
-	l2js.SubLScript = (function() {
+	l2js.compiler = l2js.compiler || {};
+	l2js.compiler.env = l2js.compiler.env || {};
+	
+	l2js.compiler.env.SubLScript = (function() {
 
 		function SubLScript(lscript, axiom, maxIterations) {
-			this.lscript = lscript;
+			this.lscript = lscript; // instance
 			this.axiom = axiom;
-			this.maxIterations = maxIterations || 1;
+			this.maxIterations = maxIterations;
 		}
 
 
@@ -19,16 +22,16 @@ window.l2js && window.l2js.utils && function(l2js) {
 
 			var result;
 			if (this.derivation) {
-				result = new this.lscript().derive(this.derivation, this.maxIterations);
+				result = this.lscript.derive(this.derivation, this.maxIterations);
 			} else {
-				result = new this.lscript().derive(this.axiom, 0);
+				result = this.lscript.derive(this.axiom, this.maxIterations);
+				this.axiom = result.axiom;
 			}
 
 			this.derivation = result.derivation;
 			this.interpretation = result.interpretation;
 
 			return this;
-
 		};
 
 		return SubLScript;

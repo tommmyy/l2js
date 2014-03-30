@@ -1,7 +1,7 @@
 {
 	"name": "LSystem2JS",
 	"devDependencies": {
-		"jquery": "1.10.2",
+		"jquery": "~1.10.2",
 		"kineticjs": "~4.7.0"
 	}
 }

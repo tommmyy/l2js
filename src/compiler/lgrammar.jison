@@ -9,8 +9,7 @@ name							[A-Za-z_][A-Za-z_0-9_]*
 
 \/\/[^\n]* 						/* skip comment */
 \s+                   			/* skip whitespace */
-[0-9]+\b			  			return 'INT'
-[0-9]+"."[0-9]+\b  				return 'REAL'
+[0-9]+("."[0-9]+)?\b  			return 'NUMBER'
 "'"(.*?)"'"						%{ /* 'text' */
 									yytext = this.matches[1];
 									return 'TEXT';
@@ -23,6 +22,7 @@ name							[A-Za-z_][A-Za-z_0-9_]*
 "lsystem"						return 'LSYSTEM'
 "alphabet"						return 'ALPHABET'
 "using"							return 'USING'
+"derive"						return 'DERIVE'
 "call"							return 'CALL'
 "sublsystem"					return 'SUBLSYSTEM'
 "main"							return 'MAIN'
@@ -44,6 +44,7 @@ name							[A-Za-z_][A-Za-z_0-9_]*
 ";"								return ';'
 ":"								return ':'
 "|"								return '|'
+"."								return '.'
 "="								return '='
 <<EOF>>							return 'EOF'
 
@@ -119,11 +120,15 @@ stmt
 			block.entries = $stmts;
 			$$ = new yy.ASTLSystem($id1, $id2, $axiom, undefined , block);
 		}}
-	| LSYSTEM id '(' axiom ',' int ')' USING id '{' stmts '}'
+	| LSYSTEM id '(' axiom ',' number ')' USING id '{' stmts '}'
 		{{
+			if($number % 1 !== 0) {
+				var errMsg = "Number of iterations should be integer.";
+				throw new yy.ParseError('Parse error on ' + @$.first_line + ':' + @$.last_column + '. ' + errMsg );
+			}
 			var block = new yy.ASTBlock(); 
 			block.entries = $stmts;
-			$$ = new yy.ASTLSystem($id1, $id2, $axiom, $int, block);
+			$$ = new yy.ASTLSystem($id1, $id2, $axiom, $number, block);
 		}}
 	| ALPHABET id '{' symbols '}'
 		{{
@@ -140,16 +145,23 @@ stmt
 		{$$ = $1;}
 	| call
 		{$$ = $1;}
+	| DERIVE id
+		{$$ = new yy.ASTDerive($id);}
 	; 
 
 
 sublsystem
 	: SUBLSYSTEM id '(' axiom ')' 
 		{$id.type="lsystem"; $$ = new yy.ASTSubLSystem($id, $axiom);} 
-	| SUBLSYSTEM id '(' axiom ',' int ')' 
-		{$id.type="lsystem"; $$ = new yy.ASTSubLSystem($id, $axiom, $int);}
-	| SUBLSYSTEM id '('  ',' int ')' 
-		{$id.type="lsystem"; $$ = new yy.ASTSubLSystem($id, undefined, $int);}
+	| SUBLSYSTEM id '(' axiom ',' e ')' 
+		{{
+			$id.type="lsystem"; $$ = new yy.ASTSubLSystem($id, $axiom, $e);
+		}}
+	| SUBLSYSTEM id '('  ',' e ')' 
+		{{
+		
+			$id.type="lsystem"; $$ = new yy.ASTSubLSystem($id, undefined, $e);
+		}}
 	| SUBLSYSTEM id '(' ')' 
 		{$id.type="lsystem"; $$ = new yy.ASTSubLSystem($id);}
 	; 
@@ -158,10 +170,14 @@ sublsystem
 call
 	: CALL id '(' axiom ')' 
 		{$id.type="lsystem"; $$ = new yy.ASTCall($id, $axiom);} 
-	| CALL id '(' axiom ',' int ')' 
-		{$id.type="lsystem"; $$ = new yy.ASTCall($id, $axiom, $int);}
-	| CALL id '('  ',' int ')' 
-		{$id.type="lsystem"; $$ = new yy.ASTCall($id, undefined, $int);}
+	| CALL id '(' axiom ',' e ')' 
+		{{
+			$id.type="lsystem"; $$ = new yy.ASTCall($id, $axiom, $e);
+		}}
+	| CALL id '('  ',' e ')' 
+		{{
+			$id.type="lsystem"; $$ = new yy.ASTCall($id, undefined, $e);
+		}}
 	| CALL id '(' ')' 
 		{$id.type="lsystem"; $$ = new yy.ASTCall($id);}
 	; 
@@ -177,8 +193,14 @@ axiom
 	;
 
 iterations
-	: int
-		{$$ = $1;}
+	: number
+		{{
+			if($number % 1 !== 0) {
+				var errMsg = "Number of iterations should be integer.";
+				throw new yy.ParseError('Parse error on ' + @$.first_line + ':' + @$.last_column + '. ' + errMsg );
+			}
+			$$ = $1;
+		}}
 	;
 	
 ancestor
@@ -315,16 +337,10 @@ text
 	;
 
 number
-	: int
-        {$$ = $1;}
-	| REAL
-        {$$ = Number(yytext);}
+	: NUMBER
+        {$$ =  Number(yytext);}
 	;
 
-int
-	: INT
-        {$$ = Number(yytext);}
-	;
 	
 
 

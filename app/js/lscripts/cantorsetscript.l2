@@ -1,0 +1,17 @@
+$_step=3;
+lscript CantorSetScript {
+	$_script=3;
+	
+	alphabet Alphabet2D {
+		F, f
+	};
+
+	lsystem CantorSet(F(1)) using Alphabet2D  {
+		f(a) --> f($a/3) f($a/3) f($a/3);
+		F(a) --> F($a/3) f($a/3) F($a/3);
+	};
+	
+	main call CantorSet (F($_step), 2); 
+};
+
+derive CantorSetScript;

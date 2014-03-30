@@ -3,12 +3,15 @@
 
 window.l2js && window.l2js.utils && function(l2js) {
 	
+	l2js.compiler = l2js.compiler || {};
+	l2js.compiler.env = l2js.compiler.env || {};
+	
 	/**
 	 * Alphabet determines what symbols are used by a L-system.
 	 * 
 	 * @class
 	 */
-	l2js.Alphabet = (function() {
+	l2js.compiler.env.Alphabet = (function() {
 		function Alphabet(id, symbols) {
 			this.id = id;
 			this.symbols = symbols;

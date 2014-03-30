@@ -58,44 +58,29 @@
 				<div class="form-group">
 					<label for="toCompile">Code</label>
 					<textarea id="toCompile" name="toCompile" class="form-control" rows="10">
-
-$_global=3;
-lscript Script1 {
-	$_script=3;
-	
+$_step=3;
+$_angle=45;
+lscript flower {
 	alphabet Alphabet2D {
-		F, f
+		F, f,  A1, B1, B2
 	};
+	lsystem root(A1($_step), 1) using Alphabet2D  {
+		A1(a) --> F($a) sublsystem leaf(A1($a), 0) F($a);
+		B1(a) --> F($a) call leaf(A1($a), 0) F($a);
+		F(a)-->F($a/2);
+	};
+	lsystem leaf(A1($_step/2), 2) using Alphabet2D {
+		A1(a) --> f($a) A1($a/2); 
+	};
+	main call root(, 1); 
+};
+derive flower;
 
-	lsystem LSystemExample1(F($_script)) using Alphabet2D  {
-		f --> F f;
-		F --> F f F;
-	};
-	
-	$_script=2;
-	
-	lsystem CantorSet(F(1)) using Alphabet2D  {
-		F(a)--> F(1/$a+$_global) sublsystem LSystemExample1();
-		F(a)-h> F(1/$a+$_script) call LSystemExample1();
-	};
-	
-	main call CantorSet (F($_global), 4); 
-}
+
 
 </textarea>
 				</div>
-				<div class="form-group">
-					<label for="axiom">Axiom</label>
-					<input type="text" class="form-control" id="axiom" name="axiom" placeholder="Enter axiom">
-				</div>
-				<div class="form-group">
-					<label for="numberOfIterations">Number of iterations</label>
-					<input type="text" class="form-control" id="numberOfIterations" name="numberOfIterations" placeholder="Enter number of iterations">
-				</div>
-				<div class="form-group">
-					<label for="toInterpret">Derived</label>
-					<textarea id="toInterpret" name="toInterpret" class="form-control" rows="10" readonly="readonly"></textarea>
-				</div>
+				
 
 			</form>
 
@@ -103,28 +88,36 @@ lscript Script1 {
 
 		<script type="text/javascript" src="js/jquery.min.js"></script>
 		<script type="text/javascript" src="js/bootstrap.min.js"></script>
+		<!--
+		<script type="text/javascript" src="../dist/l2js-v0.0.1.min.js"></script>
+		-->
 		<script type="text/javascript" src="../src/l2js.js"></script>
 		<script type="text/javascript" src="../src/core.js"></script>
 		<script type="text/javascript" src="../src/core/deferred.js"></script>
 		<script type="text/javascript" src="../src/utils.js"></script>
-		<script type="text/javascript" src="../src/lnodes.js"></script>
-		<script type="text/javascript" src="../src/lparser.js"></script>
-		<script type="text/javascript" src="../src/alphabet.js"></script>
-		<script type="text/javascript" src="../src/lsystem.js"></script>
-		<script type="text/javascript" src="../src/lscript.js"></script>
-		<script type="text/javascript" src="../src/sublsystem.js"></script>
-		<script type="text/javascript" src="../src/sublscript.js"></script>
-		<script type="text/javascript" src="../src/astcompiler.js"></script>
 		<script type="text/javascript" src="../src/compiler.js"></script>
+		<script type="text/javascript" src="../src/compiler/env.js"></script>
+		<script type="text/javascript" src="../src/compiler/env/alphabet.js"></script>
+		<script type="text/javascript" src="../src/compiler/env/sublsystem.js"></script>
+		<script type="text/javascript" src="../src/compiler/env/lsystem.js"></script>
+		<script type="text/javascript" src="../src/compiler/env/lscript.js"></script>
+		<script type="text/javascript" src="../src/compiler/env/sublscript.js"></script>
+		<script type="text/javascript" src="../src/compiler/lnodes.js"></script>
+		<script type="text/javascript" src="../src/compiler/lparser.js"></script>
+		<script type="text/javascript" src="../src/compiler/astcompiler.js"></script>
+		<script type="text/javascript" src="../src/compiler/compiler.js"></script>
 		<script type="text/javascript" src="../src/facade.js"></script>
-		
-		
 		
 		<script type="text/javascript" src="js/main.js"></script>
 		
-	<!-- <script type="text/javascript" src="../src/foo.js"></script> -->
-		<!-- <script type="text/javascript" src="../jsprototype.js"></script>
-		 -->
+		<!--
+			<script type="text/javascript" src="js/main.js"></script>
+		<script type="text/javascript" src="js/foo.js"></script>
+		-->	
+		<!--
+		<script type="text/javascript" src="js/lscripts/cantorsetscript.js"></script>
+		-->
+		
 
 	</body>
 </html>

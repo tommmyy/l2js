@@ -25,65 +25,62 @@ describe('q', function() {
 				flag = false, expected = "msg", result = null,
 						errorResult = null;
 
-				runs(function() {
-					promise.then(function(success) {
-						result = success;
-					}, function(error) {
-						errorResult = error;
-					});
+				promise.then(function(success) {
+					result = success;
+					
+				}, function(error) {
+					errorResult = error;
 				});
+				
+				jasmine.clock().install();
+			});
+			
 
+			afterEach(function() {
+				jasmine.clock().uninstall();
 			});
 
-			it('resolve callback is called after task is succesfully done',
+			describe('call', function(){
+				it('resolve after task is succesfully done',
 					function() {
-						runs(function() {
-							setTimeout(function() {
-								flag = true;
-								deferred.resolve(expected);
-							}, 1000);
-						});
-
-						waitsFor(function() {
-							return flag;
-						}, "Resolve should be called", 1500);
-
-						runs(function() {
-							expect(result).toBe(expected);
-							expect(errorResult).toBeNull();
-						});
+						setTimeout(function() {
+							deferred.resolve(expected);
+						}, 100);
+					
+						jasmine.clock().tick(101);
+					
+						expect(result).toBe(expected);
+						expect(errorResult).toBeNull();
 					});
 
-			it('reject callback is called after task is rejected',
+				it('reject after task is succesfully done',
 					function() {
-						runs(function() {
-							setTimeout(function() {
-								flag = true;
-								deferred.reject(expected);
-							}, 1000);
-						});
-
-						waitsFor(function() {
-							return flag;
-						}, "Reject should be called", 1500);
-
-						runs(function() {
-							expect(result).toBeNull();
-							expect(errorResult).toBe(expected);
-						});
+						setTimeout(function() {
+							deferred.reject(expected);
+						}, 100);
+						jasmine.clock().tick(101);
+						
+						expect(result).toBeNull();
+						expect(errorResult).toBe(expected);
 					});
+			});
 
 		}); // /callbacks
+		
 
 		describe('in chainnings of promises', function() {
 			var flag, result, errorResult;
-
-			beforeEach(function() {
-				flag = false, result = null, errorResult = null;
-			});
-
-			it('every promise should be called only if previous one in chain is successfully done', function() {
-				runs(function() {
+			describe('every promise', function(){
+				beforeEach(function() {
+					flag = false, result = null, errorResult = null;
+					jasmine.clock().install();
+				});
+	
+				afterEach(function() {
+					jasmine.clock().uninstall();
+				});
+				
+				it('should be called only if previous one in chain is successfully done', function() {
 					promise.then(function(messageA) {
 						return messageA + "B";
 					}).then(function(messageB) {
@@ -92,21 +89,14 @@ describe('q', function() {
 					
 					setTimeout(function() {
 						deferred.resolve("A");
-						flag=true;
-					}, 1000);
-				});
-
-				waitsFor(function() {
-					return flag;
-				}, "Resolve should be called", 1500);
-
-				runs(function() {
+					}, 100);
+					
+					jasmine.clock().tick(101);
+					
 					expect(result).toBe("AB");
 				});
 
-			});
-			it('every promise should chain reason after reject', function() {
-				runs(function() {
+				it('should chain reason after reject', function() {
 					promise.then(function(messageA) {
 						return messageA + "B";
 					}, function(reason1){
@@ -119,20 +109,15 @@ describe('q', function() {
 					
 					setTimeout(function() {
 						deferred.reject("1");
-						flag=true;
-					}, 1000);
-				});
+					}, 100);
 
-				waitsFor(function() {
-					return flag;
-				}, "Resolve should be called", 1500);
-
-				runs(function() {
+					jasmine.clock().tick(101);
+					
 					expect(result).toBeNull();
 					expect(errorResult).toBe("12");
 				});
-
 			});
+			
 		}); // /chains
 
 	}); // /deferred

@@ -1,0 +1,21 @@
+$_step=3;
+$_angle=45;
+lscript flower {
+	alphabet Alphabet2D {
+		SU, SO, // stack push/pop
+		PS, PE, PA, // polygon start/end,add vertex  
+		F, f,  A1, B1, B2
+	};
+	lsystem root(F($_step), 3) using Alphabet2D  {
+		F(a) --> F($a) SU  L($_angle) F($a*0.8) A1($a) SO SU  R($_angle) F($a*0.8) B1($a) SO;
+		A1(a) --> sublsystem leaf(, $a);
+		B1(a) --> call leaf(, $a);
+	};
+	lsystem leaf(A1($long), 2) using Alphabet2D {
+		A1(a) --> PS B1($a, 45)  B1($a, 0-45) PE; 
+		B1(a,b) --> B1($a/3, 0-$b/2) B1($a/3, $b/2);
+		B1(a,b) -h> SU L($b/2) F($a) PA SO; 
+	};
+	main call root(); 
+};
+derive flower;

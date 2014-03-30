@@ -52,6 +52,9 @@ window.l2js && function(l2js) {
 
 		isUndefined: function (v) {
 			return typeof v === 'undefined';
+		}, 
+		toUpperFirstLetter: function (string) {
+		    return string.charAt(0).toUpperCase() + string.slice(1);
 		}		
 	};
 }(window.l2js);

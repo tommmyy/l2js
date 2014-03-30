@@ -25,7 +25,7 @@ module.exports = function(grunt) {
 				jison : {
 					l : {
 						options: { moduleType: 'js' },
-						files: {'src/lparser.js' : 'src/lgrammar.jison'}
+						files: {'src/compiler/lparser.js' : 'src/compiler/lgrammar.jison'}
 					}
 				},
 				build : {
@@ -82,6 +82,10 @@ module.exports = function(grunt) {
 				},
 			});
 
+	function _toUpperFirstLetter(string) {
+	    return string.charAt(0).toUpperCase() + string.slice(1);
+	}	
+	
 	function build(config, success) {
 		var files = grunt.file.expand(config.src);
 
@@ -180,13 +184,17 @@ module.exports = function(grunt) {
 	 */
 	function processGrammarFile(filepath, success) {
 		var src = grunt.file.read(filepath);
-		var names = filepath.match(/[\\\/]([^\.]+)\.js$/, filepath);
+		var names = filepath.match(/[\\\/]([^\.]+)\.js$/, filepath)[1].split("/");
+		var _lastInd =  names.length-1;
+		names[_lastInd] = _toUpperFirstLetter(names[_lastInd]);
+		var name = names.join(".");
 		
 
-		src = src.replace(/var\s*parser\s*=\s*\(function\(\)\{/g, 'window.l2js && function(l2js) {'+ "\n" +'l2js.' + names[1] + ' = (function(){');
+		src = src.replace(/var\s*parser\s*=\s*\(function\(\)\{/g, 'window.l2js && function(l2js) {'+ "\n" +'l2js.' + name + ' = (function(){');
 		src = src.replace(/\}\)\(\);$/g, '})();'+ "\n" +'}(window.l2js);');
 		
 		grunt.file.write(filepath, src);
+		success();
 	}
 
 	require("load-grunt-tasks")(grunt);
@@ -201,13 +209,14 @@ module.exports = function(grunt) {
 	});
 	
 	grunt.registerTask('wrapparsers', 'wrap jison parsers to app format',
-			function() {
-				grunt.util.async.forEach(files.parsers, processGrammarFile, this.async());
-			});
+	function() {
+		grunt.util.async.forEach(files.parsers, processGrammarFile, this.async());
+	});
 
 
 	grunt.registerTask('buildall', 'buildall the JS files in parallel',
 			function() {
+				grunt.log.writeln("Starting build all components...");
 				var builds = grunt.config('build');
 				builds = Object.keys(builds).map(function(key) {
 					return builds[key];
