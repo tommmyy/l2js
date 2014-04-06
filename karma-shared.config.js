@@ -5,7 +5,9 @@ module.exports = function(config, specificOptions) {
 		logLevel : config.LOG_INFO,
 		logColors : true,
 		browsers : [ 'Chrome' ],
-		browserDisconnectTimeout : 10000,
+		browserDisconnectTimeout : 100000000,
+		browserNoActivityTimeout: 100000000,
+		singleRun: false,
 
 		// For more browsers on Sauce Labs see:
 		// https://saucelabs.com/docs/platforms/webdriver

@@ -14,16 +14,30 @@ l2jsFiles = {
 	          "src/compiler/lparser.js",
 	          "src/compiler/astcompiler.js",
 	          "src/compiler/compiler.js",
+	          "src/interpret.js",
+	          "src/interpret/turtle2dbuilder.js",
+	          "src/interpret/interpret.js",
 	          "src/facade.js"
 	          ],
 	"parsers": ["src/compiler/lparser.js"],
-	"test" : ["dist/l2js-v*.js", 
+/*
+ 
+ 	"test" : ["dist/l2js-v*.js", 
 	          "test/*.js", 
 	          "test/core/*.js", 
 	          "test/compiler/*.js", 
-	          "test/compiler/env/*.js"]
+	          "test/compiler/env/*.js",
+	          "test/interpret/*.js"]
+ */
+	
+	"test" : [
+	          "test/*.js", 
+	          "test/core/*.js", 
+	          "test/compiler/*.js", 
+	          "test/compiler/env/*.js",
+	          "test/interpret/*.js"]
 }
-
+l2jsFiles.test = l2jsFiles.src.concat(l2jsFiles.test);
 if (exports) {
 	exports.files = l2jsFiles;
 }

@@ -1,9 +1,6 @@
 'use strict';
 
-window.l2js && window.l2js.utils && function(l2js) {
-	
-	l2js.compiler = l2js.compiler || {};
-	l2js.compiler.env = l2js.compiler.env || {};
+window.l2js && window.l2js.utils && window.l2js.compiler && window.l2js.compiler.env && function(l2js) {
 	
 	/**
 	 * Abstract LScript class.

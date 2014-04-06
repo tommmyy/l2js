@@ -4,7 +4,7 @@
 * Copyright 2013, 2013 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-03-30T14:04:10.367Z
+* Date: 2014-04-05T17:20:15.039Z
 */
 
 (function( global, factory ) {'use strict';
@@ -164,10 +164,7 @@ l2js.compiler = l2js.compiler || {};
 
 l2js.compiler.env = l2js.compiler.env || {};
 
-l2js.compiler = l2js.compiler || {};
-	l2js.compiler.env = l2js.compiler.env || {};
-	
-	/**
+/**
 	 * Alphabet determines what symbols are used by a L-system.
 	 * 
 	 * @class
@@ -199,8 +196,6 @@ l2js.compiler = l2js.compiler || {};
 
 
 
-	l2js.compiler = l2js.compiler || {};
-	l2js.compiler.env = l2js.compiler.env || {};
 	
 	l2js.compiler.env.SubLSystem = (function() {
 
@@ -436,10 +431,7 @@ l2js.compiler = l2js.compiler || {};
 
 	})(l2js);
 
-l2js.compiler = l2js.compiler || {};
-	l2js.compiler.env = l2js.compiler.env || {};
-	
-	/**
+/**
 	 * Abstract LScript class.
 	 * 
 	 * @class
@@ -473,8 +465,6 @@ l2js.compiler = l2js.compiler || {};
 
 
 
-	l2js.compiler = l2js.compiler || {};
-	l2js.compiler.env = l2js.compiler.env || {};
 	
 	l2js.compiler.env.SubLScript = (function() {
 
@@ -1988,6 +1978,172 @@ return new Parser;
 	
 	l2js.compiler.Lparser.yy = l2js.compiler.lnodes;
 	l2js.compiler.Lparser.yy.ParseError = ParseError;
+
+l2js.interpret = l2js.interpret || {};
+
+/**
+ * Interpret of the symbols of L-system. Used Builder design pattern. 
+ *
+ * @class
+ */
+
+
+
+
+
+	l2js.interpret.Turtle2DBuilder =  (function()	{
+	
+		function Turtle2DBuilder(options) {
+			this.options = options;
+		};
+		
+		Turtle2DBuilder.prototype.next = function(symbol, ctx) {
+			console.log(symbol.id, ctx);
+		};
+	
+		return Turtle2DBuilder;
+
+	})();
+
+/**
+ * Interpret of the symbols of L-system. Used Builder design pattern. 
+ *
+ * @class
+ */
+
+
+
+
+
+	l2js.interpret.Interpret =  (function(l2js)	{
+	
+		Interpret.options = {
+			callbacks: {
+				// end of interpretation
+				end: function(){ 
+					
+				},
+				// start reading symbols generated in next sublsystem
+				newLSystem: function(lsys) {
+					
+				},
+				// end reading symbols in sublsystem
+				endOfLSystem: function(lsys) {
+					
+				}
+			}	
+		};
+		
+		function Interpret(result, options) {
+			this.result = result;
+			this.options = options && l2js.utils.extend(options, Interpret.options) || Interpret.options;
+			this.ctx = {};
+		};
+	
+		/**
+		 * Factory method for builder
+		 * @param {object} symbol Symbol that shoud be interpreted by the right builder
+		 * @return Implementation of Builder according Alphabet including 'symbol' 
+		 */
+		Interpret.prototype.getBuilder = function(symbol) {
+			switch(symbol.alphabet.id) {
+				case "Turtle2D":
+					this._turtle2dBuilder || (this._turtle2dBuilder = new l2js.interpret.Turtle2DBuilder(this.options));
+					return this._turtle2dBuilder;	
+				throw new Error("Unsupported alphabet: '" + symbol.alphabet.id + "'");
+			}
+		};
+	
+		/**
+		 * Interpret next symbol
+		 */
+		Interpret.prototype.next = function() {
+			var symbol = this.getNextSymbol();
+			if(!symbol) {
+				this.getBuilder(symbol).interpret(symbol, this.ctx);
+			}
+		};
+	
+		/**
+		 * Interpret all the symbols
+		 */	
+		Interpret.prototype.all = function() {
+			while(this.hasNextSymbol()) {
+				this.next();
+			}
+		};
+
+
+		Interpret.prototype.hasNextSymbol = function() {
+			
+			if(!this._lSysBuf) {
+				return this.result && this.result.length;
+			}
+			
+			var bufLevel = 0;
+			while(this._lSysBuf[bufLevel] && 
+					l2js.utils.isUndefined(this._lSysBuf[bufLevel].interpretaion[this._indexBuf[bufLevel]+1]) ) {
+				bufLevel++;
+			}
+			return this._lSysBuf[bufLevel];
+		};
+
+		Interpret.prototype.getNextSymbol = function() {
+			
+			this._setupBuffers();
+			
+			var symbol, index = this._indexBuf[0], result = this._lSysBuf[0];
+			
+			// Set position of previous symbol if we are at the end of l-system buffer (if exists)
+			while(result && l2js.utils.isUndefined(result.interpretaion[index+1]) ) {
+				result = this._lSysBuf.shift();
+				index = this._indexBuf.shift();
+				this._trigger('endOfLSystem', result);
+			}
+			
+			// Next symbol does not exists
+			if(!result) {
+				this._trigger('end');
+				this._clearBuffers();
+				return;	
+			}
+			
+			index++;
+			symbol = result.interpretation[index];
+			this._indexBuf[0] = index;
+				
+			if(symbol instanceof l2js.compiler.env.SubLSystem) {
+				index = 0;
+				this._indexBuf.unshift(index);
+				this._lSysBuf.unshift(symbol);	
+				this._trigger('newLSystem', symbol);
+				symbol = symbol.interpretation[index];
+			}
+			
+			return symbol; 					
+		};
+		
+		Interpret.prototype._trigger = function(event) {
+			var args = Array.prototype.slice.call(arguments, 1);
+			this.options.callbacks[event] && this.options.callbacks[event].apply(args);
+		};
+		
+		Interpret.prototype._setupBuffers = function() {
+			// Buffer of symbol of the result of currently read l-system
+			this._lSysBuf || (this._lSysBuf = [this.result]);
+			
+			// Buffer of curent position in the lSysBuf
+			this._indexBuf || (this._indexBuf = [0]);
+		};
+		
+		Interpret.prototype._clearBuffers = function() {
+			this._lSysBuf = null;
+			this._indexBuf = null;
+		};
+		
+		
+		return Interpret;
+	})(l2js);
 
 l2js.compile = function(code) {
 		return new l2js.compiler.Compiler().compile(code);

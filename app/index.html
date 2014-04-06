@@ -58,24 +58,24 @@
 				<div class="form-group">
 					<label for="toCompile">Code</label>
 					<textarea id="toCompile" name="toCompile" class="form-control" rows="10">
-$_step=3;
-$_angle=45;
-lscript flower {
-	alphabet Alphabet2D {
-		F, f,  A1, B1, B2
-	};
-	lsystem root(A1($_step), 1) using Alphabet2D  {
-		A1(a) --> F($a) sublsystem leaf(A1($a), 0) F($a);
-		B1(a) --> F($a) call leaf(A1($a), 0) F($a);
-		F(a)-->F($a/2);
-	};
-	lsystem leaf(A1($_step/2), 2) using Alphabet2D {
-		A1(a) --> f($a) A1($a/2); 
-	};
-	main call root(, 1); 
-};
-derive flower;
 
+			 $_step=3;
+	$_angle=45;
+	lscript flower {
+		alphabet Alphabet2D {
+			F, f,  A1, B1, B2
+		};
+		lsystem root(A1($_step), 1) using Alphabet2D  {
+			A1(a) --> F($a) sublsystem leaf(A1($a), 0) F($a);
+			B1(a) --> F($a) call leaf(A1($a), 0) F($a);
+			F(a)-->F($a/2);
+		};
+		lsystem leaf(A1($_step/2), 2) using Alphabet2D {
+			A1(a) --> f($a) A1($a/2); 
+		};
+		main call root(, 1); 
+	};
+	derive flower
 
 
 </textarea>
@@ -88,6 +88,7 @@ derive flower;
 
 		<script type="text/javascript" src="js/jquery.min.js"></script>
 		<script type="text/javascript" src="js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="../bower_modules/kineticjs/__untyped__/kinetic.min.js"></script>
 		<!--
 		<script type="text/javascript" src="../dist/l2js-v0.0.1.min.js"></script>
 		-->
@@ -106,6 +107,9 @@ derive flower;
 		<script type="text/javascript" src="../src/compiler/lparser.js"></script>
 		<script type="text/javascript" src="../src/compiler/astcompiler.js"></script>
 		<script type="text/javascript" src="../src/compiler/compiler.js"></script>
+		<script type="text/javascript" src="../src/interpret.js"></script>
+		<script type="text/javascript" src="../src/interpret/turtle2dbuilder.js"></script>
+		<script type="text/javascript" src="../src/interpret/interpret.js"></script>
 		<script type="text/javascript" src="../src/facade.js"></script>
 		
 		<script type="text/javascript" src="js/main.js"></script>
