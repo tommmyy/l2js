@@ -4,7 +4,7 @@
 * Copyright 2013, 2013 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-04-19T11:06:59.517Z
+* Date: 2014-04-19T11:32:23.872Z
 */
 
 (function( global, factory ) {'use strict';
