@@ -10,7 +10,7 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env.SubLSystem && funct
 	l2js.compiler.env.LSystem = (function(l2js) {
 
 		function LSystem(ctx) {
-			this.ctx = l2js.utils.copy(ctx);
+			this.ctx = ctx?l2js.utils.copy(ctx):{};
 			this.rulesProbabilities = {};
 		}
 		
@@ -36,17 +36,17 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env.SubLSystem && funct
 		  */
 		LSystem.prototype.derive = function(axiom, maxIterations) {
 			if (arguments.length === 0) {
-				axiom = this.axiom;
+				axiom = this.axiom();
 				maxIterations = this.maxIterations;
 			} else if (arguments.length === 1) {
 				if ( typeof axiom === "number") {
 					maxIterations = arguments[0];
-					axiom = this.axiom;
+					axiom = this.axiom();
 				} else {
 					maxIterations = this.maxIterations;
 				}
 			} else if (arguments.length === 2) {
-				axiom = axiom || this.axiom;
+				axiom = axiom || this.axiom();
 				maxIterations = l2js.utils.isUndefined(maxIterations)? this.maxIterations:maxIterations;
 			}
 

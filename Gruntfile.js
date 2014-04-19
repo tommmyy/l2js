@@ -52,7 +52,7 @@ module.exports = function(grunt) {
 								ascii_only : true
 							},
 							banner : "/*! L2JS v<%= pkg.version %> | "
-									+ "Copyright 2013, 2013 Tomáš Konrády (tomas.konrady@uhk.cz). | "
+									+ "Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz). | "
 									+ "MIT licence */",
 							compress : {
 								hoist_funs : false,

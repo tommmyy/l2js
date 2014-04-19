@@ -24,9 +24,18 @@
 	}
 	
 	function compiled(js){
+		var derivation = l2js.derive(js);
+		//console.log(derivation)
+		l2js.interpretAll(derivation, {
+			container: "script_output",
+			width: 480,
+			height: 320,
+			//turtle: {
+				//initPosition: [100, 100],
+				//initOrientation: 0
+			//}
+		});
 		
-		console.log(l2js.derive(js));
-
 //		var derived = lsystem.derive("F(1)", 3);
 //		$("#toInterpret").text(derived);
 	}

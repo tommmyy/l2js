@@ -4,7 +4,7 @@
 * Copyright 2013, 2013 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-04-05T17:20:15.039Z
+* Date: 2014-04-12T14:32:22.304Z
 */
 
 (function( global, factory ) {'use strict';
@@ -155,9 +155,27 @@ window.l2js.files = {};
 		isUndefined: function (v) {
 			return typeof v === 'undefined';
 		}, 
+		isFunction:function (functionToCheck) {
+		 var getType = {};
+		 return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
+		},
 		toUpperFirstLetter: function (string) {
 		    return string.charAt(0).toUpperCase() + string.slice(1);
-		}		
+		},
+		/** 
+		 * http://xazure.net/2011/06/tips-snippets/javascript/padding-string-in-javascript/ 
+		 * @param str - The string to pad. 
+		 * @param padChar - The character to pad the string with. 
+		 * @param length - The length of the resulting string. 
+		 *
+		 * @return The padded string. 
+		 */ 
+		padLeft: function (str, padChar, length) { 
+		
+		    while(str.length < length) 
+		        str = padChar + str;
+		    return str; 
+		} 	
 	};
 
 l2js.compiler = l2js.compiler || {};
@@ -206,8 +224,14 @@ l2js.compiler.env = l2js.compiler.env || {};
 		 * @param maxIterations
 		 */
 		function SubLSystem(ctx, lsystem, axiom, maxIterations) {
-			this.lsystem = lsystem;
 			this.ctx = ctx;
+			this.lsystem = lsystem;
+			
+			if(typeof axiom === "number") {
+				maxIteration = axiom;
+				axiom = undefined;
+			}
+			
 			this.axiom = axiom;
 			this.maxIterations = maxIterations;
 		}
@@ -245,7 +269,7 @@ l2js.compiler.env = l2js.compiler.env || {};
 	l2js.compiler.env.LSystem = (function(l2js) {
 
 		function LSystem(ctx) {
-			this.ctx = l2js.utils.copy(ctx);
+			this.ctx = ctx?l2js.utils.copy(ctx):{};
 			this.rulesProbabilities = {};
 		}
 		
@@ -271,17 +295,17 @@ l2js.compiler.env = l2js.compiler.env || {};
 		  */
 		LSystem.prototype.derive = function(axiom, maxIterations) {
 			if (arguments.length === 0) {
-				axiom = this.axiom;
+				axiom = this.axiom();
 				maxIterations = this.maxIterations;
 			} else if (arguments.length === 1) {
 				if ( typeof axiom === "number") {
 					maxIterations = arguments[0];
-					axiom = this.axiom;
+					axiom = this.axiom();
 				} else {
 					maxIterations = this.maxIterations;
 				}
 			} else if (arguments.length === 2) {
-				axiom = axiom || this.axiom;
+				axiom = axiom || this.axiom();
 				maxIterations = l2js.utils.isUndefined(maxIterations)? this.maxIterations:maxIterations;
 			}
 
@@ -529,6 +553,11 @@ l2js.compiler.env = l2js.compiler.env || {};
 			this.e = e;
 		}
 		
+		lnodes.ASTFunc = function ASTFunc(id, args) {
+			this.id = id;
+			this.args = args;
+		}
+		
 		lnodes.ASTLSystem = function ASTLSystem(id, alphabet, axiom, maxIterations, body){
 			this.id = id;
 			this.body = body;
@@ -580,17 +609,11 @@ l2js.compiler.env = l2js.compiler.env || {};
 			this.maxIterations = maxIterations;
 		}
 		
-		lnodes.ASTImport = function ASTImport(lsystem, axiom, iterations) {
-			this.lsystem = lsystem;
-			this.axiom = axiom;
-			this.iterations = iterations;
-			this.isMain = false;
-		}
-		
 		lnodes.ASTAlphabet = function ASTAlphabet(id, symbols) {
 			this.id = id;
 			this.symbols = symbols;
 		}
+		
 		return lnodes;
 	
 	})();
@@ -674,9 +697,9 @@ l2js.compiler.env = l2js.compiler.env || {};
 l2js.compiler.Lparser = (function(){
 var parser = {trace: function trace() { },
 yy: {},
-symbols_: {"error":2,"program":3,"program_entries":4,"EOF":5,"stmts":6,"stmt":7,";":8,"var":9,"=":10,"e":11,"symbol":12,"text":13,"LSCRIPT":14,"id":15,"{":16,"}":17,"LSYSTEM":18,"(":19,"axiom":20,")":21,"USING":22,",":23,"number":24,"ALPHABET":25,"symbols":26,"ancestor":27,"RULE_OP":28,"successors":29,"H_RULE_OP":30,"main_call":31,"sublsystem":32,"call":33,"DERIVE":34,"SUBLSYSTEM":35,"CALL":36,"MAIN":37,"string":38,"iterations":39,"params":40,"successor":41,"|":42,":":43,"module":44,"arguments":45,"param":46,"ID":47,"VAR":48,"+":49,"term":50,"-":51,"*":52,"factor":53,"/":54,"E":55,"PI":56,"TEXT":57,"NUMBER":58,"$accept":0,"$end":1},
-terminals_: {2:"error",5:"EOF",8:";",10:"=",14:"LSCRIPT",16:"{",17:"}",18:"LSYSTEM",19:"(",21:")",22:"USING",23:",",25:"ALPHABET",28:"RULE_OP",30:"H_RULE_OP",34:"DERIVE",35:"SUBLSYSTEM",36:"CALL",37:"MAIN",42:"|",43:":",47:"ID",48:"VAR",49:"+",51:"-",52:"*",54:"/",55:"E",56:"PI",57:"TEXT",58:"NUMBER"},
-productions_: [0,[3,2],[4,1],[6,3],[6,1],[6,0],[7,3],[7,3],[7,1],[7,5],[7,10],[7,12],[7,5],[7,3],[7,3],[7,1],[7,1],[7,1],[7,2],[32,5],[32,7],[32,6],[32,4],[33,5],[33,7],[33,6],[33,4],[31,2],[20,1],[39,1],[27,4],[27,1],[29,3],[29,1],[41,3],[41,1],[38,2],[38,1],[44,4],[44,1],[44,1],[44,1],[45,3],[45,2],[45,1],[45,0],[40,3],[40,2],[40,1],[40,0],[46,1],[26,3],[26,1],[26,0],[12,1],[9,1],[15,1],[11,3],[11,3],[11,1],[50,3],[50,3],[50,1],[53,1],[53,1],[53,1],[53,1],[53,3],[13,1],[24,1]],
+symbols_: {"error":2,"program":3,"program_entries":4,"EOF":5,"stmts":6,"stmt":7,";":8,"var":9,"=":10,"e":11,"symbol":12,"text":13,"LSCRIPT":14,"id":15,"{":16,"}":17,"LSYSTEM":18,"(":19,"axiom":20,")":21,"USING":22,",":23,"number":24,"ALPHABET":25,"symbols":26,"ancestor":27,"RULE_OP":28,"successors":29,"H_RULE_OP":30,"main_call":31,"sublsystem":32,"call":33,"DERIVE":34,"SUBLSYSTEM":35,"CALL":36,"MAIN":37,"string":38,"iterations":39,"params":40,"successor":41,"|":42,":":43,"module":44,"arguments":45,"param":46,"ID":47,"VAR":48,"+":49,"term":50,"-":51,"*":52,"factor":53,"/":54,"FUNC":55,"E":56,"PI":57,"TEXT":58,"NUMBER":59,"$accept":0,"$end":1},
+terminals_: {2:"error",5:"EOF",8:";",10:"=",14:"LSCRIPT",16:"{",17:"}",18:"LSYSTEM",19:"(",21:")",22:"USING",23:",",25:"ALPHABET",28:"RULE_OP",30:"H_RULE_OP",34:"DERIVE",35:"SUBLSYSTEM",36:"CALL",37:"MAIN",42:"|",43:":",47:"ID",48:"VAR",49:"+",51:"-",52:"*",54:"/",55:"FUNC",56:"E",57:"PI",58:"TEXT",59:"NUMBER"},
+productions_: [0,[3,2],[4,1],[6,3],[6,1],[6,0],[7,3],[7,3],[7,1],[7,5],[7,10],[7,12],[7,5],[7,3],[7,3],[7,1],[7,1],[7,1],[7,2],[32,5],[32,7],[32,6],[32,4],[33,5],[33,7],[33,6],[33,4],[31,2],[20,1],[39,1],[27,4],[27,1],[29,3],[29,1],[41,3],[41,1],[38,2],[38,1],[44,4],[44,1],[44,1],[44,1],[45,3],[45,2],[45,1],[45,0],[40,3],[40,2],[40,1],[40,0],[46,1],[26,3],[26,1],[26,0],[12,1],[9,1],[15,1],[11,3],[11,3],[11,1],[50,3],[50,3],[50,1],[53,4],[53,1],[53,1],[53,1],[53,1],[53,3],[13,1],[24,1]],
 performAction: function anonymous(yytext, yyleng, yylineno, yy, yystate /* action[1] */, $$ /* vstack */, _$ /* lstack */) {
 /* this == yyval */
 
@@ -862,24 +885,26 @@ case 61:this.$ = new yy.ASTOperation($$[$0-1], $$[$0-2], $$[$0]);
 break;
 case 62:this.$ = $$[$0];
 break;
-case 63:this.$ = $$[$0];
+case 63:this.$ = new yy.ASTFunc($$[$0-3], $$[$0-1]);
 break;
-case 64:this.$ = Math.E;
+case 64:this.$ = $$[$0];
 break;
-case 65:this.$ = Math.PI;
+case 65:this.$ = Math.E;
 break;
-case 66:this.$ = $$[$0];
+case 66:this.$ = Math.PI;
 break;
-case 67:this.$ = new yy.ASTBrackets($$[$0-1]);
+case 67:this.$ = $$[$0];
 break;
-case 68:this.$ = String(yytext);
+case 68:this.$ = new yy.ASTBrackets($$[$0-1]);
 break;
-case 69:this.$ =  Number(yytext);
+case 69:this.$ = String(yytext);
+break;
+case 70:this.$ =  Number(yytext);
 break;
 }
 },
-table: [{3:1,4:2,5:[2,5],6:3,7:4,9:5,11:7,12:6,14:[1,8],15:17,18:[1,9],19:[1,27],24:24,25:[1,10],27:11,31:12,32:13,33:14,34:[1,15],35:[1,20],36:[1,21],37:[1,19],47:[1,22],48:[1,16],50:18,53:23,55:[1,25],56:[1,26],58:[1,28]},{1:[3]},{5:[1,29]},{5:[2,2]},{5:[2,4],8:[1,30],17:[2,4]},{5:[2,66],8:[2,66],10:[1,31],17:[2,66],49:[2,66],51:[2,66],52:[2,66],54:[2,66]},{10:[1,32],19:[1,33],28:[2,31],30:[2,31]},{5:[2,8],8:[2,8],17:[2,8],49:[1,34],51:[1,35]},{15:36,47:[1,22]},{15:37,47:[1,22]},{15:38,47:[1,22]},{28:[1,39],30:[1,40]},{5:[2,15],8:[2,15],17:[2,15]},{5:[2,16],8:[2,16],17:[2,16]},{5:[2,17],8:[2,17],17:[2,17]},{15:41,47:[1,22]},{5:[2,55],8:[2,55],10:[2,55],17:[2,55],21:[2,55],23:[2,55],49:[2,55],51:[2,55],52:[2,55],54:[2,55]},{10:[2,54],17:[2,54],19:[2,54],23:[2,54],28:[2,54],30:[2,54]},{5:[2,59],8:[2,59],17:[2,59],21:[2,59],23:[2,59],49:[2,59],51:[2,59],52:[1,42],54:[1,43]},{33:44,36:[1,21]},{15:45,47:[1,22]},{15:46,47:[1,22]},{5:[2,56],8:[2,56],10:[2,56],16:[2,56],17:[2,56],19:[2,56],21:[2,56],23:[2,56],28:[2,56],30:[2,56],35:[2,56],36:[2,56],42:[2,56],43:[2,56],47:[2,56]},{5:[2,62],8:[2,62],17:[2,62],21:[2,62],23:[2,62],49:[2,62],51:[2,62],52:[2,62],54:[2,62]},{5:[2,63],8:[2,63],17:[2,63],21:[2,63],23:[2,63],49:[2,63],51:[2,63],52:[2,63],54:[2,63]},{5:[2,64],8:[2,64],17:[2,64],21:[2,64],23:[2,64],49:[2,64],51:[2,64],52:[2,64],54:[2,64]},{5:[2,65],8:[2,65],17:[2,65],21:[2,65],23:[2,65],49:[2,65],51:[2,65],52:[2,65],54:[2,65]},{9:48,11:47,19:[1,27],24:24,48:[1,16],50:18,53:23,55:[1,25],56:[1,26],58:[1,28]},{5:[2,69],8:[2,69],17:[2,69],21:[2,69],23:[2,69],42:[2,69],49:[2,69],51:[2,69],52:[2,69],54:[2,69]},{1:[2,1]},{5:[2,5],6:49,7:4,9:5,11:7,12:6,14:[1,8],15:17,17:[2,5],18:[1,9],19:[1,27],24:24,25:[1,10],27:11,31:12,32:13,33:14,34:[1,15],35:[1,20],36:[1,21],37:[1,19],47:[1,22],48:[1,16],50:18,53:23,55:[1,25],56:[1,26],58:[1,28]},{9:48,11:50,19:[1,27],24:24,48:[1,16],50:18,53:23,55:[1,25],56:[1,26],58:[1,28]},{13:51,57:[1,52]},{21:[2,49],23:[1,55],40:53,46:54,47:[1,56]},{9:48,19:[1,27],24:24,48:[1,16],50:57,53:23,55:[1,25],56:[1,26],58:[1,28]},{9:48,19:[1,27],24:24,48:[1,16],50:58,53:23,55:[1,25],56:[1,26],58:[1,28]},{16:[1,59]},{19:[1,60]},{16:[1,61]},{15:66,29:62,32:68,33:67,35:[1,20],36:[1,21],38:64,41:63,44:65,47:[1,22]},{15:66,29:69,32:68,33:67,35:[1,20],36:[1,21],38:64,41:63,44:65,47:[1,22]},{5:[2,18],8:[2,18],17:[2,18]},{9:48,19:[1,27],24:24,48:[1,16],53:70,55:[1,25],56:[1,26],58:[1,28]},{9:48,19:[1,27],24:24,48:[1,16],53:71,55:[1,25],56:[1,26],58:[1,28]},{5:[2,27],8:[2,27],17:[2,27]},{19:[1,72]},{19:[1,73]},{21:[1,74],49:[1,34],51:[1,35]},{5:[2,66],8:[2,66],17:[2,66],21:[2,66],23:[2,66],49:[2,66],51:[2,66],52:[2,66],54:[2,66]},{5:[2,3],17:[2,3]},{5:[2,6],8:[2,6],17:[2,6],49:[1,34],51:[1,35]},{5:[2,7],8:[2,7],17:[2,7]},{5:[2,68],8:[2,68],17:[2,68]},{21:[1,75]},{21:[2,48],23:[1,76]},{21:[2,49],23:[1,55],40:77,46:54,47:[1,56]},{21:[2,50],23:[2,50]},{5:[2,57],8:[2,57],17:[2,57],21:[2,57],23:[2,57],49:[2,57],51:[2,57],52:[1,42],54:[1,43]},{5:[2,58],8:[2,58],17:[2,58],21:[2,58],23:[2,58],49:[2,58],51:[2,58],52:[1,42],54:[1,43]},{6:78,7:4,9:5,11:7,12:6,14:[1,8],15:17,17:[2,5],18:[1,9],19:[1,27],24:24,25:[1,10],27:11,31:12,32:13,33:14,34:[1,15],35:[1,20],36:[1,21],37:[1,19],47:[1,22],48:[1,16],50:18,53:23,55:[1,25],56:[1,26],58:[1,28]},{15:66,20:79,32:68,33:67,35:[1,20],36:[1,21],38:80,44:65,47:[1,22]},{12:82,15:17,17:[2,53],26:81,47:[1,22]},{5:[2,13],8:[2,13],17:[2,13]},{5:[2,33],8:[2,33],17:[2,33],42:[1,83]},{5:[2,35],8:[2,35],17:[2,35],42:[2,35],43:[1,84]},{5:[2,37],8:[2,37],15:66,17:[2,37],21:[2,37],23:[2,37],32:68,33:67,35:[1,20],36:[1,21],38:85,42:[2,37],43:[2,37],44:65,47:[1,22]},{5:[2,39],8:[2,39],17:[2,39],19:[1,86],21:[2,39],23:[2,39],35:[2,39],36:[2,39],42:[2,39],43:[2,39],47:[2,39]},{5:[2,40],8:[2,40],17:[2,40],21:[2,40],23:[2,40],35:[2,40],36:[2,40],42:[2,40],43:[2,40],47:[2,40]},{5:[2,41],8:[2,41],17:[2,41],21:[2,41],23:[2,41],35:[2,41],36:[2,41],42:[2,41],43:[2,41],47:[2,41]},{5:[2,14],8:[2,14],17:[2,14]},{5:[2,60],8:[2,60],17:[2,60],21:[2,60],23:[2,60],49:[2,60],51:[2,60],52:[2,60],54:[2,60]},{5:[2,61],8:[2,61],17:[2,61],21:[2,61],23:[2,61],49:[2,61],51:[2,61],52:[2,61],54:[2,61]},{15:66,20:87,21:[1,89],23:[1,88],32:68,33:67,35:[1,20],36:[1,21],38:80,44:65,47:[1,22]},{15:66,20:90,21:[1,92],23:[1,91],32:68,33:67,35:[1,20],36:[1,21],38:80,44:65,47:[1,22]},{5:[2,67],8:[2,67],17:[2,67],21:[2,67],23:[2,67],49:[2,67],51:[2,67],52:[2,67],54:[2,67]},{28:[2,30],30:[2,30]},{21:[2,49],23:[1,55],40:93,46:54,47:[1,56]},{21:[2,47]},{17:[1,94]},{21:[1,95],23:[1,96]},{21:[2,28],23:[2,28]},{17:[1,97]},{17:[2,52],23:[1,98]},{15:66,29:99,32:68,33:67,35:[1,20],36:[1,21],38:64,41:63,44:65,47:[1,22]},{24:100,58:[1,28]},{5:[2,36],8:[2,36],17:[2,36],21:[2,36],23:[2,36],42:[2,36],43:[2,36]},{9:48,11:102,19:[1,27],21:[2,45],23:[1,103],24:24,45:101,48:[1,16],50:18,53:23,55:[1,25],56:[1,26],58:[1,28]},{21:[1,104],23:[1,105]},{9:48,11:106,19:[1,27],24:24,48:[1,16],50:18,53:23,55:[1,25],56:[1,26],58:[1,28]},{5:[2,22],8:[2,22],17:[2,22],21:[2,22],23:[2,22],35:[2,22],36:[2,22],42:[2,22],43:[2,22],47:[2,22]},{21:[1,107],23:[1,108]},{9:48,11:109,19:[1,27],24:24,48:[1,16],50:18,53:23,55:[1,25],56:[1,26],58:[1,28]},{5:[2,26],8:[2,26],17:[2,26],21:[2,26],23:[2,26],35:[2,26],36:[2,26],42:[2,26],43:[2,26],47:[2,26]},{21:[2,46]},{5:[2,9],8:[2,9],17:[2,9]},{22:[1,110]},{24:111,58:[1,28]},{5:[2,12],8:[2,12],17:[2,12]},{12:82,15:17,17:[2,53],26:112,47:[1,22]},{5:[2,32],8:[2,32],17:[2,32]},{5:[2,34],8:[2,34],17:[2,34],42:[2,34]},{21:[1,113]},{21:[2,44],23:[1,114],49:[1,34],51:[1,35]},{9:48,11:102,19:[1,27],21:[2,45],23:[1,103],24:24,45:115,48:[1,16],50:18,53:23,55:[1,25],56:[1,26],58:[1,28]},{5:[2,19],8:[2,19],17:[2,19],21:[2,19],23:[2,19],35:[2,19],36:[2,19],42:[2,19],43:[2,19],47:[2,19]},{9:48,11:116,19:[1,27],24:24,48:[1,16],50:18,53:23,55:[1,25],56:[1,26],58:[1,28]},{21:[1,117],49:[1,34],51:[1,35]},{5:[2,23],8:[2,23],17:[2,23],21:[2,23],23:[2,23],35:[2,23],36:[2,23],42:[2,23],43:[2,23],47:[2,23]},{9:48,11:118,19:[1,27],24:24,48:[1,16],50:18,53:23,55:[1,25],56:[1,26],58:[1,28]},{21:[1,119],49:[1,34],51:[1,35]},{15:120,47:[1,22]},{21:[1,121]},{17:[2,51]},{5:[2,38],8:[2,38],17:[2,38],21:[2,38],23:[2,38],35:[2,38],36:[2,38],42:[2,38],43:[2,38],47:[2,38]},{9:48,11:102,19:[1,27],21:[2,45],23:[1,103],24:24,45:122,48:[1,16],50:18,53:23,55:[1,25],56:[1,26],58:[1,28]},{21:[2,43]},{21:[1,123],49:[1,34],51:[1,35]},{5:[2,21],8:[2,21],17:[2,21],21:[2,21],23:[2,21],35:[2,21],36:[2,21],42:[2,21],43:[2,21],47:[2,21]},{21:[1,124],49:[1,34],51:[1,35]},{5:[2,25],8:[2,25],17:[2,25],21:[2,25],23:[2,25],35:[2,25],36:[2,25],42:[2,25],43:[2,25],47:[2,25]},{16:[1,125]},{22:[1,126]},{21:[2,42]},{5:[2,20],8:[2,20],17:[2,20],21:[2,20],23:[2,20],35:[2,20],36:[2,20],42:[2,20],43:[2,20],47:[2,20]},{5:[2,24],8:[2,24],17:[2,24],21:[2,24],23:[2,24],35:[2,24],36:[2,24],42:[2,24],43:[2,24],47:[2,24]},{6:127,7:4,9:5,11:7,12:6,14:[1,8],15:17,17:[2,5],18:[1,9],19:[1,27],24:24,25:[1,10],27:11,31:12,32:13,33:14,34:[1,15],35:[1,20],36:[1,21],37:[1,19],47:[1,22],48:[1,16],50:18,53:23,55:[1,25],56:[1,26],58:[1,28]},{15:128,47:[1,22]},{17:[1,129]},{16:[1,130]},{5:[2,10],8:[2,10],17:[2,10]},{6:131,7:4,9:5,11:7,12:6,14:[1,8],15:17,17:[2,5],18:[1,9],19:[1,27],24:24,25:[1,10],27:11,31:12,32:13,33:14,34:[1,15],35:[1,20],36:[1,21],37:[1,19],47:[1,22],48:[1,16],50:18,53:23,55:[1,25],56:[1,26],58:[1,28]},{17:[1,132]},{5:[2,11],8:[2,11],17:[2,11]}],
-defaultActions: {3:[2,2],29:[2,1],77:[2,47],93:[2,46],112:[2,51],115:[2,43],122:[2,42]},
+table: [{3:1,4:2,5:[2,5],6:3,7:4,9:5,11:7,12:6,14:[1,8],15:17,18:[1,9],19:[1,28],24:25,25:[1,10],27:11,31:12,32:13,33:14,34:[1,15],35:[1,20],36:[1,21],37:[1,19],47:[1,22],48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{1:[3]},{5:[1,30]},{5:[2,2]},{5:[2,4],8:[1,31],17:[2,4]},{5:[2,67],8:[2,67],10:[1,32],17:[2,67],49:[2,67],51:[2,67],52:[2,67],54:[2,67]},{10:[1,33],19:[1,34],28:[2,31],30:[2,31]},{5:[2,8],8:[2,8],17:[2,8],49:[1,35],51:[1,36]},{15:37,47:[1,22]},{15:38,47:[1,22]},{15:39,47:[1,22]},{28:[1,40],30:[1,41]},{5:[2,15],8:[2,15],17:[2,15]},{5:[2,16],8:[2,16],17:[2,16]},{5:[2,17],8:[2,17],17:[2,17]},{15:42,47:[1,22]},{5:[2,55],8:[2,55],10:[2,55],17:[2,55],21:[2,55],23:[2,55],49:[2,55],51:[2,55],52:[2,55],54:[2,55]},{10:[2,54],17:[2,54],19:[2,54],23:[2,54],28:[2,54],30:[2,54]},{5:[2,59],8:[2,59],17:[2,59],21:[2,59],23:[2,59],49:[2,59],51:[2,59],52:[1,43],54:[1,44]},{33:45,36:[1,21]},{15:46,47:[1,22]},{15:47,47:[1,22]},{5:[2,56],8:[2,56],10:[2,56],16:[2,56],17:[2,56],19:[2,56],21:[2,56],23:[2,56],28:[2,56],30:[2,56],35:[2,56],36:[2,56],42:[2,56],43:[2,56],47:[2,56]},{5:[2,62],8:[2,62],17:[2,62],21:[2,62],23:[2,62],49:[2,62],51:[2,62],52:[2,62],54:[2,62]},{19:[1,48]},{5:[2,64],8:[2,64],17:[2,64],21:[2,64],23:[2,64],49:[2,64],51:[2,64],52:[2,64],54:[2,64]},{5:[2,65],8:[2,65],17:[2,65],21:[2,65],23:[2,65],49:[2,65],51:[2,65],52:[2,65],54:[2,65]},{5:[2,66],8:[2,66],17:[2,66],21:[2,66],23:[2,66],49:[2,66],51:[2,66],52:[2,66],54:[2,66]},{9:50,11:49,19:[1,28],24:25,48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{5:[2,70],8:[2,70],17:[2,70],21:[2,70],23:[2,70],42:[2,70],49:[2,70],51:[2,70],52:[2,70],54:[2,70]},{1:[2,1]},{5:[2,5],6:51,7:4,9:5,11:7,12:6,14:[1,8],15:17,17:[2,5],18:[1,9],19:[1,28],24:25,25:[1,10],27:11,31:12,32:13,33:14,34:[1,15],35:[1,20],36:[1,21],37:[1,19],47:[1,22],48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{9:50,11:52,19:[1,28],24:25,48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{13:53,58:[1,54]},{21:[2,49],23:[1,57],40:55,46:56,47:[1,58]},{9:50,19:[1,28],24:25,48:[1,16],50:59,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{9:50,19:[1,28],24:25,48:[1,16],50:60,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{16:[1,61]},{19:[1,62]},{16:[1,63]},{15:68,29:64,32:70,33:69,35:[1,20],36:[1,21],38:66,41:65,44:67,47:[1,22]},{15:68,29:71,32:70,33:69,35:[1,20],36:[1,21],38:66,41:65,44:67,47:[1,22]},{5:[2,18],8:[2,18],17:[2,18]},{9:50,19:[1,28],24:25,48:[1,16],53:72,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{9:50,19:[1,28],24:25,48:[1,16],53:73,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{5:[2,27],8:[2,27],17:[2,27]},{19:[1,74]},{19:[1,75]},{9:50,11:77,19:[1,28],21:[2,45],23:[1,78],24:25,45:76,48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{21:[1,79],49:[1,35],51:[1,36]},{5:[2,67],8:[2,67],17:[2,67],21:[2,67],23:[2,67],49:[2,67],51:[2,67],52:[2,67],54:[2,67]},{5:[2,3],17:[2,3]},{5:[2,6],8:[2,6],17:[2,6],49:[1,35],51:[1,36]},{5:[2,7],8:[2,7],17:[2,7]},{5:[2,69],8:[2,69],17:[2,69]},{21:[1,80]},{21:[2,48],23:[1,81]},{21:[2,49],23:[1,57],40:82,46:56,47:[1,58]},{21:[2,50],23:[2,50]},{5:[2,57],8:[2,57],17:[2,57],21:[2,57],23:[2,57],49:[2,57],51:[2,57],52:[1,43],54:[1,44]},{5:[2,58],8:[2,58],17:[2,58],21:[2,58],23:[2,58],49:[2,58],51:[2,58],52:[1,43],54:[1,44]},{6:83,7:4,9:5,11:7,12:6,14:[1,8],15:17,17:[2,5],18:[1,9],19:[1,28],24:25,25:[1,10],27:11,31:12,32:13,33:14,34:[1,15],35:[1,20],36:[1,21],37:[1,19],47:[1,22],48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{15:68,20:84,32:70,33:69,35:[1,20],36:[1,21],38:85,44:67,47:[1,22]},{12:87,15:17,17:[2,53],26:86,47:[1,22]},{5:[2,13],8:[2,13],17:[2,13]},{5:[2,33],8:[2,33],17:[2,33],42:[1,88]},{5:[2,35],8:[2,35],17:[2,35],42:[2,35],43:[1,89]},{5:[2,37],8:[2,37],15:68,17:[2,37],21:[2,37],23:[2,37],32:70,33:69,35:[1,20],36:[1,21],38:90,42:[2,37],43:[2,37],44:67,47:[1,22]},{5:[2,39],8:[2,39],17:[2,39],19:[1,91],21:[2,39],23:[2,39],35:[2,39],36:[2,39],42:[2,39],43:[2,39],47:[2,39]},{5:[2,40],8:[2,40],17:[2,40],21:[2,40],23:[2,40],35:[2,40],36:[2,40],42:[2,40],43:[2,40],47:[2,40]},{5:[2,41],8:[2,41],17:[2,41],21:[2,41],23:[2,41],35:[2,41],36:[2,41],42:[2,41],43:[2,41],47:[2,41]},{5:[2,14],8:[2,14],17:[2,14]},{5:[2,60],8:[2,60],17:[2,60],21:[2,60],23:[2,60],49:[2,60],51:[2,60],52:[2,60],54:[2,60]},{5:[2,61],8:[2,61],17:[2,61],21:[2,61],23:[2,61],49:[2,61],51:[2,61],52:[2,61],54:[2,61]},{15:68,20:92,21:[1,94],23:[1,93],32:70,33:69,35:[1,20],36:[1,21],38:85,44:67,47:[1,22]},{15:68,20:95,21:[1,97],23:[1,96],32:70,33:69,35:[1,20],36:[1,21],38:85,44:67,47:[1,22]},{21:[1,98]},{21:[2,44],23:[1,99],49:[1,35],51:[1,36]},{9:50,11:77,19:[1,28],21:[2,45],23:[1,78],24:25,45:100,48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{5:[2,68],8:[2,68],17:[2,68],21:[2,68],23:[2,68],49:[2,68],51:[2,68],52:[2,68],54:[2,68]},{28:[2,30],30:[2,30]},{21:[2,49],23:[1,57],40:101,46:56,47:[1,58]},{21:[2,47]},{17:[1,102]},{21:[1,103],23:[1,104]},{21:[2,28],23:[2,28]},{17:[1,105]},{17:[2,52],23:[1,106]},{15:68,29:107,32:70,33:69,35:[1,20],36:[1,21],38:66,41:65,44:67,47:[1,22]},{24:108,59:[1,29]},{5:[2,36],8:[2,36],17:[2,36],21:[2,36],23:[2,36],42:[2,36],43:[2,36]},{9:50,11:77,19:[1,28],21:[2,45],23:[1,78],24:25,45:109,48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{21:[1,110],23:[1,111]},{9:50,11:112,19:[1,28],24:25,48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{5:[2,22],8:[2,22],17:[2,22],21:[2,22],23:[2,22],35:[2,22],36:[2,22],42:[2,22],43:[2,22],47:[2,22]},{21:[1,113],23:[1,114]},{9:50,11:115,19:[1,28],24:25,48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{5:[2,26],8:[2,26],17:[2,26],21:[2,26],23:[2,26],35:[2,26],36:[2,26],42:[2,26],43:[2,26],47:[2,26]},{5:[2,63],8:[2,63],17:[2,63],21:[2,63],23:[2,63],49:[2,63],51:[2,63],52:[2,63],54:[2,63]},{9:50,11:77,19:[1,28],21:[2,45],23:[1,78],24:25,45:116,48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{21:[2,43]},{21:[2,46]},{5:[2,9],8:[2,9],17:[2,9]},{22:[1,117]},{24:118,59:[1,29]},{5:[2,12],8:[2,12],17:[2,12]},{12:87,15:17,17:[2,53],26:119,47:[1,22]},{5:[2,32],8:[2,32],17:[2,32]},{5:[2,34],8:[2,34],17:[2,34],42:[2,34]},{21:[1,120]},{5:[2,19],8:[2,19],17:[2,19],21:[2,19],23:[2,19],35:[2,19],36:[2,19],42:[2,19],43:[2,19],47:[2,19]},{9:50,11:121,19:[1,28],24:25,48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{21:[1,122],49:[1,35],51:[1,36]},{5:[2,23],8:[2,23],17:[2,23],21:[2,23],23:[2,23],35:[2,23],36:[2,23],42:[2,23],43:[2,23],47:[2,23]},{9:50,11:123,19:[1,28],24:25,48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{21:[1,124],49:[1,35],51:[1,36]},{21:[2,42]},{15:125,47:[1,22]},{21:[1,126]},{17:[2,51]},{5:[2,38],8:[2,38],17:[2,38],21:[2,38],23:[2,38],35:[2,38],36:[2,38],42:[2,38],43:[2,38],47:[2,38]},{21:[1,127],49:[1,35],51:[1,36]},{5:[2,21],8:[2,21],17:[2,21],21:[2,21],23:[2,21],35:[2,21],36:[2,21],42:[2,21],43:[2,21],47:[2,21]},{21:[1,128],49:[1,35],51:[1,36]},{5:[2,25],8:[2,25],17:[2,25],21:[2,25],23:[2,25],35:[2,25],36:[2,25],42:[2,25],43:[2,25],47:[2,25]},{16:[1,129]},{22:[1,130]},{5:[2,20],8:[2,20],17:[2,20],21:[2,20],23:[2,20],35:[2,20],36:[2,20],42:[2,20],43:[2,20],47:[2,20]},{5:[2,24],8:[2,24],17:[2,24],21:[2,24],23:[2,24],35:[2,24],36:[2,24],42:[2,24],43:[2,24],47:[2,24]},{6:131,7:4,9:5,11:7,12:6,14:[1,8],15:17,17:[2,5],18:[1,9],19:[1,28],24:25,25:[1,10],27:11,31:12,32:13,33:14,34:[1,15],35:[1,20],36:[1,21],37:[1,19],47:[1,22],48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{15:132,47:[1,22]},{17:[1,133]},{16:[1,134]},{5:[2,10],8:[2,10],17:[2,10]},{6:135,7:4,9:5,11:7,12:6,14:[1,8],15:17,17:[2,5],18:[1,9],19:[1,28],24:25,25:[1,10],27:11,31:12,32:13,33:14,34:[1,15],35:[1,20],36:[1,21],37:[1,19],47:[1,22],48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{17:[1,136]},{5:[2,11],8:[2,11],17:[2,11]}],
+defaultActions: {3:[2,2],30:[2,1],82:[2,47],100:[2,43],101:[2,46],116:[2,42],119:[2,51]},
 parseError: function parseError(str, hash) {
     if (hash.recoverable) {
         this.trace(str);
@@ -1349,16 +1374,16 @@ case 0:/* skip comment */
 break;
 case 1:/* skip whitespace */
 break;
-case 2:return 58
+case 2:return 59
 break;
 case 3: /* 'text' */
 									yy_.yytext = this.matches[1];
-									return 57;
+									return 58;
 								
 break;
 case 4: /* "text" */
 									yy_.yytext = this.matches[1];
-									return 57;
+									return 58;
 								
 break;
 case 5:return 14
@@ -1381,48 +1406,50 @@ case 13:return 28
 break;
 case 14:return 30
 break;
-case 15:return 55
+case 15:return 56
 break;
-case 16:return 56
+case 16:return 57
 break;
-case 17:return 48
+case 17:return 55
 break;
-case 18:return 47
+case 18:return 48
 break;
-case 19:return 52
+case 19:return 47
 break;
-case 20:return 54
+case 20:return 52
 break;
-case 21:return 51
+case 21:return 54
 break;
-case 22:return 49
+case 22:return 51
 break;
-case 23:return 19
+case 23:return 49
 break;
-case 24:return 21
+case 24:return 19
 break;
-case 25:return 16
+case 25:return 21
 break;
-case 26:return 17
+case 26:return 16
 break;
-case 27:return 23
+case 27:return 17
 break;
-case 28:return 8
+case 28:return 23
 break;
-case 29:return 43
+case 29:return 8
 break;
-case 30:return 42
+case 30:return 43
 break;
-case 31:return '.'
+case 31:return 42
 break;
-case 32:return 10
+case 32:return '.'
 break;
-case 33:return 5
+case 33:return 10
+break;
+case 34:return 5
 break;
 }
 },
-rules: [/^(?:\/\/[^\n]*)/,/^(?:\s+)/,/^(?:[0-9]+(\.[0-9]+)?\b)/,/^(?:'(.*?)')/,/^(?:"(.*?)")/,/^(?:lscript\b)/,/^(?:lsystem\b)/,/^(?:alphabet\b)/,/^(?:using\b)/,/^(?:derive\b)/,/^(?:call\b)/,/^(?:sublsystem\b)/,/^(?:main\b)/,/^(?:-->)/,/^(?:-h>)/,/^(?:E\b)/,/^(?:PI\b)/,/^(?:\$([A-Za-z_][A-Za-z_0-9_]*))/,/^(?:([A-Za-z_][A-Za-z_0-9_]*))/,/^(?:\*)/,/^(?:\/)/,/^(?:-)/,/^(?:\+)/,/^(?:\()/,/^(?:\))/,/^(?:\{)/,/^(?:\})/,/^(?:,)/,/^(?:;)/,/^(?::)/,/^(?:\|)/,/^(?:\.)/,/^(?:=)/,/^(?:$)/],
-conditions: {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33],"inclusive":true}}
+rules: [/^(?:\/\/[^\n]*)/,/^(?:\s+)/,/^(?:[0-9]+(\.[0-9]+)?\b)/,/^(?:'(.*?)')/,/^(?:"(.*?)")/,/^(?:lscript\b)/,/^(?:lsystem\b)/,/^(?:alphabet\b)/,/^(?:using\b)/,/^(?:derive\b)/,/^(?:call\b)/,/^(?:sublsystem\b)/,/^(?:main\b)/,/^(?:-->)/,/^(?:-h>)/,/^(?:E\b)/,/^(?:PI\b)/,/^(?:__([A-Za-z_][A-Za-z_0-9_]*))/,/^(?:\$([A-Za-z_][A-Za-z_0-9_]*))/,/^(?:([A-Za-z_][A-Za-z_0-9_]*))/,/^(?:\*)/,/^(?:\/)/,/^(?:-)/,/^(?:\+)/,/^(?:\()/,/^(?:\))/,/^(?:\{)/,/^(?:\})/,/^(?:,)/,/^(?:;)/,/^(?::)/,/^(?:\|)/,/^(?:\.)/,/^(?:=)/,/^(?:$)/],
+conditions: {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34],"inclusive":true}}
 };
 return lexer;
 })();
@@ -1457,8 +1484,21 @@ return new Parser;
 			
 			// id of lsystem in current context
 			this.lsystems = [];
+			
+			// add functions
+			this.funcs = [];
+			
+			
 		}	
 		
+		ASTCompiler.funcsSrc = {
+			"__color": "__color: function(r, g, b) {" +
+					"var rgb = r;" + 
+					"rgb = rgb << 8;" +
+					"rgb |= g;" +
+					"rgb = rgb << 8;" +
+					"rgb |= b; return rgb/16581375;}"
+		};
 		
 		ASTCompiler.states = {
 			"GLOBAL": "global",
@@ -1505,7 +1545,12 @@ return new Parser;
 				src = "(function(l2js){\n";
 				src += "var env = l2js.compiler.env,\n";
 				src += "ctx = {};\n";
-				src += this.visitBlock(node);
+				
+				var block = this.visitBlock(node);
+				if(this.funcs && this.funcs.length) {
+					src += this.addFuncs();
+				}
+				src += block;
 				src += "\n})(l2js);\n";
 
 				return src;
@@ -1514,7 +1559,16 @@ return new Parser;
 				throw Error("Root node in AST should be root ASTBLock.");
 			}
 		};
-
+		
+		ASTCompiler.prototype.addFuncs = function() {
+			var funcsSrc = [];
+			for(var i = 0; i<this.funcs.length; i++){
+				ASTCompiler.funcsSrc[this.funcs[i]] && funcsSrc.push(ASTCompiler.funcsSrc[this.funcs[i]])
+			}
+			
+			return "var funcs = {" +funcsSrc.join(",\n")+ "};\n";
+		};
+		
 		/**
 		 * Call generation of code for all nodes according to its type of
 		 * AST object.
@@ -1576,7 +1630,7 @@ return new Parser;
 			return src;
 		};
 		
-		ASTCompiler.prototype.makeId = function(id) {
+		ASTCompiler.prototype._makeId = function(id) {
 			var prefix, newId;
 
 			if(this.states[0] === ASTCompiler.states.RULE) {
@@ -1600,8 +1654,8 @@ return new Parser;
 		
 		ASTCompiler.prototype.visitId = function(id) {
 			// Variables only with expressions, declaration is made by visitBlock
-			if(id.type === "var" && id.e) {
-				return this.makeId(id.id) + "=" + this.visitExpression(id.e) + ";\n";
+			if(id.type === "var" && !l2js.utils.isUndefined(id.e)) {
+				return this._makeId(id.id) + "=" + this.visitExpression(id.e) + ";\n";
 			}
 		};
 		
@@ -1625,25 +1679,28 @@ return new Parser;
 			
 			src += "function " + id + "() {\n" +
 				id + ".__super__.constructor.apply(this, arguments);\n" +
-				"this.self = " + id +";\n";
+				"this.self = " + id +";\n" +
+				"this._init();";
 			
 			this.lsystems.unshift({id:id, rulesHash: []});
 			
-			// constructor has only declarations of context variables
+			// end of constructor and definition of static properties
+			src += "}\n";
+			
+			// init function of declarations of context variables
+			src += id + ".prototype._init = function() {\n";
 			// separate variable declarations
 			var i, entries = lsystem.body.entries, decs = [];
-			for(i=0; i<entries.length; i++) {
+			for(i=entries.length - 1; i>=0; i--) {
 				if(entries[i] instanceof lnodes.ASTId) {
-					decs = decs.concat(entries.splice(i, 1));
+					decs.unshift(entries.splice(i, 1)[0]);
 				}
-
 			}
 			
 			src += this.visitBlock({entries: decs});
+			src += "};\n";
+			// end of init
 			
-			// end of constructor and definition of static properties
-			src += "}\n";
-
 			// Static properties
 			src += id + ".alphabet = " + lsystem.alphabet.id + ";\n" +
 				id + ".id = '" + id + "';\n";
@@ -1656,11 +1713,9 @@ return new Parser;
 			
 			this.lsystems.shift();	
 			
-			this.states.unshift(ASTCompiler.states.GLOBAL);
 			
-			src += id + ".prototype.axiom = " + this.visitString(lsystem.axiom, id) + ";\n" ;
+			src += id + ".prototype.axiom = function() {return " + this.visitString(lsystem.axiom, id) + ";};\n" ;
 			
-			this.states.shift();			
 			
 			if(!l2js.utils.isUndefined(lsystem.maxIterations)) {
 				src += id + ".prototype.maxIterations = " + this.visitExpression(lsystem.maxIterations) + " ;\n";
@@ -1719,10 +1774,20 @@ return new Parser;
 			} else if(e instanceof lnodes.ASTBrackets) {
 				return "(" + this.visitExpression(e.e) + ")";
 			} else if(e instanceof lnodes.ASTId) {
-				return this.makeId(e.id);
+				return this._makeId(e.id);
+			} else if(e instanceof lnodes.ASTFunc) {
+				var exps = [];
+				for(var i=0;i<e.args.length; i++) {
+					exps.push(this.visitExpression(e.args[i]));
+				}
+				if(l2js.utils.indexOf(this.funcs, e.id) ===-1) {
+					this.funcs.push(e.id);
+				}
+				return "funcs." + e.id + "(" + exps.join(",") + ")";
 			} else if(typeof e === "number") {
 				return e;
-			} else {
+			}
+			else {
 				throw new Error("Unexpected expression symbol: " + e);
 			}
 		};
@@ -1817,7 +1882,9 @@ return new Parser;
 				src += "this.main = "+ lid + ";\n";
 				
 				if(!l2js.utils.isUndefined(call.axiom)){
-					src += "this.axiom = " + this.visitString(call.axiom, lid) + ";\n";
+					this.states.unshift(ASTCompiler.states.GLOBAL);
+					src += this.visitString(call.axiom, lid) + ";\n";
+					this.states.shift();
 
 				}
 					
@@ -1834,7 +1901,7 @@ return new Parser;
 					args.push(this.visitExpression(call.maxIterations)); 
 				} 
 				var srcDerivation = (this.ruleType === "h") ? "interpretation":"derivation";
-				src = "new " + lid + "(this.ctx).derive(" + args.join(", ") + ")."+srcDerivation+"\n";
+				src = "new " + lid + "(" + (this.states[0] === ASTCompiler.states.GLOBAL?"ctx":"this.ctx")+ ").derive(" + args.join(", ") + ")."+srcDerivation+"\n";
 			}
 			return src;
 		};
@@ -1864,9 +1931,14 @@ return new Parser;
 			
 			this.states.unshift(ASTCompiler.states.RULE);
 			this.ruleParams = params;
+			
+			var prevRuleType = this.ruleType;
+			
 			this.ruleType = rule.type;
 			
 			src += this.makeRule(ancestor, successors, rule.type);
+			
+			this.ruleType = prevRuleType;
 			
 			this.ruleParams = [];
 			
@@ -1992,15 +2064,215 @@ l2js.interpret = l2js.interpret || {};
 
 
 	l2js.interpret.Turtle2DBuilder =  (function()	{
-	
 		function Turtle2DBuilder(options) {
 			this.options = options;
 		};
 		
-		Turtle2DBuilder.prototype.next = function(symbol, ctx) {
-			console.log(symbol.id, ctx);
+		Turtle2DBuilder.options = {
+			container: "",
+			width:100,
+			height:100,
+			skipUnknownSymbols: true,
+			turtle: {
+				initPosition: [0, 0],
+				initOrientation: 0
+			}
+		};
+		
+		Turtle2DBuilder.turtleTransforms = {
+			left: function(angle, turtle) {
+				
+			}, 
+			right: function(angle, turtle) {
+				
+			},
+			forward: function(step, turtle) {
+				var pos = turtle.position;
+				var orientation = turtle.orientation * Math.PI / 180;
+				return [step*Math.cos(orientation)+pos[0], step*Math.sin(orientation)+pos[1]];
+			}
+			
+		};
+		
+		Turtle2DBuilder.prototype.interpret = function(symbol, ctx) {
+			if(!ctx.turtle2D) {
+				this._init(ctx);
+			}
+			this._resolveSymbol(symbol, ctx);
+			//console.log(symbol);
 		};
 	
+		Turtle2DBuilder.prototype._resolveSymbol = function(symbol, ctx) {
+			if(this._symbols[symbol.symbol]) {
+				this._symbols[symbol.symbol].call(this, symbol, ctx);
+			} else if(!this.options.skipUnknownSymbols){
+				throw new Error('Unexpected symbol (\''+symbol.symbol+'\')');	
+			}
+		};
+	
+		Turtle2DBuilder.prototype._init = function(ctx){
+			
+			this.options = l2js.utils.extend(l2js.utils.copy(Turtle2DBuilder.options), this.options);
+			if(!this.options.container) {
+				throw new Error("Turtle2D should have set the container to draw on.");
+			}
+			
+			var turtle2D = ctx.turtle2D = {},
+				opts = this.options;
+			turtle2D.stage  = new Kinetic.Stage({
+			    container: opts.container,
+				width: opts.width,
+				height: opts.height
+			});
+			turtle2D.baseLayer = new Kinetic.Layer();
+			turtle2D.stage.add(turtle2D.baseLayer);
+			
+			turtle2D.stack = [];
+			turtle2D.turtle = {
+				position: opts.turtle.initPosition, 
+				orientation: opts.turtle.initOrientation
+			};
+		};	
+		
+		Turtle2DBuilder.prototype._normalizeStep = function(step) {
+			return step * Math.max(this.options.width, this.options.height);
+		};
+		
+		Turtle2DBuilder.prototype._normalizeAngle = function(angle) {
+			var interval = angle % 360;
+			return angle<0?360+interval:interval;
+		};
+		 
+		Turtle2DBuilder.prototype._realColorToHexString= function(color) {
+			return '#' + l2js.utils.padLeft( Math.round(16581375*color).toString(16), 0, 6);
+		};
+
+		Turtle2DBuilder.prototype._symbols = {
+			/**
+			 * 
+			 * Forward and draw line
+			 * F(step, stroke, color) 
+			 * @param {Object} symbol
+			 * @param {Object} ctx
+			 */
+			'F': function(symbol, ctx) {
+				var step = this._normalizeStep(symbol.arguments[0]);
+				var stroke = this._normalizeStep(symbol.arguments[1]);
+				var color = this._realColorToHexString(symbol.arguments[2]);
+				var turtle2D = ctx.turtle2D;
+				var newPos = Turtle2DBuilder.turtleTransforms.forward(step, turtle2D.turtle);
+				
+				turtle2D.baseLayer.add( new Kinetic.Line({
+			        points: [turtle2D.turtle.position[0], turtle2D.turtle.position[1], newPos[0], newPos[1]],
+			        stroke: color,
+			        strokeWidth: stroke,
+			        lineCap: 'round',
+			        lineJoin: 'round'
+			    }));
+     
+				turtle2D.baseLayer.batchDraw();
+				turtle2D.turtle.position = newPos;
+			},
+			/**
+			 * 
+			 * Move by step
+			 * f(step) 
+			 * @param {Object} symbol
+			 * @param {Object} ctx
+			 */
+			'f': function(symbol, ctx) {
+				var step = this._normalizeStep(symbol.arguments[0]);
+				var turtle2D = ctx.turtle2D;
+				var newPos = Turtle2DBuilder.turtleTransforms.forward(step, turtle2D.turtle);
+				turtle2D.turtle.position = newPos;
+			},
+			/**
+			 * Turn left
+			 * 
+			 * L(angle)
+			 * 
+			 * @param {Object} symbol
+			 * @param {Object} ctx
+			 */
+			'L': function(symbol, ctx) {
+				var turtle = ctx.turtle2D.turtle;
+				var angle = symbol.arguments[0];
+				angle && (turtle.orientation = this._normalizeAngle(turtle.orientation - angle));
+				
+			},
+			'R': function(symbol, ctx) {
+				var turtle = ctx.turtle2D.turtle;
+				var angle = symbol.arguments[0];
+				angle && (turtle.orientation = this._normalizeAngle(turtle.orientation + angle));
+			},
+			'SU': function(symbol, ctx) {
+				var turtle2D = ctx.turtle2D;
+				turtle2D.stack = turtle2D.stack || [];
+				turtle2D.stack.unshift(l2js.utils.copy(turtle2D.turtle));
+			},
+			'SS': function(symbol, ctx) {
+				var turtle2D = ctx.turtle2D;
+				if(l2js.utils.isUndefined(turtle2D.stack)||!turtle2D.stack.length) {
+					throw new Error('Cannot read from undefined of empty indices stack.');
+				}
+				turtle2D.turtle = turtle2D.stack.shift();
+			},
+			/**
+			 * Start of polygon 
+			 *
+			 * PU(fillColor, stroke, strokeColor)
+			 * 
+			 * @param {Object} symbol
+			 * @param {Object} ctx
+			 */
+			'PU': function(symbol, ctx) {
+				var turtle2D = ctx.turtle2D, poly, fillColor, stroke, strokeColor;
+				turtle2D.polyStack = turtle2D.polyStack || [];
+				fillColor = this._realColorToHexString(symbol.arguments[0]);
+				stroke = this._normalizeStep(symbol.arguments[1]);
+				strokeColor = this._realColorToHexString(symbol.arguments[2]);
+				
+				poly = new Kinetic.Line({
+			        points: [],
+			        fill: fillColor,
+			        stroke: stroke,
+			        strokeWidth: strokeColor,
+			        closed: true
+			    });
+				
+				turtle2D.baseLayer.add(poly);
+				turtle2D.polyStack.unshift(poly);
+			},
+			/**
+			 * End of Polygon 
+			 * @param {Object} symbol
+			 * @param {Object} ctx
+			 */
+			'PS': function(symbol, ctx) {
+				var turtle2D = ctx.turtle2D;
+				if(l2js.utils.isUndefined(turtle2D.polyStack)||!turtle2D.polyStack.length) {
+					throw new Error('Cannot read from undefined of empty polygon stack.');
+				}
+				turtle2D.polyStack.shift();
+			},
+			/**
+			 * Add vertex to polygon 
+			 * @param {Object} symbol
+			 * @param {Object} ctx
+			 */
+			'V': function(symbol, ctx) {
+				var turtle2D = ctx.turtle2D, turtle = turtle2D.turtle;
+				if(l2js.utils.isUndefined(turtle2D.polyStack)||!turtle2D.polyStack.length) {
+					throw new Error('Cannot read from undefined of empty polygon stack.');
+				}
+				var poly = turtle2D.polyStack[0];
+				poly.points(poly.points().concat(turtle.position));
+				turtle2D.baseLayer.batchDraw();
+			}
+			
+			
+		};
+		
 		return Turtle2DBuilder;
 
 	})();
@@ -2035,8 +2307,8 @@ l2js.interpret = l2js.interpret || {};
 		};
 		
 		function Interpret(result, options) {
-			this.result = result;
-			this.options = options && l2js.utils.extend(options, Interpret.options) || Interpret.options;
+			this.result = this._clearOutEmptyLSystems(l2js.utils.copy(result));
+			this.options = options && l2js.utils.extend(l2js.utils.copy(Interpret.options), options) || Interpret.options;
 			this.ctx = {};
 		};
 	
@@ -2048,10 +2320,10 @@ l2js.interpret = l2js.interpret || {};
 		Interpret.prototype.getBuilder = function(symbol) {
 			switch(symbol.alphabet.id) {
 				case "Turtle2D":
-					this._turtle2dBuilder || (this._turtle2dBuilder = new l2js.interpret.Turtle2DBuilder(this.options));
+					this._turtle2dBuilder || (this._turtle2dBuilder = new l2js.interpret.Turtle2DBuilder(this.options), this.ctx);
 					return this._turtle2dBuilder;	
-				throw new Error("Unsupported alphabet: '" + symbol.alphabet.id + "'");
 			}
+			throw new Error("Unsupported alphabet: '" + symbol.alphabet.id + "'");
 		};
 	
 		/**
@@ -2059,9 +2331,10 @@ l2js.interpret = l2js.interpret || {};
 		 */
 		Interpret.prototype.next = function() {
 			var symbol = this.getNextSymbol();
-			if(!symbol) {
+			if(symbol) {
 				this.getBuilder(symbol).interpret(symbol, this.ctx);
 			}
+			return symbol;
 		};
 	
 		/**
@@ -2075,30 +2348,36 @@ l2js.interpret = l2js.interpret || {};
 
 
 		Interpret.prototype.hasNextSymbol = function() {
-			
 			if(!this._lSysBuf) {
-				return this.result && this.result.length;
+				return !!(this.result && this.result.interpretation.length);
 			}
-			
+
 			var bufLevel = 0;
 			while(this._lSysBuf[bufLevel] && 
-					l2js.utils.isUndefined(this._lSysBuf[bufLevel].interpretaion[this._indexBuf[bufLevel]+1]) ) {
+					l2js.utils.isUndefined(this._lSysBuf[bufLevel].interpretation[this._indexBuf[bufLevel]+1]) 
+				) {
 				bufLevel++;
-			}
-			return this._lSysBuf[bufLevel];
+			};
+			return !!this._lSysBuf[bufLevel];
 		};
 
 		Interpret.prototype.getNextSymbol = function() {
-			
 			this._setupBuffers();
 			
-			var symbol, index = this._indexBuf[0], result = this._lSysBuf[0];
+			var symbol, readIndex, result;
+			
+			readIndex = this._indexBuf.length === 0 ? 0: ++this._indexBuf[0];
+			result = this._lSysBuf.length === 0 ? this.result : this._lSysBuf[0];
 			
 			// Set position of previous symbol if we are at the end of l-system buffer (if exists)
-			while(result && l2js.utils.isUndefined(result.interpretaion[index+1]) ) {
-				result = this._lSysBuf.shift();
-				index = this._indexBuf.shift();
+			// Also skip empty sublsystems
+			while(result && l2js.utils.isUndefined(result.interpretation[readIndex]) ) {
+				this._lSysBuf.shift();
+				this._indexBuf.shift();
 				this._trigger('endOfLSystem', result);
+				
+				result = this._lSysBuf[0];
+				readIndex = ++this._indexBuf[0];
 			}
 			
 			// Next symbol does not exists
@@ -2108,16 +2387,15 @@ l2js.interpret = l2js.interpret || {};
 				return;	
 			}
 			
-			index++;
-			symbol = result.interpretation[index];
-			this._indexBuf[0] = index;
+			symbol = result.interpretation[readIndex];	
+			this._indexBuf[0] = readIndex;
+			this._lSysBuf[0] = result;
 				
 			if(symbol instanceof l2js.compiler.env.SubLSystem) {
-				index = 0;
-				this._indexBuf.unshift(index);
-				this._lSysBuf.unshift(symbol);	
 				this._trigger('newLSystem', symbol);
-				symbol = symbol.interpretation[index];
+				this._indexBuf.unshift(0);
+				this._lSysBuf.unshift(symbol);	
+				symbol = symbol.interpretation[0];
 			}
 			
 			return symbol; 					
@@ -2130,15 +2408,34 @@ l2js.interpret = l2js.interpret || {};
 		
 		Interpret.prototype._setupBuffers = function() {
 			// Buffer of symbol of the result of currently read l-system
-			this._lSysBuf || (this._lSysBuf = [this.result]);
+			this._lSysBuf = this._lSysBuf || [];
 			
 			// Buffer of curent position in the lSysBuf
-			this._indexBuf || (this._indexBuf = [0]);
+			this._indexBuf =  this._indexBuf || [];
 		};
 		
 		Interpret.prototype._clearBuffers = function() {
 			this._lSysBuf = null;
 			this._indexBuf = null;
+		};
+		
+		Interpret.prototype._clearOutEmptyLSystems = function(result) {
+			if(result.interpretation) {
+				var dels = [];
+				for(var i=0; i<result.interpretation.length; i++){
+					if(result.interpretation[i] instanceof l2js.compiler.env.SubLSystem) {
+						result.interpretation[i] = this._clearOutEmptyLSystems(result.interpretation[i]);
+						if(!result.interpretation[i].interpretation || result.interpretation[i].interpretation.length === 0) {
+							dels.push(i);
+						} 			
+					}
+				}
+				for(var i = dels.length-1; i>=0; i--) {
+					result.interpretation.splice(dels[i], 1);	
+				}
+			}
+			return result;
+			
 		};
 		
 		
@@ -2150,9 +2447,12 @@ l2js.compile = function(code) {
 	}
 	
 	l2js.derive = function(lsystemCode) {
-		var out = eval(lsystemCode);
-		
+		var out = eval(lsystemCode);		
 		return out;
+	}
+	
+	l2js.interpretAll = function(symbols, options) {
+		return new l2js.interpret.Interpret(symbols, options).all();
 	}
 
 

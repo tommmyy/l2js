@@ -53,8 +53,26 @@ window.l2js && function(l2js) {
 		isUndefined: function (v) {
 			return typeof v === 'undefined';
 		}, 
+		isFunction:function (functionToCheck) {
+		 var getType = {};
+		 return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
+		},
 		toUpperFirstLetter: function (string) {
 		    return string.charAt(0).toUpperCase() + string.slice(1);
-		}		
+		},
+		/** 
+		 * http://xazure.net/2011/06/tips-snippets/javascript/padding-string-in-javascript/ 
+		 * @param str - The string to pad. 
+		 * @param padChar - The character to pad the string with. 
+		 * @param length - The length of the resulting string. 
+		 *
+		 * @return The padded string. 
+		 */ 
+		padLeft: function (str, padChar, length) { 
+		
+		    while(str.length < length) 
+		        str = padChar + str;
+		    return str; 
+		} 	
 	};
 }(window.l2js);

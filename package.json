@@ -1,7 +1,7 @@
 {
   "name": "lsystem2js",
   "title": "LSystem2JS",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "devDependencies": {
     "grunt": "~0.4.1",
     "bower": "~1.2.0",

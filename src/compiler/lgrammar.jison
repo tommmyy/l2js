@@ -30,6 +30,7 @@ name							[A-Za-z_][A-Za-z_0-9_]*
 "-h>"							return 'H_RULE_OP'
 "E"								return 'E'
 "PI"							return 'PI'
+"__"{name}						return 'FUNC'
 "$"{name}						return 'VAR'
 {name}							return 'ID'
 "*"                   			return '*'
@@ -319,7 +320,9 @@ term
     ;
   
 factor
-	: number
+	: FUNC '(' arguments ')'
+    	{$$ = new yy.ASTFunc($1, $arguments);}
+    | number
         {$$ = $1;}
     | E
         {$$ = Math.E;}
@@ -327,8 +330,9 @@ factor
         {$$ = Math.PI;}
     | var
     	{$$ = $1;}
-    | '(' e ')'
-    	{$$ = new yy.ASTBrackets($e);}
+    
+   | '(' e ')'
+  	{$$ = new yy.ASTBrackets($e);}
     ;
 
 text

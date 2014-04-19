@@ -21,8 +21,21 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 			
 			// id of lsystem in current context
 			this.lsystems = [];
+			
+			// add functions
+			this.funcs = [];
+			
+			
 		}	
 		
+		ASTCompiler.funcsSrc = {
+			"__color": "__color: function(r, g, b) {" +
+					"var rgb = r;" + 
+					"rgb = rgb << 8;" +
+					"rgb |= g;" +
+					"rgb = rgb << 8;" +
+					"rgb |= b; return rgb/16581375;}"
+		};
 		
 		ASTCompiler.states = {
 			"GLOBAL": "global",
@@ -69,7 +82,12 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 				src = "(function(l2js){\n";
 				src += "var env = l2js.compiler.env,\n";
 				src += "ctx = {};\n";
-				src += this.visitBlock(node);
+				
+				var block = this.visitBlock(node);
+				if(this.funcs && this.funcs.length) {
+					src += this.addFuncs();
+				}
+				src += block;
 				src += "\n})(l2js);\n";
 
 				return src;
@@ -78,7 +96,16 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 				throw Error("Root node in AST should be root ASTBLock.");
 			}
 		};
-
+		
+		ASTCompiler.prototype.addFuncs = function() {
+			var funcsSrc = [];
+			for(var i = 0; i<this.funcs.length; i++){
+				ASTCompiler.funcsSrc[this.funcs[i]] && funcsSrc.push(ASTCompiler.funcsSrc[this.funcs[i]])
+			}
+			
+			return "var funcs = {" +funcsSrc.join(",\n")+ "};\n";
+		};
+		
 		/**
 		 * Call generation of code for all nodes according to its type of
 		 * AST object.
@@ -140,7 +167,7 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 			return src;
 		};
 		
-		ASTCompiler.prototype.makeId = function(id) {
+		ASTCompiler.prototype._makeId = function(id) {
 			var prefix, newId;
 
 			if(this.states[0] === ASTCompiler.states.RULE) {
@@ -164,8 +191,8 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 		
 		ASTCompiler.prototype.visitId = function(id) {
 			// Variables only with expressions, declaration is made by visitBlock
-			if(id.type === "var" && id.e) {
-				return this.makeId(id.id) + "=" + this.visitExpression(id.e) + ";\n";
+			if(id.type === "var" && !l2js.utils.isUndefined(id.e)) {
+				return this._makeId(id.id) + "=" + this.visitExpression(id.e) + ";\n";
 			}
 		};
 		
@@ -189,25 +216,28 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 			
 			src += "function " + id + "() {\n" +
 				id + ".__super__.constructor.apply(this, arguments);\n" +
-				"this.self = " + id +";\n";
+				"this.self = " + id +";\n" +
+				"this._init();";
 			
 			this.lsystems.unshift({id:id, rulesHash: []});
 			
-			// constructor has only declarations of context variables
+			// end of constructor and definition of static properties
+			src += "}\n";
+			
+			// init function of declarations of context variables
+			src += id + ".prototype._init = function() {\n";
 			// separate variable declarations
 			var i, entries = lsystem.body.entries, decs = [];
-			for(i=0; i<entries.length; i++) {
+			for(i=entries.length - 1; i>=0; i--) {
 				if(entries[i] instanceof lnodes.ASTId) {
-					decs = decs.concat(entries.splice(i, 1));
+					decs.unshift(entries.splice(i, 1)[0]);
 				}
-
 			}
 			
 			src += this.visitBlock({entries: decs});
+			src += "};\n";
+			// end of init
 			
-			// end of constructor and definition of static properties
-			src += "}\n";
-
 			// Static properties
 			src += id + ".alphabet = " + lsystem.alphabet.id + ";\n" +
 				id + ".id = '" + id + "';\n";
@@ -220,11 +250,9 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 			
 			this.lsystems.shift();	
 			
-			this.states.unshift(ASTCompiler.states.GLOBAL);
 			
-			src += id + ".prototype.axiom = " + this.visitString(lsystem.axiom, id) + ";\n" ;
+			src += id + ".prototype.axiom = function() {return " + this.visitString(lsystem.axiom, id) + ";};\n" ;
 			
-			this.states.shift();			
 			
 			if(!l2js.utils.isUndefined(lsystem.maxIterations)) {
 				src += id + ".prototype.maxIterations = " + this.visitExpression(lsystem.maxIterations) + " ;\n";
@@ -283,10 +311,20 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 			} else if(e instanceof lnodes.ASTBrackets) {
 				return "(" + this.visitExpression(e.e) + ")";
 			} else if(e instanceof lnodes.ASTId) {
-				return this.makeId(e.id);
+				return this._makeId(e.id);
+			} else if(e instanceof lnodes.ASTFunc) {
+				var exps = [];
+				for(var i=0;i<e.args.length; i++) {
+					exps.push(this.visitExpression(e.args[i]));
+				}
+				if(l2js.utils.indexOf(this.funcs, e.id) ===-1) {
+					this.funcs.push(e.id);
+				}
+				return "funcs." + e.id + "(" + exps.join(",") + ")";
 			} else if(typeof e === "number") {
 				return e;
-			} else {
+			}
+			else {
 				throw new Error("Unexpected expression symbol: " + e);
 			}
 		};
@@ -381,7 +419,9 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 				src += "this.main = "+ lid + ";\n";
 				
 				if(!l2js.utils.isUndefined(call.axiom)){
-					src += "this.axiom = " + this.visitString(call.axiom, lid) + ";\n";
+					this.states.unshift(ASTCompiler.states.GLOBAL);
+					src += this.visitString(call.axiom, lid) + ";\n";
+					this.states.shift();
 
 				}
 					
@@ -398,7 +438,7 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 					args.push(this.visitExpression(call.maxIterations)); 
 				} 
 				var srcDerivation = (this.ruleType === "h") ? "interpretation":"derivation";
-				src = "new " + lid + "(this.ctx).derive(" + args.join(", ") + ")."+srcDerivation+"\n";
+				src = "new " + lid + "(" + (this.states[0] === ASTCompiler.states.GLOBAL?"ctx":"this.ctx")+ ").derive(" + args.join(", ") + ")."+srcDerivation+"\n";
 			}
 			return src;
 		};
@@ -428,9 +468,14 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 			
 			this.states.unshift(ASTCompiler.states.RULE);
 			this.ruleParams = params;
+			
+			var prevRuleType = this.ruleType;
+			
 			this.ruleType = rule.type;
 			
 			src += this.makeRule(ancestor, successors, rule.type);
+			
+			this.ruleType = prevRuleType;
 			
 			this.ruleParams = [];
 			

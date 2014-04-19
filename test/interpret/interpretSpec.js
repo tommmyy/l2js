@@ -18,6 +18,19 @@ describe("Interpret", function() {
 		SubLSystem = l2js.compiler.env.SubLSystem;
 	});
 	
+	// fake builder
+	
+	function Turtle2DBuilder() {
+		
+	};
+	
+	Turtle2DBuilder.prototype.interpret= function(symbol, ctx) {
+		console.log(symbol);
+	};	
+	
+	l2js.interpret.Turtle2DBuilder = Turtle2DBuilder; 
+
+	
 	describe("clear out SubLSystems with unspecified interpretation symbols", function() {
 		var result, sub1, sub2, sub3;
 		

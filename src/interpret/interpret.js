@@ -30,13 +30,10 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
 		
 		function Interpret(result, options) {
 			this.result = this._clearOutEmptyLSystems(l2js.utils.copy(result));
-			this.options = options && l2js.utils.extend(Interpret.options, options) || Interpret.options;
+			this.options = options && l2js.utils.extend(l2js.utils.copy(Interpret.options), options) || Interpret.options;
 			this.ctx = {};
 		};
 	
-	
-		
-		
 		/**
 		 * Factory method for builder
 		 * @param {object} symbol Symbol that shoud be interpreted by the right builder
@@ -45,10 +42,10 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
 		Interpret.prototype.getBuilder = function(symbol) {
 			switch(symbol.alphabet.id) {
 				case "Turtle2D":
-					this._turtle2dBuilder || (this._turtle2dBuilder = new l2js.interpret.Turtle2DBuilder(this.options));
+					this._turtle2dBuilder || (this._turtle2dBuilder = new l2js.interpret.Turtle2DBuilder(this.options), this.ctx);
 					return this._turtle2dBuilder;	
-				throw new Error("Unsupported alphabet: '" + symbol.alphabet.id + "'");
 			}
+			throw new Error("Unsupported alphabet: '" + symbol.alphabet.id + "'");
 		};
 	
 		/**

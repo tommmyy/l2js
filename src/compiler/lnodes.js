@@ -33,6 +33,11 @@ window.l2js && window.l2js.compiler && function(l2js) {
 			this.e = e;
 		}
 		
+		lnodes.ASTFunc = function ASTFunc(id, args) {
+			this.id = id;
+			this.args = args;
+		}
+		
 		lnodes.ASTLSystem = function ASTLSystem(id, alphabet, axiom, maxIterations, body){
 			this.id = id;
 			this.body = body;
@@ -84,17 +89,11 @@ window.l2js && window.l2js.compiler && function(l2js) {
 			this.maxIterations = maxIterations;
 		}
 		
-		lnodes.ASTImport = function ASTImport(lsystem, axiom, iterations) {
-			this.lsystem = lsystem;
-			this.axiom = axiom;
-			this.iterations = iterations;
-			this.isMain = false;
-		}
-		
 		lnodes.ASTAlphabet = function ASTAlphabet(id, symbols) {
 			this.id = id;
 			this.symbols = symbols;
 		}
+		
 		return lnodes;
 	
 	})();

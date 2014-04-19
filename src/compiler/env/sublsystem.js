@@ -16,8 +16,14 @@ window.l2js && window.l2js.utils && window.l2js.compiler && window.l2js.compiler
 		 * @param maxIterations
 		 */
 		function SubLSystem(ctx, lsystem, axiom, maxIterations) {
-			this.lsystem = lsystem;
 			this.ctx = ctx;
+			this.lsystem = lsystem;
+			
+			if(typeof axiom === "number") {
+				maxIteration = axiom;
+				axiom = undefined;
+			}
+			
 			this.axiom = axiom;
 			this.maxIterations = maxIterations;
 		}
