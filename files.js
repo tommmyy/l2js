@@ -22,7 +22,7 @@ l2jsFiles = {
 	"parsers": ["src/compiler/lparser.js"],
 
  
- 	"test" : ["dist/l2js-v*.js", 
+ 	"test" : ["dist/l2js.js", 
 	          "test/*.js", 
 	          "test/core/*.js", 
 	          "test/compiler/*.js", 

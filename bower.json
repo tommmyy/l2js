@@ -1,5 +1,7 @@
 {
 	"name": "LSystem2JS",
+	"version": "0.0.2",
+	"main": "./dist/l2js.js",
 	"devDependencies": {
 		"jquery": "~1.10.2",
 		"kineticjs": "~5.0.1"

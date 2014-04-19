@@ -32,7 +32,8 @@ module.exports = function(grunt) {
 		},
 		build : {
 			l2js : {
-				dest : "dist/l2js-v<%= pkg.version %>.js",
+				// dest : "dist/l2js-v<%= pkg.version %>.js",
+				dest : "dist/l2js.js",
 				src : wrap(files.src, "build")
 
 			}
@@ -43,12 +44,15 @@ module.exports = function(grunt) {
 		uglify : {
 			l2js : {
 				files : {
-					"dist/l2js-v<%= pkg.version %>.min.js" : ["dist/l2js-v<%= pkg.version %>.js"]
+					// "dist/l2js-v<%= pkg.version %>.min.js" : ["dist/l2js-v<%= pkg.version %>.js"]
+					"dist/l2js.min.js" : ["dist/l2js.js"]
 				},
 				options : {
 					preserveComments : false,
-					sourceMap : "dist/l2js-v<%= pkg.version %>.min.map",
-					sourceMappingURL : "dist/l2js-v<%= pkg.version %>.min.map",
+					// sourceMap : "dist/l2js-v<%= pkg.version %>.min.map",
+					// sourceMappingURL : "dist/l2js-v<%= pkg.version %>.min.map",
+					sourceMap : "dist/l2js.min.map",
+					sourceMappingURL : "dist/l2js.min.map",
 					report : "min",
 					beautify : {
 						ascii_only : true
@@ -70,14 +74,16 @@ module.exports = function(grunt) {
 		compress : {
 			build : {
 				options : {
-					archive : 'dist/l2js-v<%= pkg.version %>.zip',
+					// archive : 'dist/l2js-v<%= pkg.version %>.zip',
+					archive : 'dist/l2js.zip',
 					mode : 'zip'
 				},
 				src : ['**'],
 				cwd : 'dist',
 				expand : true,
 				dot : true,
-				dest : 'l2js-v<%= pkg.version %>/'
+				// dest : 'l2js-v<%= pkg.version %>/'
+				dest : 'l2js/'
 			}
 		},
 	});
