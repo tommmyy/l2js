@@ -20,7 +20,7 @@ l2jsFiles = {
 	          "src/facade.js"
 	          ],
 	"parsers": ["src/compiler/lparser.js"],
-/*
+
  
  	"test" : ["dist/l2js-v*.js", 
 	          "test/*.js", 
@@ -28,16 +28,17 @@ l2jsFiles = {
 	          "test/compiler/*.js", 
 	          "test/compiler/env/*.js",
 	          "test/interpret/*.js"]
- */
+/*
 	
 	"test" : [
 	          "test/*.js", 
 	          "test/core/*.js", 
 	          "test/compiler/*.js", 
 	          "test/compiler/env/*.js",
-	          "test/interpret/*.js"]
-}
-l2jsFiles.test = l2jsFiles.src.concat(l2jsFiles.test);
+	          "test/interpret/*.js"] 
+	          */
+};
+//l2jsFiles.test = l2jsFiles.src.concat(l2jsFiles.test);
 if (exports) {
 	exports.files = l2jsFiles;
 }
