@@ -13,6 +13,7 @@ l2jsFiles = {
 	          "src/compiler/lnodes.js",
 	          "src/compiler/lparser.js",
 	          "src/compiler/astcompiler.js",
+	          "src/compiler/l2compiler.js",
 	          "src/compiler/compiler.js",
 	          "src/interpret.js",
 	          "src/interpret/turtle2dbuilder.js",

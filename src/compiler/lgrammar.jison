@@ -3,7 +3,7 @@
 
 /* lexical grammar */
 %lex
-name							[A-Za-z_][A-Za-z_0-9_]*								
+name							[A-Za-z_][A-Za-z_0-9_]*	
 
 %%
 
@@ -21,6 +21,7 @@ name							[A-Za-z_][A-Za-z_0-9_]*
 "lscript"						return 'LSCRIPT'
 "lsystem"						return 'LSYSTEM'
 "alphabet"						return 'ALPHABET'
+"included"						return 'INCLUDED'
 "using"							return 'USING'
 "derive"						return 'DERIVE'
 "call"							return 'CALL'
@@ -136,6 +137,8 @@ stmt
 			$id.type='alphabet';
 			$$ = new yy.ASTAlphabet($id, $symbols);
 		}}
+	| INCLUDED TEXT '{' stmts '}'
+		{$$ = new yy.ASTIncluded($2, $stmts);}
 	| ancestor RULE_OP successors
 		{$$ = new yy.ASTRule($1, $3);}
 	| ancestor H_RULE_OP successors

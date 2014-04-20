@@ -47,13 +47,16 @@
 				</div>
 			</div>
 		</div>
-<div class="container">
+		<div class="container">
 			<h1>Stochastic L-Systems</h1>
 			<h2 class="lead">Basic use</h2>
 
 			<form role="form">
-				<button type="submit" id="compile" class="btn btn-default">
+				<button type="button" id="compile" class="btn btn-default">
 					Compile
+				</button>
+				<button type="button" id="format" class="btn btn-default">
+					Format
 				</button>
 				<div class="form-group">
 					<label for="toCompile">Code</label>
@@ -91,7 +94,6 @@ $_angle = 10;
 derive LeafScript;
 </textarea>
 				</div>
-				
 
 			</form>
 			<div id="script_output"></div>
@@ -117,22 +119,22 @@ derive LeafScript;
 		<script type="text/javascript" src="../src/compiler/lnodes.js"></script>
 		<script type="text/javascript" src="../src/compiler/lparser.js"></script>
 		<script type="text/javascript" src="../src/compiler/astcompiler.js"></script>
+		<script type="text/javascript" src="../src/compiler/l2compiler.js"></script>
 		<script type="text/javascript" src="../src/compiler/compiler.js"></script>
 		<script type="text/javascript" src="../src/interpret.js"></script>
 		<script type="text/javascript" src="../src/interpret/turtle2dbuilder.js"></script>
 		<script type="text/javascript" src="../src/interpret/interpret.js"></script>
 		<script type="text/javascript" src="../src/facade.js"></script>
-		
+
 		<script type="text/javascript" src="js/main.js"></script>
-		
+
 		<!--
-			<script type="text/javascript" src="js/main.js"></script>
+		<script type="text/javascript" src="js/main.js"></script>
 		<script type="text/javascript" src="js/foo.js"></script>
-		-->	
+		-->
 		<!--
 		<script type="text/javascript" src="js/lscripts/cantorsetscript.js"></script>
 		-->
-		
 
 	</body>
 </html>

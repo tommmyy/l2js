@@ -4,7 +4,7 @@
 * Copyright 2013, 2013 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-04-19T11:32:23.872Z
+* Date: 2014-04-20T23:50:21.581Z
 */
 
 (function( global, factory ) {'use strict';
@@ -45,7 +45,9 @@ window.l2js.files = {};
 
 /**
  * Promise object inspired by {@link http://docs.angularjs.org/api/ng.$q}
+ * 
  */
+// TODO: chain promises, chain errors
 
 
 
@@ -54,7 +56,7 @@ window.l2js.files = {};
 	/** Promise */
 	l2js.core.Promise = function Promise(deferred) {
 		this.deferred = deferred;
-	}
+	};
 	
 	l2js.core.Promise.prototype.then = function(successCallback, errorCallback) {
 		
@@ -76,23 +78,21 @@ window.l2js.files = {};
 	 */
 	l2js.core.Deferred = function() {
 		this.promise = new l2js.core.Promise(this);
-	}
+	};
 
 
 	l2js.core.Deferred.prototype.reject = function(reason) {
-		var chainReason = this.errorCallback(reason);
-		if(typeof chainReason !== 'undefined') {
-			this.promise.result.reject(chainReason);	
+		if(this.errorCallback) {
+			this.promise.result.reject(this.errorCallback(reason) || reason );	
 		}
-	}
+	};
 
 	l2js.core.Deferred.prototype.resolve = function(value) {
-		var chainValue = this.successCallback(value);
-		if(typeof chainValue !== 'undefined') {
-			this.promise.result.resolve(chainValue);	
+		if(this.successCallback) {
+			this.promise.result.resolve(this.successCallback(value) || value);	
 		}
 		
-	}
+	};
 	
 	l2js.core.q = {
 		/** Factory for deffered object */
@@ -531,32 +531,32 @@ l2js.compiler.env = l2js.compiler.env || {};
 		lnodes.ASTBlock = function ASTBlock() {
 			this.entries = [];
 			this.isRoot = false;
-		}
+		};
 		
 		lnodes.ASTBlock.prototype.addEntry = function(entry) {
 			this.entries.push(entry);
-		}
+		};
 		
 		lnodes.ASTId = function ASTId(id, type, e) {
 			this.id = id;
 			this.type = type;
 			this.e = e;
-		}
+		};
 		
 		lnodes.ASTOperation = function ASTOperation(op, left, right){
 			this.op = op;
 			this.left = left;
 			this.right = right;
-		}
+		};
 		
 		lnodes.ASTBrackets= function ASTBrackets(e){
 			this.e = e;
-		}
+		};
 		
 		lnodes.ASTFunc = function ASTFunc(id, args) {
 			this.id = id;
 			this.args = args;
-		}
+		};
 		
 		lnodes.ASTLSystem = function ASTLSystem(id, alphabet, axiom, maxIterations, body){
 			this.id = id;
@@ -575,44 +575,49 @@ l2js.compiler.env = l2js.compiler.env || {};
 			this.ancestor = ancestor;
 			this.successors = successors;
 			this.type = type;
-		}
+		};
 		
 		lnodes.ASTAncestor = function ASTAncestor(symbol, params) {
 			this.symbol = symbol;
 			this.params = params;
-		}
+		};
 		
 		lnodes.ASTSuccessor = function ASTSuccessor(string, probability) {
 			this.string = string;
 			this.probability = probability;
-		}
+		};
 		
 		lnodes.ASTModule = function ASTModule(symbol, args) {
 			this.symbol = symbol;
 			this.args = args;
-		}
+		};
 		
 		lnodes.ASTCall = function ASTCall(lsystem, axiom, maxIterations) {
 			this.lsystem = lsystem;
 			this.axiom = axiom;
 			this.maxIterations = maxIterations;
 			this.isMain = false;
-		}
+		};
 		
 		lnodes.ASTDerive= function ASTDerive(lscript) {
 			this.lscript  = lscript;
-		}
+		};
 		
 		lnodes.ASTSubLSystem = function ASTSubLSystem(lsystem, axiom, maxIterations) {
 			this.lsystem = lsystem;
 			this.axiom = axiom;
 			this.maxIterations = maxIterations;
-		}
+		};
 		
 		lnodes.ASTAlphabet = function ASTAlphabet(id, symbols) {
 			this.id = id;
 			this.symbols = symbols;
-		}
+		};
+		
+		lnodes.ASTIncluded = function ASTIncluded(file, body) {
+			this.file = file;
+			this.body = body;
+		};
 		
 		return lnodes;
 	
@@ -697,9 +702,9 @@ l2js.compiler.env = l2js.compiler.env || {};
 l2js.compiler.Lparser = (function(){
 var parser = {trace: function trace() { },
 yy: {},
-symbols_: {"error":2,"program":3,"program_entries":4,"EOF":5,"stmts":6,"stmt":7,";":8,"var":9,"=":10,"e":11,"symbol":12,"text":13,"LSCRIPT":14,"id":15,"{":16,"}":17,"LSYSTEM":18,"(":19,"axiom":20,")":21,"USING":22,",":23,"number":24,"ALPHABET":25,"symbols":26,"ancestor":27,"RULE_OP":28,"successors":29,"H_RULE_OP":30,"main_call":31,"sublsystem":32,"call":33,"DERIVE":34,"SUBLSYSTEM":35,"CALL":36,"MAIN":37,"string":38,"iterations":39,"params":40,"successor":41,"|":42,":":43,"module":44,"arguments":45,"param":46,"ID":47,"VAR":48,"+":49,"term":50,"-":51,"*":52,"factor":53,"/":54,"FUNC":55,"E":56,"PI":57,"TEXT":58,"NUMBER":59,"$accept":0,"$end":1},
-terminals_: {2:"error",5:"EOF",8:";",10:"=",14:"LSCRIPT",16:"{",17:"}",18:"LSYSTEM",19:"(",21:")",22:"USING",23:",",25:"ALPHABET",28:"RULE_OP",30:"H_RULE_OP",34:"DERIVE",35:"SUBLSYSTEM",36:"CALL",37:"MAIN",42:"|",43:":",47:"ID",48:"VAR",49:"+",51:"-",52:"*",54:"/",55:"FUNC",56:"E",57:"PI",58:"TEXT",59:"NUMBER"},
-productions_: [0,[3,2],[4,1],[6,3],[6,1],[6,0],[7,3],[7,3],[7,1],[7,5],[7,10],[7,12],[7,5],[7,3],[7,3],[7,1],[7,1],[7,1],[7,2],[32,5],[32,7],[32,6],[32,4],[33,5],[33,7],[33,6],[33,4],[31,2],[20,1],[39,1],[27,4],[27,1],[29,3],[29,1],[41,3],[41,1],[38,2],[38,1],[44,4],[44,1],[44,1],[44,1],[45,3],[45,2],[45,1],[45,0],[40,3],[40,2],[40,1],[40,0],[46,1],[26,3],[26,1],[26,0],[12,1],[9,1],[15,1],[11,3],[11,3],[11,1],[50,3],[50,3],[50,1],[53,4],[53,1],[53,1],[53,1],[53,1],[53,3],[13,1],[24,1]],
+symbols_: {"error":2,"program":3,"program_entries":4,"EOF":5,"stmts":6,"stmt":7,";":8,"var":9,"=":10,"e":11,"symbol":12,"text":13,"LSCRIPT":14,"id":15,"{":16,"}":17,"LSYSTEM":18,"(":19,"axiom":20,")":21,"USING":22,",":23,"number":24,"ALPHABET":25,"symbols":26,"INCLUDED":27,"TEXT":28,"ancestor":29,"RULE_OP":30,"successors":31,"H_RULE_OP":32,"main_call":33,"sublsystem":34,"call":35,"DERIVE":36,"SUBLSYSTEM":37,"CALL":38,"MAIN":39,"string":40,"iterations":41,"params":42,"successor":43,"|":44,":":45,"module":46,"arguments":47,"param":48,"ID":49,"VAR":50,"+":51,"term":52,"-":53,"*":54,"factor":55,"/":56,"FUNC":57,"E":58,"PI":59,"NUMBER":60,"$accept":0,"$end":1},
+terminals_: {2:"error",5:"EOF",8:";",10:"=",14:"LSCRIPT",16:"{",17:"}",18:"LSYSTEM",19:"(",21:")",22:"USING",23:",",25:"ALPHABET",27:"INCLUDED",28:"TEXT",30:"RULE_OP",32:"H_RULE_OP",36:"DERIVE",37:"SUBLSYSTEM",38:"CALL",39:"MAIN",44:"|",45:":",49:"ID",50:"VAR",51:"+",53:"-",54:"*",56:"/",57:"FUNC",58:"E",59:"PI",60:"NUMBER"},
+productions_: [0,[3,2],[4,1],[6,3],[6,1],[6,0],[7,3],[7,3],[7,1],[7,5],[7,10],[7,12],[7,5],[7,5],[7,3],[7,3],[7,1],[7,1],[7,1],[7,2],[34,5],[34,7],[34,6],[34,4],[35,5],[35,7],[35,6],[35,4],[33,2],[20,1],[41,1],[29,4],[29,1],[31,3],[31,1],[43,3],[43,1],[40,2],[40,1],[46,4],[46,1],[46,1],[46,1],[47,3],[47,2],[47,1],[47,0],[42,3],[42,2],[42,1],[42,0],[48,1],[26,3],[26,1],[26,0],[12,1],[9,1],[15,1],[11,3],[11,3],[11,1],[52,3],[52,3],[52,1],[55,4],[55,1],[55,1],[55,1],[55,1],[55,3],[13,1],[24,1]],
 performAction: function anonymous(yytext, yyleng, yylineno, yy, yystate /* action[1] */, $$ /* vstack */, _$ /* lstack */) {
 /* this == yyval */
 
@@ -770,48 +775,50 @@ case 12:
 			this.$ = new yy.ASTAlphabet($$[$0-3], $$[$0-1]);
 		
 break;
-case 13:this.$ = new yy.ASTRule($$[$0-2], $$[$0]);
+case 13:this.$ = new yy.ASTIncluded($$[$0-3], $$[$0-1]);
 break;
-case 14:this.$ = new yy.ASTRule($$[$0-2], $$[$0], 'h');
+case 14:this.$ = new yy.ASTRule($$[$0-2], $$[$0]);
 break;
-case 15:this.$ = $$[$0];
+case 15:this.$ = new yy.ASTRule($$[$0-2], $$[$0], 'h');
 break;
 case 16:this.$ = $$[$0];
 break;
 case 17:this.$ = $$[$0];
 break;
-case 18:this.$ = new yy.ASTDerive($$[$0]);
+case 18:this.$ = $$[$0];
 break;
-case 19:$$[$0-3].type="lsystem"; this.$ = new yy.ASTSubLSystem($$[$0-3], $$[$0-1]);
+case 19:this.$ = new yy.ASTDerive($$[$0]);
 break;
-case 20:
+case 20:$$[$0-3].type="lsystem"; this.$ = new yy.ASTSubLSystem($$[$0-3], $$[$0-1]);
+break;
+case 21:
 			$$[$0-5].type="lsystem"; this.$ = new yy.ASTSubLSystem($$[$0-5], $$[$0-3], $$[$0-1]);
 		
 break;
-case 21:
+case 22:
 		
 			$$[$0-4].type="lsystem"; this.$ = new yy.ASTSubLSystem($$[$0-4], undefined, $$[$0-1]);
 		
 break;
-case 22:$$[$0-2].type="lsystem"; this.$ = new yy.ASTSubLSystem($$[$0-2]);
+case 23:$$[$0-2].type="lsystem"; this.$ = new yy.ASTSubLSystem($$[$0-2]);
 break;
-case 23:$$[$0-3].type="lsystem"; this.$ = new yy.ASTCall($$[$0-3], $$[$0-1]);
+case 24:$$[$0-3].type="lsystem"; this.$ = new yy.ASTCall($$[$0-3], $$[$0-1]);
 break;
-case 24:
+case 25:
 			$$[$0-5].type="lsystem"; this.$ = new yy.ASTCall($$[$0-5], $$[$0-3], $$[$0-1]);
 		
 break;
-case 25:
+case 26:
 			$$[$0-4].type="lsystem"; this.$ = new yy.ASTCall($$[$0-4], undefined, $$[$0-1]);
 		
 break;
-case 26:$$[$0-2].type="lsystem"; this.$ = new yy.ASTCall($$[$0-2]);
+case 27:$$[$0-2].type="lsystem"; this.$ = new yy.ASTCall($$[$0-2]);
 break;
-case 27:this.$ = $$[$0]; this.$.isMain = true;
+case 28:this.$ = $$[$0]; this.$.isMain = true;
 break;
-case 28:this.$ = $$[$0]
+case 29:this.$ = $$[$0]
 break;
-case 29:
+case 30:
 			if($$[$0] % 1 !== 0) {
 				var errMsg = "Number of iterations should be integer.";
 				throw new yy.ParseError('Parse error on ' + this._$.first_line + ':' + this._$.last_column + '. ' + errMsg );
@@ -819,92 +826,92 @@ case 29:
 			this.$ = $$[$0];
 		
 break;
-case 30:this.$ = new yy.ASTAncestor($$[$0-3], $$[$0-1]);
+case 31:this.$ = new yy.ASTAncestor($$[$0-3], $$[$0-1]);
 break;
-case 31:this.$ = new yy.ASTAncestor($$[$0]);
+case 32:this.$ = new yy.ASTAncestor($$[$0]);
 break;
-case 32:this.$ = $$[$0]; this.$.unshift($$[$0-2]);
+case 33:this.$ = $$[$0]; this.$.unshift($$[$0-2]);
 break;
-case 33:this.$ = [$$[$0]];
+case 34:this.$ = [$$[$0]];
 break;
-case 34:this.$ = new yy.ASTSuccessor($$[$0-2], $$[$0]);
+case 35:this.$ = new yy.ASTSuccessor($$[$0-2], $$[$0]);
 break;
-case 35:this.$ = new yy.ASTSuccessor($$[$0]);
+case 36:this.$ = new yy.ASTSuccessor($$[$0]);
 break;
-case 36:this.$ = $$[$0]; this.$.unshift($$[$0-1]);
+case 37:this.$ = $$[$0]; this.$.unshift($$[$0-1]);
 break;
-case 37:this.$ = [$$[$0]];
+case 38:this.$ = [$$[$0]];
 break;
-case 38:$$[$0-3].type="symbol"; this.$ = new yy.ASTModule($$[$0-3], $$[$0-1]);
+case 39:$$[$0-3].type="symbol"; this.$ = new yy.ASTModule($$[$0-3], $$[$0-1]);
 break;
-case 39:$$[$0].type="symbol"; this.$ =  new yy.ASTModule($$[$0]);
-break;
-case 40:this.$ = $$[$0];
+case 40:$$[$0].type="symbol"; this.$ =  new yy.ASTModule($$[$0]);
 break;
 case 41:this.$ = $$[$0];
 break;
-case 42:this.$ = $$[$0]; this.$.unshift($$[$0-2]);
+case 42:this.$ = $$[$0];
 break;
-case 43:this.$ = $$[$0]; this.$.unshift(undefined);
+case 43:this.$ = $$[$0]; this.$.unshift($$[$0-2]);
 break;
-case 44:this.$ = [$$[$0]];
+case 44:this.$ = $$[$0]; this.$.unshift(undefined);
 break;
-case 45:this.$ = [];
+case 45:this.$ = [$$[$0]];
 break;
-case 46:this.$ = $$[$0]; this.$.unshift($$[$0-2]);
+case 46:this.$ = [];
 break;
-case 47:this.$ = $$[$0]; this.$.unshift(undefined);
+case 47:this.$ = $$[$0]; this.$.unshift($$[$0-2]);
 break;
-case 48:this.$ = [$$[$0]];
+case 48:this.$ = $$[$0]; this.$.unshift(undefined);
 break;
-case 49:this.$ = [];
+case 49:this.$ = [$$[$0]];
 break;
-case 50: this.$ = new yy.ASTId($$[$0], 'param');
+case 50:this.$ = [];
 break;
-case 51:this.$ = $$[$0]; this.$.unshift($$[$0-2]);
+case 51: this.$ = new yy.ASTId($$[$0], 'param');
 break;
-case 52:this.$ = [$$[$0]];
+case 52:this.$ = $$[$0]; this.$.unshift($$[$0-2]);
 break;
-case 53:this.$ = [];
+case 53:this.$ = [$$[$0]];
 break;
-case 54: this.$ = $$[$0]; this.$.type='symbol';
+case 54:this.$ = [];
 break;
-case 55: this.$ = new yy.ASTId($$[$0], 'var'); 
+case 55: this.$ = $$[$0]; this.$.type='symbol';
 break;
-case 56: this.$ = new yy.ASTId($$[$0]); 
+case 56: this.$ = new yy.ASTId($$[$0], 'var'); 
 break;
-case 57:this.$ = new yy.ASTOperation($$[$0-1], $$[$0-2], $$[$0]);
+case 57: this.$ = new yy.ASTId($$[$0]); 
 break;
 case 58:this.$ = new yy.ASTOperation($$[$0-1], $$[$0-2], $$[$0]);
 break;
-case 59:this.$ = $$[$0];
+case 59:this.$ = new yy.ASTOperation($$[$0-1], $$[$0-2], $$[$0]);
 break;
-case 60:this.$ = new yy.ASTOperation($$[$0-1], $$[$0-2], $$[$0]);
+case 60:this.$ = $$[$0];
 break;
 case 61:this.$ = new yy.ASTOperation($$[$0-1], $$[$0-2], $$[$0]);
 break;
-case 62:this.$ = $$[$0];
+case 62:this.$ = new yy.ASTOperation($$[$0-1], $$[$0-2], $$[$0]);
 break;
-case 63:this.$ = new yy.ASTFunc($$[$0-3], $$[$0-1]);
+case 63:this.$ = $$[$0];
 break;
-case 64:this.$ = $$[$0];
+case 64:this.$ = new yy.ASTFunc($$[$0-3], $$[$0-1]);
 break;
-case 65:this.$ = Math.E;
+case 65:this.$ = $$[$0];
 break;
-case 66:this.$ = Math.PI;
+case 66:this.$ = Math.E;
 break;
-case 67:this.$ = $$[$0];
+case 67:this.$ = Math.PI;
 break;
-case 68:this.$ = new yy.ASTBrackets($$[$0-1]);
+case 68:this.$ = $$[$0];
 break;
-case 69:this.$ = String(yytext);
+case 69:this.$ = new yy.ASTBrackets($$[$0-1]);
 break;
-case 70:this.$ =  Number(yytext);
+case 70:this.$ = String(yytext);
+break;
+case 71:this.$ =  Number(yytext);
 break;
 }
 },
-table: [{3:1,4:2,5:[2,5],6:3,7:4,9:5,11:7,12:6,14:[1,8],15:17,18:[1,9],19:[1,28],24:25,25:[1,10],27:11,31:12,32:13,33:14,34:[1,15],35:[1,20],36:[1,21],37:[1,19],47:[1,22],48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{1:[3]},{5:[1,30]},{5:[2,2]},{5:[2,4],8:[1,31],17:[2,4]},{5:[2,67],8:[2,67],10:[1,32],17:[2,67],49:[2,67],51:[2,67],52:[2,67],54:[2,67]},{10:[1,33],19:[1,34],28:[2,31],30:[2,31]},{5:[2,8],8:[2,8],17:[2,8],49:[1,35],51:[1,36]},{15:37,47:[1,22]},{15:38,47:[1,22]},{15:39,47:[1,22]},{28:[1,40],30:[1,41]},{5:[2,15],8:[2,15],17:[2,15]},{5:[2,16],8:[2,16],17:[2,16]},{5:[2,17],8:[2,17],17:[2,17]},{15:42,47:[1,22]},{5:[2,55],8:[2,55],10:[2,55],17:[2,55],21:[2,55],23:[2,55],49:[2,55],51:[2,55],52:[2,55],54:[2,55]},{10:[2,54],17:[2,54],19:[2,54],23:[2,54],28:[2,54],30:[2,54]},{5:[2,59],8:[2,59],17:[2,59],21:[2,59],23:[2,59],49:[2,59],51:[2,59],52:[1,43],54:[1,44]},{33:45,36:[1,21]},{15:46,47:[1,22]},{15:47,47:[1,22]},{5:[2,56],8:[2,56],10:[2,56],16:[2,56],17:[2,56],19:[2,56],21:[2,56],23:[2,56],28:[2,56],30:[2,56],35:[2,56],36:[2,56],42:[2,56],43:[2,56],47:[2,56]},{5:[2,62],8:[2,62],17:[2,62],21:[2,62],23:[2,62],49:[2,62],51:[2,62],52:[2,62],54:[2,62]},{19:[1,48]},{5:[2,64],8:[2,64],17:[2,64],21:[2,64],23:[2,64],49:[2,64],51:[2,64],52:[2,64],54:[2,64]},{5:[2,65],8:[2,65],17:[2,65],21:[2,65],23:[2,65],49:[2,65],51:[2,65],52:[2,65],54:[2,65]},{5:[2,66],8:[2,66],17:[2,66],21:[2,66],23:[2,66],49:[2,66],51:[2,66],52:[2,66],54:[2,66]},{9:50,11:49,19:[1,28],24:25,48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{5:[2,70],8:[2,70],17:[2,70],21:[2,70],23:[2,70],42:[2,70],49:[2,70],51:[2,70],52:[2,70],54:[2,70]},{1:[2,1]},{5:[2,5],6:51,7:4,9:5,11:7,12:6,14:[1,8],15:17,17:[2,5],18:[1,9],19:[1,28],24:25,25:[1,10],27:11,31:12,32:13,33:14,34:[1,15],35:[1,20],36:[1,21],37:[1,19],47:[1,22],48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{9:50,11:52,19:[1,28],24:25,48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{13:53,58:[1,54]},{21:[2,49],23:[1,57],40:55,46:56,47:[1,58]},{9:50,19:[1,28],24:25,48:[1,16],50:59,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{9:50,19:[1,28],24:25,48:[1,16],50:60,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{16:[1,61]},{19:[1,62]},{16:[1,63]},{15:68,29:64,32:70,33:69,35:[1,20],36:[1,21],38:66,41:65,44:67,47:[1,22]},{15:68,29:71,32:70,33:69,35:[1,20],36:[1,21],38:66,41:65,44:67,47:[1,22]},{5:[2,18],8:[2,18],17:[2,18]},{9:50,19:[1,28],24:25,48:[1,16],53:72,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{9:50,19:[1,28],24:25,48:[1,16],53:73,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{5:[2,27],8:[2,27],17:[2,27]},{19:[1,74]},{19:[1,75]},{9:50,11:77,19:[1,28],21:[2,45],23:[1,78],24:25,45:76,48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{21:[1,79],49:[1,35],51:[1,36]},{5:[2,67],8:[2,67],17:[2,67],21:[2,67],23:[2,67],49:[2,67],51:[2,67],52:[2,67],54:[2,67]},{5:[2,3],17:[2,3]},{5:[2,6],8:[2,6],17:[2,6],49:[1,35],51:[1,36]},{5:[2,7],8:[2,7],17:[2,7]},{5:[2,69],8:[2,69],17:[2,69]},{21:[1,80]},{21:[2,48],23:[1,81]},{21:[2,49],23:[1,57],40:82,46:56,47:[1,58]},{21:[2,50],23:[2,50]},{5:[2,57],8:[2,57],17:[2,57],21:[2,57],23:[2,57],49:[2,57],51:[2,57],52:[1,43],54:[1,44]},{5:[2,58],8:[2,58],17:[2,58],21:[2,58],23:[2,58],49:[2,58],51:[2,58],52:[1,43],54:[1,44]},{6:83,7:4,9:5,11:7,12:6,14:[1,8],15:17,17:[2,5],18:[1,9],19:[1,28],24:25,25:[1,10],27:11,31:12,32:13,33:14,34:[1,15],35:[1,20],36:[1,21],37:[1,19],47:[1,22],48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{15:68,20:84,32:70,33:69,35:[1,20],36:[1,21],38:85,44:67,47:[1,22]},{12:87,15:17,17:[2,53],26:86,47:[1,22]},{5:[2,13],8:[2,13],17:[2,13]},{5:[2,33],8:[2,33],17:[2,33],42:[1,88]},{5:[2,35],8:[2,35],17:[2,35],42:[2,35],43:[1,89]},{5:[2,37],8:[2,37],15:68,17:[2,37],21:[2,37],23:[2,37],32:70,33:69,35:[1,20],36:[1,21],38:90,42:[2,37],43:[2,37],44:67,47:[1,22]},{5:[2,39],8:[2,39],17:[2,39],19:[1,91],21:[2,39],23:[2,39],35:[2,39],36:[2,39],42:[2,39],43:[2,39],47:[2,39]},{5:[2,40],8:[2,40],17:[2,40],21:[2,40],23:[2,40],35:[2,40],36:[2,40],42:[2,40],43:[2,40],47:[2,40]},{5:[2,41],8:[2,41],17:[2,41],21:[2,41],23:[2,41],35:[2,41],36:[2,41],42:[2,41],43:[2,41],47:[2,41]},{5:[2,14],8:[2,14],17:[2,14]},{5:[2,60],8:[2,60],17:[2,60],21:[2,60],23:[2,60],49:[2,60],51:[2,60],52:[2,60],54:[2,60]},{5:[2,61],8:[2,61],17:[2,61],21:[2,61],23:[2,61],49:[2,61],51:[2,61],52:[2,61],54:[2,61]},{15:68,20:92,21:[1,94],23:[1,93],32:70,33:69,35:[1,20],36:[1,21],38:85,44:67,47:[1,22]},{15:68,20:95,21:[1,97],23:[1,96],32:70,33:69,35:[1,20],36:[1,21],38:85,44:67,47:[1,22]},{21:[1,98]},{21:[2,44],23:[1,99],49:[1,35],51:[1,36]},{9:50,11:77,19:[1,28],21:[2,45],23:[1,78],24:25,45:100,48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{5:[2,68],8:[2,68],17:[2,68],21:[2,68],23:[2,68],49:[2,68],51:[2,68],52:[2,68],54:[2,68]},{28:[2,30],30:[2,30]},{21:[2,49],23:[1,57],40:101,46:56,47:[1,58]},{21:[2,47]},{17:[1,102]},{21:[1,103],23:[1,104]},{21:[2,28],23:[2,28]},{17:[1,105]},{17:[2,52],23:[1,106]},{15:68,29:107,32:70,33:69,35:[1,20],36:[1,21],38:66,41:65,44:67,47:[1,22]},{24:108,59:[1,29]},{5:[2,36],8:[2,36],17:[2,36],21:[2,36],23:[2,36],42:[2,36],43:[2,36]},{9:50,11:77,19:[1,28],21:[2,45],23:[1,78],24:25,45:109,48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{21:[1,110],23:[1,111]},{9:50,11:112,19:[1,28],24:25,48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{5:[2,22],8:[2,22],17:[2,22],21:[2,22],23:[2,22],35:[2,22],36:[2,22],42:[2,22],43:[2,22],47:[2,22]},{21:[1,113],23:[1,114]},{9:50,11:115,19:[1,28],24:25,48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{5:[2,26],8:[2,26],17:[2,26],21:[2,26],23:[2,26],35:[2,26],36:[2,26],42:[2,26],43:[2,26],47:[2,26]},{5:[2,63],8:[2,63],17:[2,63],21:[2,63],23:[2,63],49:[2,63],51:[2,63],52:[2,63],54:[2,63]},{9:50,11:77,19:[1,28],21:[2,45],23:[1,78],24:25,45:116,48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{21:[2,43]},{21:[2,46]},{5:[2,9],8:[2,9],17:[2,9]},{22:[1,117]},{24:118,59:[1,29]},{5:[2,12],8:[2,12],17:[2,12]},{12:87,15:17,17:[2,53],26:119,47:[1,22]},{5:[2,32],8:[2,32],17:[2,32]},{5:[2,34],8:[2,34],17:[2,34],42:[2,34]},{21:[1,120]},{5:[2,19],8:[2,19],17:[2,19],21:[2,19],23:[2,19],35:[2,19],36:[2,19],42:[2,19],43:[2,19],47:[2,19]},{9:50,11:121,19:[1,28],24:25,48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{21:[1,122],49:[1,35],51:[1,36]},{5:[2,23],8:[2,23],17:[2,23],21:[2,23],23:[2,23],35:[2,23],36:[2,23],42:[2,23],43:[2,23],47:[2,23]},{9:50,11:123,19:[1,28],24:25,48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{21:[1,124],49:[1,35],51:[1,36]},{21:[2,42]},{15:125,47:[1,22]},{21:[1,126]},{17:[2,51]},{5:[2,38],8:[2,38],17:[2,38],21:[2,38],23:[2,38],35:[2,38],36:[2,38],42:[2,38],43:[2,38],47:[2,38]},{21:[1,127],49:[1,35],51:[1,36]},{5:[2,21],8:[2,21],17:[2,21],21:[2,21],23:[2,21],35:[2,21],36:[2,21],42:[2,21],43:[2,21],47:[2,21]},{21:[1,128],49:[1,35],51:[1,36]},{5:[2,25],8:[2,25],17:[2,25],21:[2,25],23:[2,25],35:[2,25],36:[2,25],42:[2,25],43:[2,25],47:[2,25]},{16:[1,129]},{22:[1,130]},{5:[2,20],8:[2,20],17:[2,20],21:[2,20],23:[2,20],35:[2,20],36:[2,20],42:[2,20],43:[2,20],47:[2,20]},{5:[2,24],8:[2,24],17:[2,24],21:[2,24],23:[2,24],35:[2,24],36:[2,24],42:[2,24],43:[2,24],47:[2,24]},{6:131,7:4,9:5,11:7,12:6,14:[1,8],15:17,17:[2,5],18:[1,9],19:[1,28],24:25,25:[1,10],27:11,31:12,32:13,33:14,34:[1,15],35:[1,20],36:[1,21],37:[1,19],47:[1,22],48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{15:132,47:[1,22]},{17:[1,133]},{16:[1,134]},{5:[2,10],8:[2,10],17:[2,10]},{6:135,7:4,9:5,11:7,12:6,14:[1,8],15:17,17:[2,5],18:[1,9],19:[1,28],24:25,25:[1,10],27:11,31:12,32:13,33:14,34:[1,15],35:[1,20],36:[1,21],37:[1,19],47:[1,22],48:[1,16],50:18,53:23,55:[1,24],56:[1,26],57:[1,27],59:[1,29]},{17:[1,136]},{5:[2,11],8:[2,11],17:[2,11]}],
-defaultActions: {3:[2,2],30:[2,1],82:[2,47],100:[2,43],101:[2,46],116:[2,42],119:[2,51]},
+table: [{3:1,4:2,5:[2,5],6:3,7:4,9:5,11:7,12:6,14:[1,8],15:18,18:[1,9],19:[1,29],24:26,25:[1,10],27:[1,11],29:12,33:13,34:14,35:15,36:[1,16],37:[1,21],38:[1,22],39:[1,20],49:[1,23],50:[1,17],52:19,55:24,57:[1,25],58:[1,27],59:[1,28],60:[1,30]},{1:[3]},{5:[1,31]},{5:[2,2]},{5:[2,4],8:[1,32],17:[2,4]},{5:[2,68],8:[2,68],10:[1,33],17:[2,68],51:[2,68],53:[2,68],54:[2,68],56:[2,68]},{10:[1,34],19:[1,35],30:[2,32],32:[2,32]},{5:[2,8],8:[2,8],17:[2,8],51:[1,36],53:[1,37]},{15:38,49:[1,23]},{15:39,49:[1,23]},{15:40,49:[1,23]},{28:[1,41]},{30:[1,42],32:[1,43]},{5:[2,16],8:[2,16],17:[2,16]},{5:[2,17],8:[2,17],17:[2,17]},{5:[2,18],8:[2,18],17:[2,18]},{15:44,49:[1,23]},{5:[2,56],8:[2,56],10:[2,56],17:[2,56],21:[2,56],23:[2,56],51:[2,56],53:[2,56],54:[2,56],56:[2,56]},{10:[2,55],17:[2,55],19:[2,55],23:[2,55],30:[2,55],32:[2,55]},{5:[2,60],8:[2,60],17:[2,60],21:[2,60],23:[2,60],51:[2,60],53:[2,60],54:[1,45],56:[1,46]},{35:47,38:[1,22]},{15:48,49:[1,23]},{15:49,49:[1,23]},{5:[2,57],8:[2,57],10:[2,57],16:[2,57],17:[2,57],19:[2,57],21:[2,57],23:[2,57],30:[2,57],32:[2,57],37:[2,57],38:[2,57],44:[2,57],45:[2,57],49:[2,57]},{5:[2,63],8:[2,63],17:[2,63],21:[2,63],23:[2,63],51:[2,63],53:[2,63],54:[2,63],56:[2,63]},{19:[1,50]},{5:[2,65],8:[2,65],17:[2,65],21:[2,65],23:[2,65],51:[2,65],53:[2,65],54:[2,65],56:[2,65]},{5:[2,66],8:[2,66],17:[2,66],21:[2,66],23:[2,66],51:[2,66],53:[2,66],54:[2,66],56:[2,66]},{5:[2,67],8:[2,67],17:[2,67],21:[2,67],23:[2,67],51:[2,67],53:[2,67],54:[2,67],56:[2,67]},{9:52,11:51,19:[1,29],24:26,50:[1,17],52:19,55:24,57:[1,25],58:[1,27],59:[1,28],60:[1,30]},{5:[2,71],8:[2,71],17:[2,71],21:[2,71],23:[2,71],44:[2,71],51:[2,71],53:[2,71],54:[2,71],56:[2,71]},{1:[2,1]},{5:[2,5],6:53,7:4,9:5,11:7,12:6,14:[1,8],15:18,17:[2,5],18:[1,9],19:[1,29],24:26,25:[1,10],27:[1,11],29:12,33:13,34:14,35:15,36:[1,16],37:[1,21],38:[1,22],39:[1,20],49:[1,23],50:[1,17],52:19,55:24,57:[1,25],58:[1,27],59:[1,28],60:[1,30]},{9:52,11:54,19:[1,29],24:26,50:[1,17],52:19,55:24,57:[1,25],58:[1,27],59:[1,28],60:[1,30]},{13:55,28:[1,56]},{21:[2,50],23:[1,59],42:57,48:58,49:[1,60]},{9:52,19:[1,29],24:26,50:[1,17],52:61,55:24,57:[1,25],58:[1,27],59:[1,28],60:[1,30]},{9:52,19:[1,29],24:26,50:[1,17],52:62,55:24,57:[1,25],58:[1,27],59:[1,28],60:[1,30]},{16:[1,63]},{19:[1,64]},{16:[1,65]},{16:[1,66]},{15:71,31:67,34:73,35:72,37:[1,21],38:[1,22],40:69,43:68,46:70,49:[1,23]},{15:71,31:74,34:73,35:72,37:[1,21],38:[1,22],40:69,43:68,46:70,49:[1,23]},{5:[2,19],8:[2,19],17:[2,19]},{9:52,19:[1,29],24:26,50:[1,17],55:75,57:[1,25],58:[1,27],59:[1,28],60:[1,30]},{9:52,19:[1,29],24:26,50:[1,17],55:76,57:[1,25],58:[1,27],59:[1,28],60:[1,30]},{5:[2,28],8:[2,28],17:[2,28]},{19:[1,77]},{19:[1,78]},{9:52,11:80,19:[1,29],21:[2,46],23:[1,81],24:26,47:79,50:[1,17],52:19,55:24,57:[1,25],58:[1,27],59:[1,28],60:[1,30]},{21:[1,82],51:[1,36],53:[1,37]},{5:[2,68],8:[2,68],17:[2,68],21:[2,68],23:[2,68],51:[2,68],53:[2,68],54:[2,68],56:[2,68]},{5:[2,3],17:[2,3]},{5:[2,6],8:[2,6],17:[2,6],51:[1,36],53:[1,37]},{5:[2,7],8:[2,7],17:[2,7]},{5:[2,70],8:[2,70],17:[2,70]},{21:[1,83]},{21:[2,49],23:[1,84]},{21:[2,50],23:[1,59],42:85,48:58,49:[1,60]},{21:[2,51],23:[2,51]},{5:[2,58],8:[2,58],17:[2,58],21:[2,58],23:[2,58],51:[2,58],53:[2,58],54:[1,45],56:[1,46]},{5:[2,59],8:[2,59],17:[2,59],21:[2,59],23:[2,59],51:[2,59],53:[2,59],54:[1,45],56:[1,46]},{6:86,7:4,9:5,11:7,12:6,14:[1,8],15:18,17:[2,5],18:[1,9],19:[1,29],24:26,25:[1,10],27:[1,11],29:12,33:13,34:14,35:15,36:[1,16],37:[1,21],38:[1,22],39:[1,20],49:[1,23],50:[1,17],52:19,55:24,57:[1,25],58:[1,27],59:[1,28],60:[1,30]},{15:71,20:87,34:73,35:72,37:[1,21],38:[1,22],40:88,46:70,49:[1,23]},{12:90,15:18,17:[2,54],26:89,49:[1,23]},{6:91,7:4,9:5,11:7,12:6,14:[1,8],15:18,17:[2,5],18:[1,9],19:[1,29],24:26,25:[1,10],27:[1,11],29:12,33:13,34:14,35:15,36:[1,16],37:[1,21],38:[1,22],39:[1,20],49:[1,23],50:[1,17],52:19,55:24,57:[1,25],58:[1,27],59:[1,28],60:[1,30]},{5:[2,14],8:[2,14],17:[2,14]},{5:[2,34],8:[2,34],17:[2,34],44:[1,92]},{5:[2,36],8:[2,36],17:[2,36],44:[2,36],45:[1,93]},{5:[2,38],8:[2,38],15:71,17:[2,38],21:[2,38],23:[2,38],34:73,35:72,37:[1,21],38:[1,22],40:94,44:[2,38],45:[2,38],46:70,49:[1,23]},{5:[2,40],8:[2,40],17:[2,40],19:[1,95],21:[2,40],23:[2,40],37:[2,40],38:[2,40],44:[2,40],45:[2,40],49:[2,40]},{5:[2,41],8:[2,41],17:[2,41],21:[2,41],23:[2,41],37:[2,41],38:[2,41],44:[2,41],45:[2,41],49:[2,41]},{5:[2,42],8:[2,42],17:[2,42],21:[2,42],23:[2,42],37:[2,42],38:[2,42],44:[2,42],45:[2,42],49:[2,42]},{5:[2,15],8:[2,15],17:[2,15]},{5:[2,61],8:[2,61],17:[2,61],21:[2,61],23:[2,61],51:[2,61],53:[2,61],54:[2,61],56:[2,61]},{5:[2,62],8:[2,62],17:[2,62],21:[2,62],23:[2,62],51:[2,62],53:[2,62],54:[2,62],56:[2,62]},{15:71,20:96,21:[1,98],23:[1,97],34:73,35:72,37:[1,21],38:[1,22],40:88,46:70,49:[1,23]},{15:71,20:99,21:[1,101],23:[1,100],34:73,35:72,37:[1,21],38:[1,22],40:88,46:70,49:[1,23]},{21:[1,102]},{21:[2,45],23:[1,103],51:[1,36],53:[1,37]},{9:52,11:80,19:[1,29],21:[2,46],23:[1,81],24:26,47:104,50:[1,17],52:19,55:24,57:[1,25],58:[1,27],59:[1,28],60:[1,30]},{5:[2,69],8:[2,69],17:[2,69],21:[2,69],23:[2,69],51:[2,69],53:[2,69],54:[2,69],56:[2,69]},{30:[2,31],32:[2,31]},{21:[2,50],23:[1,59],42:105,48:58,49:[1,60]},{21:[2,48]},{17:[1,106]},{21:[1,107],23:[1,108]},{21:[2,29],23:[2,29]},{17:[1,109]},{17:[2,53],23:[1,110]},{17:[1,111]},{15:71,31:112,34:73,35:72,37:[1,21],38:[1,22],40:69,43:68,46:70,49:[1,23]},{24:113,60:[1,30]},{5:[2,37],8:[2,37],17:[2,37],21:[2,37],23:[2,37],44:[2,37],45:[2,37]},{9:52,11:80,19:[1,29],21:[2,46],23:[1,81],24:26,47:114,50:[1,17],52:19,55:24,57:[1,25],58:[1,27],59:[1,28],60:[1,30]},{21:[1,115],23:[1,116]},{9:52,11:117,19:[1,29],24:26,50:[1,17],52:19,55:24,57:[1,25],58:[1,27],59:[1,28],60:[1,30]},{5:[2,23],8:[2,23],17:[2,23],21:[2,23],23:[2,23],37:[2,23],38:[2,23],44:[2,23],45:[2,23],49:[2,23]},{21:[1,118],23:[1,119]},{9:52,11:120,19:[1,29],24:26,50:[1,17],52:19,55:24,57:[1,25],58:[1,27],59:[1,28],60:[1,30]},{5:[2,27],8:[2,27],17:[2,27],21:[2,27],23:[2,27],37:[2,27],38:[2,27],44:[2,27],45:[2,27],49:[2,27]},{5:[2,64],8:[2,64],17:[2,64],21:[2,64],23:[2,64],51:[2,64],53:[2,64],54:[2,64],56:[2,64]},{9:52,11:80,19:[1,29],21:[2,46],23:[1,81],24:26,47:121,50:[1,17],52:19,55:24,57:[1,25],58:[1,27],59:[1,28],60:[1,30]},{21:[2,44]},{21:[2,47]},{5:[2,9],8:[2,9],17:[2,9]},{22:[1,122]},{24:123,60:[1,30]},{5:[2,12],8:[2,12],17:[2,12]},{12:90,15:18,17:[2,54],26:124,49:[1,23]},{5:[2,13],8:[2,13],17:[2,13]},{5:[2,33],8:[2,33],17:[2,33]},{5:[2,35],8:[2,35],17:[2,35],44:[2,35]},{21:[1,125]},{5:[2,20],8:[2,20],17:[2,20],21:[2,20],23:[2,20],37:[2,20],38:[2,20],44:[2,20],45:[2,20],49:[2,20]},{9:52,11:126,19:[1,29],24:26,50:[1,17],52:19,55:24,57:[1,25],58:[1,27],59:[1,28],60:[1,30]},{21:[1,127],51:[1,36],53:[1,37]},{5:[2,24],8:[2,24],17:[2,24],21:[2,24],23:[2,24],37:[2,24],38:[2,24],44:[2,24],45:[2,24],49:[2,24]},{9:52,11:128,19:[1,29],24:26,50:[1,17],52:19,55:24,57:[1,25],58:[1,27],59:[1,28],60:[1,30]},{21:[1,129],51:[1,36],53:[1,37]},{21:[2,43]},{15:130,49:[1,23]},{21:[1,131]},{17:[2,52]},{5:[2,39],8:[2,39],17:[2,39],21:[2,39],23:[2,39],37:[2,39],38:[2,39],44:[2,39],45:[2,39],49:[2,39]},{21:[1,132],51:[1,36],53:[1,37]},{5:[2,22],8:[2,22],17:[2,22],21:[2,22],23:[2,22],37:[2,22],38:[2,22],44:[2,22],45:[2,22],49:[2,22]},{21:[1,133],51:[1,36],53:[1,37]},{5:[2,26],8:[2,26],17:[2,26],21:[2,26],23:[2,26],37:[2,26],38:[2,26],44:[2,26],45:[2,26],49:[2,26]},{16:[1,134]},{22:[1,135]},{5:[2,21],8:[2,21],17:[2,21],21:[2,21],23:[2,21],37:[2,21],38:[2,21],44:[2,21],45:[2,21],49:[2,21]},{5:[2,25],8:[2,25],17:[2,25],21:[2,25],23:[2,25],37:[2,25],38:[2,25],44:[2,25],45:[2,25],49:[2,25]},{6:136,7:4,9:5,11:7,12:6,14:[1,8],15:18,17:[2,5],18:[1,9],19:[1,29],24:26,25:[1,10],27:[1,11],29:12,33:13,34:14,35:15,36:[1,16],37:[1,21],38:[1,22],39:[1,20],49:[1,23],50:[1,17],52:19,55:24,57:[1,25],58:[1,27],59:[1,28],60:[1,30]},{15:137,49:[1,23]},{17:[1,138]},{16:[1,139]},{5:[2,10],8:[2,10],17:[2,10]},{6:140,7:4,9:5,11:7,12:6,14:[1,8],15:18,17:[2,5],18:[1,9],19:[1,29],24:26,25:[1,10],27:[1,11],29:12,33:13,34:14,35:15,36:[1,16],37:[1,21],38:[1,22],39:[1,20],49:[1,23],50:[1,17],52:19,55:24,57:[1,25],58:[1,27],59:[1,28],60:[1,30]},{17:[1,141]},{5:[2,11],8:[2,11],17:[2,11]}],
+defaultActions: {3:[2,2],31:[2,1],85:[2,48],104:[2,44],105:[2,47],121:[2,43],124:[2,52]},
 parseError: function parseError(str, hash) {
     if (hash.recoverable) {
         this.trace(str);
@@ -1374,16 +1381,16 @@ case 0:/* skip comment */
 break;
 case 1:/* skip whitespace */
 break;
-case 2:return 59
+case 2:return 60
 break;
 case 3: /* 'text' */
 									yy_.yytext = this.matches[1];
-									return 58;
+									return 28;
 								
 break;
 case 4: /* "text" */
 									yy_.yytext = this.matches[1];
-									return 58;
+									return 28;
 								
 break;
 case 5:return 14
@@ -1392,64 +1399,66 @@ case 6:return 18
 break;
 case 7:return 25
 break;
-case 8:return 22
+case 8:return 27
 break;
-case 9:return 34
+case 9:return 22
 break;
 case 10:return 36
 break;
-case 11:return 35
+case 11:return 38
 break;
 case 12:return 37
 break;
-case 13:return 28
+case 13:return 39
 break;
 case 14:return 30
 break;
-case 15:return 56
+case 15:return 32
 break;
-case 16:return 57
+case 16:return 58
 break;
-case 17:return 55
+case 17:return 59
 break;
-case 18:return 48
+case 18:return 57
 break;
-case 19:return 47
+case 19:return 50
 break;
-case 20:return 52
+case 20:return 49
 break;
 case 21:return 54
 break;
-case 22:return 51
+case 22:return 56
 break;
-case 23:return 49
+case 23:return 53
 break;
-case 24:return 19
+case 24:return 51
 break;
-case 25:return 21
+case 25:return 19
 break;
-case 26:return 16
+case 26:return 21
 break;
-case 27:return 17
+case 27:return 16
 break;
-case 28:return 23
+case 28:return 17
 break;
-case 29:return 8
+case 29:return 23
 break;
-case 30:return 43
+case 30:return 8
 break;
-case 31:return 42
+case 31:return 45
 break;
-case 32:return '.'
+case 32:return 44
 break;
-case 33:return 10
+case 33:return '.'
 break;
-case 34:return 5
+case 34:return 10
+break;
+case 35:return 5
 break;
 }
 },
-rules: [/^(?:\/\/[^\n]*)/,/^(?:\s+)/,/^(?:[0-9]+(\.[0-9]+)?\b)/,/^(?:'(.*?)')/,/^(?:"(.*?)")/,/^(?:lscript\b)/,/^(?:lsystem\b)/,/^(?:alphabet\b)/,/^(?:using\b)/,/^(?:derive\b)/,/^(?:call\b)/,/^(?:sublsystem\b)/,/^(?:main\b)/,/^(?:-->)/,/^(?:-h>)/,/^(?:E\b)/,/^(?:PI\b)/,/^(?:__([A-Za-z_][A-Za-z_0-9_]*))/,/^(?:\$([A-Za-z_][A-Za-z_0-9_]*))/,/^(?:([A-Za-z_][A-Za-z_0-9_]*))/,/^(?:\*)/,/^(?:\/)/,/^(?:-)/,/^(?:\+)/,/^(?:\()/,/^(?:\))/,/^(?:\{)/,/^(?:\})/,/^(?:,)/,/^(?:;)/,/^(?::)/,/^(?:\|)/,/^(?:\.)/,/^(?:=)/,/^(?:$)/],
-conditions: {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34],"inclusive":true}}
+rules: [/^(?:\/\/[^\n]*)/,/^(?:\s+)/,/^(?:[0-9]+(\.[0-9]+)?\b)/,/^(?:'(.*?)')/,/^(?:"(.*?)")/,/^(?:lscript\b)/,/^(?:lsystem\b)/,/^(?:alphabet\b)/,/^(?:included\b)/,/^(?:using\b)/,/^(?:derive\b)/,/^(?:call\b)/,/^(?:sublsystem\b)/,/^(?:main\b)/,/^(?:-->)/,/^(?:-h>)/,/^(?:E\b)/,/^(?:PI\b)/,/^(?:__([A-Za-z_][A-Za-z_0-9_]*))/,/^(?:\$([A-Za-z_][A-Za-z_0-9_]*))/,/^(?:([A-Za-z_][A-Za-z_0-9_]*))/,/^(?:\*)/,/^(?:\/)/,/^(?:-)/,/^(?:\+)/,/^(?:\()/,/^(?:\))/,/^(?:\{)/,/^(?:\})/,/^(?:,)/,/^(?:;)/,/^(?::)/,/^(?:\|)/,/^(?:\.)/,/^(?:=)/,/^(?:$)/],
+conditions: {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35],"inclusive":true}}
 };
 return lexer;
 })();
@@ -1464,90 +1473,83 @@ return new Parser;
 // sublscript, environment.ctx.$a = XX
 
 
-			
-	l2js.compiler.ASTCompiler = (function()	{
-		var LSystem = l2js.compiler.env.LSystem, 
-			Alphabet = l2js.compiler.env.Alphabet, 
-			LScript = l2js.compiler.env.LScript, 
-			SubLScript = l2js.compiler.env.SubLScript, 
-			SubLSystem = l2js.compiler.env.SubLSystem,
-			lnodes = l2js.compiler.lnodes;
-		
-		function ASTCompiler(){
+
+	l2js.compiler.ASTCompiler = (function() {
+		var LSystem = l2js.compiler.env.LSystem, lnodes = l2js.compiler.lnodes;
+
+		function ASTCompiler() {
 			// stack of states during compilation
 			this.states = [];
-			
+
 			// list of names of a parameters if the compiler is in the RULE state
 			this.ruleParams = [];
 			// In rule state determines rule type
 			this.ruleType = [];
-			
+
 			// id of lsystem in current context
 			this.lsystems = [];
-			
+
 			// add functions
 			this.funcs = [];
-			
-			
-		}	
-		
+
+		}
+
+
 		ASTCompiler.funcsSrc = {
-			"__color": "__color: function(r, g, b) {" +
-					"var rgb = r;" + 
-					"rgb = rgb << 8;" +
-					"rgb |= g;" +
-					"rgb = rgb << 8;" +
-					"rgb |= b; return rgb/16581375;}"
+			"__color" : "__color: function(r, g, b) {" + "var rgb = r;" + "rgb = rgb << 8;" + "rgb |= g;" + "rgb = rgb << 8;" + "rgb |= b; return rgb/16581375;}"
 		};
-		
+
 		ASTCompiler.states = {
-			"GLOBAL": "global",
-			"BLOCK": "block",
-			"RULE": "rule"
+			"GLOBAL" : "global",
+			"BLOCK" : "block",
+			"RULE" : "rule"
 		};
-		
+
 		ASTCompiler.prototype.makeRule = function(ancestor, successors, type) {
 
 			// this.checkAlphabetSymbol(symbol.symbol);
 
-			var hash = LSystem.makeHash({symbol: ancestor.symbol.id, params: this.ruleParams}, type);
+			var hash = LSystem.makeHash({
+				symbol : ancestor.symbol.id,
+				params : this.ruleParams
+			}, type);
 
 			var i, src = "";
 			for ( i = 0; i < successors.length; i++) {
 				if (l2js.utils.isUndefined(successors[i].probability)) {
 					successors[i].probability = 1;
 				}
-				
+
 				// Add hash to current lsystem to add hash declaration to the lsystem prototype
 				this.lsystems[0].rulesHash.push(hash);
-				src +=  this.lsystems[0].id + ".prototype.rules['" + hash +"'].push(" + this.visitSuccessor(successors[i]) + ");";
+				src += this.lsystems[0].id + ".prototype.rules['" + hash + "'].push(" + this.visitSuccessor(successors[i]) + ");";
 			}
 			return src;
 		};
 
-		ASTCompiler.prototype.makeRulesHashDecls = function(){
+		ASTCompiler.prototype.makeRulesHashDecls = function() {
 			var src = this.lsystems[0].id + ".prototype.rules = {};";
 
 			// TODO: nedeklarovat ty samé
-			for(var i = 0; i<this.lsystems[0].rulesHash.length; i++) {
-				src += this.lsystems[0].id + ".prototype.rules['"+this.lsystems[0].rulesHash[i]+"'] =  [];\n";
+			for (var i = 0; i < this.lsystems[0].rulesHash.length; i++) {
+				src += this.lsystems[0].id + ".prototype.rules['" + this.lsystems[0].rulesHash[i] + "'] =  [];\n";
 			}
-			return src;	
-		}
-		
+			return src;
+		};
+
 		/**
 		 * Generate code for root ASTBlock
 		 */
 		ASTCompiler.prototype.visitRoot = function(node) {
-			if (node instanceof lnodes.ASTBlock && node.isRoot) {
+			if ( node instanceof lnodes.ASTBlock && node.isRoot) {
 				var src;
 
 				src = "(function(l2js){\n";
 				src += "var env = l2js.compiler.env,\n";
 				src += "ctx = {};\n";
-				
+
 				var block = this.visitBlock(node);
-				if(this.funcs && this.funcs.length) {
+				if (this.funcs && this.funcs.length) {
 					src += this.addFuncs();
 				}
 				src += block;
@@ -1556,29 +1558,40 @@ return new Parser;
 				return src;
 			} else {
 				// TODO: Line numbers for compiling errors.
-				throw Error("Root node in AST should be root ASTBLock.");
+				throw new Error("Root node in AST should be root ASTBLock.");
 			}
 		};
-		
+
 		ASTCompiler.prototype.addFuncs = function() {
 			var funcsSrc = [];
-			for(var i = 0; i<this.funcs.length; i++){
-				ASTCompiler.funcsSrc[this.funcs[i]] && funcsSrc.push(ASTCompiler.funcsSrc[this.funcs[i]])
+			for (var i = 0; i < this.funcs.length; i++) {
+				ASTCompiler.funcsSrc[this.funcs[i]] && funcsSrc.push(ASTCompiler.funcsSrc[this.funcs[i]]);
 			}
-			
-			return "var funcs = {" +funcsSrc.join(",\n")+ "};\n";
+
+			return "var funcs = {" + funcsSrc.join(",\n") + "};\n";
 		};
-		
+
+		ASTCompiler.prototype.handleInclude = function(nodes) {
+			for ( var i = 0; i < nodes.length; i++) {
+				if (nodes[i] instanceof lnodes.ASTIncluded) {
+
+					for (var j = 0; j < nodes[i].body.length; j++) {
+						nodes.splice(1 + i + j, 0, nodes[i].body[j]);
+					}
+				}
+			}
+		};
+
 		/**
 		 * Call generation of code for all nodes according to its type of
 		 * AST object.
 		 */
-		ASTCompiler.prototype.visitNodes = function(nodes) {
+		ASTCompiler.prototype.visitNodes = function(nodes, skipInclude) {
 
 			var src = "";
-
-			var i;
-			for (i = 0; i < nodes.length; i++) {
+			!skipInclude && this.handleInclude(nodes);
+			
+			for ( var i = 0; i < nodes.length; i++) {
 				if (nodes[i] instanceof lnodes.ASTBlock) {
 					src += visitBlock(nodes[i]);
 				} else if (nodes[i] instanceof lnodes.ASTId) {
@@ -1595,51 +1608,51 @@ return new Parser;
 					src += this.visitCall(nodes[i]);
 				} else if (nodes[i] instanceof lnodes.ASTDerive) {
 					src += this.visitDerive(nodes[i]);
+				} else if (nodes[i] instanceof lnodes.ASTIncluded) {
+					
 				} else {
-					throw Error("Unexpected AST node ('"+nodes[i]+"').");
+					throw new Error("Unexpected AST node ('" + nodes[i] + "').");
 				}
 			}
 
 			return src;
 		};
 
-		ASTCompiler.prototype.visitBlock = function(block) {
+		ASTCompiler.prototype.visitBlock = function(block, skipInclude) {
 			var src = "", declarations = [];
-			
+
+			this.states.unshift(block.isRoot ? ASTCompiler.states.GLOBAL : ASTCompiler.states.BLOCK);
+
+			src = this.visitNodes(block.entries, skipInclude);
+
+			this.states.shift();
+
 			// find declarations of variables, l-systems and alphabets
 			var i;
-			for (i = 0; i < block.entries.length; i++) {
+			for ( i = 0; i < block.entries.length; i++) {
 				var entry = block.entries[i];
-				if (entry instanceof lnodes.ASTLScript
-						|| entry instanceof lnodes.ASTLSystem
-						|| entry instanceof lnodes.ASTAlphabet) {
+				if ( entry instanceof lnodes.ASTLScript || entry instanceof lnodes.ASTLSystem || entry instanceof lnodes.ASTAlphabet) {
 					declarations.push(entry.id.id);
 				}
 			}
 
 			if (declarations.length) {
-				src += "var " + declarations.join(", ") + ";\n";
+				src = "var " + declarations.join(", ") + ";\n" + src;
 			}
 
-			this.states.unshift(block.isRoot?ASTCompiler.states.GLOBAL:ASTCompiler.states.BLOCK);
-			
-			src += this.visitNodes(block.entries);
-			
-			this.states.shift();
-			
 			return src;
 		};
-		
+
 		ASTCompiler.prototype._makeId = function(id) {
 			var prefix, newId;
 
-			if(this.states[0] === ASTCompiler.states.RULE) {
+			if (this.states[0] === ASTCompiler.states.RULE) {
 				var cleanId = id.substring(1), // parameters are identified without '$' prefix
-					isParam = l2js.utils.indexOf( this.ruleParams, cleanId)!==-1; 
-				
-				prefix = (isParam)? "":"this.ctx.";
-				newId = (isParam)?cleanId:id;
-				
+				isParam = l2js.utils.indexOf(this.ruleParams, cleanId) !== -1;
+
+				prefix = (isParam) ? "" : "this.ctx.";
+				newId = (isParam) ? cleanId : id;
+
 			} else if (this.states[0] === ASTCompiler.states.GLOBAL) {
 				newId = id;
 				prefix = "ctx.";
@@ -1649,164 +1662,155 @@ return new Parser;
 			} else {
 				throw new Error("Unkonown state of the AST compiler.");
 			}
-			return  prefix + newId;
-		}
-		
+			return prefix + newId;
+		};
+
 		ASTCompiler.prototype.visitId = function(id) {
 			// Variables only with expressions, declaration is made by visitBlock
-			if(id.type === "var" && !l2js.utils.isUndefined(id.e)) {
+			if (id.type === "var" && !l2js.utils.isUndefined(id.e)) {
 				return this._makeId(id.id) + "=" + this.visitExpression(id.e) + ";\n";
 			}
 		};
-		
+
 		ASTCompiler.prototype.visitAlphabet = function(alphabet) {
 			var id = alphabet.id.id, symbols = [];
-			
+
 			var i;
-			for(i=0; i<alphabet.symbols.length; i++) {
+			for ( i = 0; i < alphabet.symbols.length; i++) {
 				symbols.push("'" + alphabet.symbols[i].id + "'");
 			}
 			return id + " = new env.Alphabet('" + id + "', [" + symbols.join(",") + "]);\n";
 		};
-		
+
 		ASTCompiler.prototype.visitLSystem = function(lsystem) {
 			var src, id = lsystem.id.id;
 
 			// definition of the L-system
 			src = id + "= (function(_super, ctx) {\nl2js.utils.extend(" + id + ", _super);";
-			
+
 			// start constructor
-			
-			src += "function " + id + "() {\n" +
-				id + ".__super__.constructor.apply(this, arguments);\n" +
-				"this.self = " + id +";\n" +
-				"this._init();";
-			
-			this.lsystems.unshift({id:id, rulesHash: []});
-			
+
+			src += "function " + id + "() {\n" + id + ".__super__.constructor.apply(this, arguments);\n" + "this.self = " + id + ";\n" + "this._init();";
+
+			this.lsystems.unshift({
+				id : id,
+				rulesHash : []
+			});
+
 			// end of constructor and definition of static properties
 			src += "}\n";
-			
+
 			// init function of declarations of context variables
 			src += id + ".prototype._init = function() {\n";
+			
+			this.handleInclude(lsystem.body.entries);
 			// separate variable declarations
 			var i, entries = lsystem.body.entries, decs = [];
-			for(i=entries.length - 1; i>=0; i--) {
-				if(entries[i] instanceof lnodes.ASTId) {
+			for ( i = entries.length - 1; i >= 0; i--) {
+				if (entries[i] instanceof lnodes.ASTId) {
 					decs.unshift(entries.splice(i, 1)[0]);
 				}
 			}
-			
-			src += this.visitBlock({entries: decs});
+
+			src += this.visitBlock({
+				entries : decs
+			});
 			src += "};\n";
 			// end of init
-			
+
 			// Static properties
-			src += id + ".alphabet = " + lsystem.alphabet.id + ";\n" +
-				id + ".id = '" + id + "';\n";
-			
-			// properties	
-			var blockSrc = this.visitBlock(lsystem.body);
-			
+			src += id + ".alphabet = " + lsystem.alphabet.id + ";\n" + id + ".id = '" + id + "';\n";
+
+			// properties
+			var blockSrc = this.visitBlock(lsystem.body, true);
+
 			src += this.makeRulesHashDecls();
 			src += blockSrc;
-			
-			this.lsystems.shift();	
-			
-			
-			src += id + ".prototype.axiom = function() {return " + this.visitString(lsystem.axiom, id) + ";};\n" ;
-			
-			
-			if(!l2js.utils.isUndefined(lsystem.maxIterations)) {
+
+			this.lsystems.shift();
+
+			src += id + ".prototype.axiom = function() {return " + this.visitString(lsystem.axiom, id) + ";};\n";
+
+			if (!l2js.utils.isUndefined(lsystem.maxIterations)) {
 				src += id + ".prototype.maxIterations = " + this.visitExpression(lsystem.maxIterations) + " ;\n";
 			}
-			
-			
+
 			// end of the L-system definition
 			src += "return " + id + ";\n})(env.LSystem, this.ctx);\n";
 			return src;
 		};
-		
+
 		ASTCompiler.prototype.visitLScript = function(lscript) {
-			var src ="", id = lscript.id.id;
-			
-			
+			var src = "", id = lscript.id.id;
+
 			// find main call
 			var i, mainCall;
-			if(lscript.body) {
-				for(i=0; i<lscript.body.entries.length; i++) {
+			if (lscript.body) {
+				for ( i = 0; i < lscript.body.entries.length; i++) {
 					var entry = lscript.body.entries[i];
-					if(entry instanceof lnodes.ASTCall && entry.isMain) {
+					if ( entry instanceof lnodes.ASTCall && entry.isMain) {
 						mainCall = entry;
 					}
-				}	
+				}
 			}
 
-			if(l2js.utils.isUndefined(mainCall)) {
+			if (l2js.utils.isUndefined(mainCall)) {
 				throw new Error("No main call within the script '" + id + "'.");
 			}
-			
+
 			// definition
 			src += id + "= (function(_super, ctx) {\nl2js.utils.extend(" + id + ", _super);";
-			
+
 			// start constructor
-			src += "function " + id + "() {\n" +
-				id + ".__super__.constructor.apply(this, arguments);\n" +  
-				"this.self = " + id +";\n";
-			
-			
-			
+			src += "function " + id + "() {\n" + id + ".__super__.constructor.apply(this, arguments);\n" + "this.self = " + id + ";\n";
+
 			src += this.visitBlock(lscript.body);
-			
-			
+
 			// end of constructor and definition of static properties
-			src += "}\n" +
-				id + ".id = '" + id + "';\n";
-			
+			src += "}\n" + id + ".id = '" + id + "';\n";
+
 			// end of definition
 			src += "return " + id + ";\n})(env.LScript, ctx);\n";
 			return src;
 		};
-		
+
 		ASTCompiler.prototype.visitExpression = function(e) {
-			if(e instanceof lnodes.ASTOperation) {
+			if ( e instanceof lnodes.ASTOperation) {
 				return this.visitExpression(e.left) + e.op + this.visitExpression(e.right);
-			} else if(e instanceof lnodes.ASTBrackets) {
+			} else if ( e instanceof lnodes.ASTBrackets) {
 				return "(" + this.visitExpression(e.e) + ")";
-			} else if(e instanceof lnodes.ASTId) {
+			} else if ( e instanceof lnodes.ASTId) {
 				return this._makeId(e.id);
-			} else if(e instanceof lnodes.ASTFunc) {
+			} else if ( e instanceof lnodes.ASTFunc) {
 				var exps = [];
-				for(var i=0;i<e.args.length; i++) {
+				for (var i = 0; i < e.args.length; i++) {
 					exps.push(this.visitExpression(e.args[i]));
 				}
-				if(l2js.utils.indexOf(this.funcs, e.id) ===-1) {
+				if (l2js.utils.indexOf(this.funcs, e.id) === -1) {
 					this.funcs.push(e.id);
 				}
 				return "funcs." + e.id + "(" + exps.join(",") + ")";
-			} else if(typeof e === "number") {
+			} else if ( typeof e === "number") {
 				return e;
-			}
-			else {
+			} else {
 				throw new Error("Unexpected expression symbol: " + e);
 			}
 		};
-	
-		
+
 		ASTCompiler.prototype.visitString = function(str, lsystem) {
-			var i, src="", modules = [];
-			if(l2js.utils.isUndefined(str)) {
-				return "undefined";
+			var i, src = "", modules = [];
+			if (l2js.utils.isUndefined(str)) {
+				return "";
 			}
-			
+
 			// foreach over modules
-			for(i=0;i<str.length;i++) {
+			for ( i = 0; i < str.length; i++) {
 				var module = str[i];
-				if(module instanceof lnodes.ASTModule) {
-					modules.push( "["+this.visitModule(module, lsystem)+"]");
-				} else if(module instanceof lnodes.ASTSubLSystem) {
-					modules.push("["+this.visitSubLSystem(module)+"]");
-				} else if(module instanceof lnodes.ASTCall) {
+				if ( module instanceof lnodes.ASTModule) {
+					modules.push("[" + this.visitModule(module, lsystem) + "]");
+				} else if ( module instanceof lnodes.ASTSubLSystem) {
+					modules.push("[" + this.visitSubLSystem(module) + "]");
+				} else if ( module instanceof lnodes.ASTCall) {
 					modules.push(this.visitCall(module));
 				} else {
 					throw new Error("Expected '" + module + "' to be module, call or sublsystem.");
@@ -1815,140 +1819,396 @@ return new Parser;
 			var src = modules[0];
 			modules.shift();
 			return src + ".concat(" + modules.join(", ") + ")";
-			
+
 		};
-		
-		/** 
+
+		/**
 		 * Converts ASTModule to JS code.
-		 * 
+		 *
 		 * @param {object} module - Input module
 		 * @param  {array} params - list of parameters name for the determining of context of variables, see visitExpression method
-		 * @param  {string} [lsystem] - If passed the alphabet for module is determined as alphabet from passed name, 
+		 * @param  {string} [lsystem] - If passed the alphabet for module is determined as alphabet from passed name,
 		 * 								otherwise alphabet of current L-system is used
-		 * 
-		 * @memberOf ASTCompiler 
+		 *
+		 * @memberOf ASTCompiler
 		 */
-		ASTCompiler.prototype.visitModule = function(module, lsystem){
-			
-			if(l2js.utils.isUndefined(module.symbol) || l2js.utils.isUndefined(module.symbol.id)) {
+		ASTCompiler.prototype.visitModule = function(module, lsystem) {
+
+			if (l2js.utils.isUndefined(module.symbol) || l2js.utils.isUndefined(module.symbol.id)) {
 				throw new Error("Module symbol is undefined.");
 			}
-			
-			var arr = module.args || module.params || [], 
-				method = module.params?"getParamModule":"getModule",
-				alphabetLystem = lsystem || this.lsystems[0].id;
-			
-			if(!alphabetLystem) {
-				throw new Error("Unknown L-system for the symbol '" + module.symbol.id + "'. Cannot determine the right alphabet.")
+
+			var arr = module.args || module.params || [], method = module.params ? "getParamModule" : "getModule", alphabetLystem = lsystem || this.lsystems[0].id;
+
+			if (!alphabetLystem) {
+				throw new Error("Unknown L-system for the symbol '" + module.symbol.id + "'. Cannot determine the right alphabet.");
 			}
-			
+
 			var j, arrJs = [];
-			for(j=0; j<arr.length; j++) {
-				if(module.params) {
+			for ( j = 0; j < arr.length; j++) {
+				if (module.params) {
 					arrJs.push("'" + arr[j].id + "'");
 				} else {
 					arrJs.push(this.visitExpression(arr[j]));
 				}
 			}
-			
-			return "env.LSystem." + method + "('" + module.symbol.id + "', [" + arrJs.join(", ") + "], " +
-				alphabetLystem + ".alphabet" + ")";
+
+			return "env.LSystem." + method + "('" + module.symbol.id + "', [" + arrJs.join(", ") + "], " + alphabetLystem + ".alphabet" + ")";
 
 		};
-		
-		ASTCompiler.prototype.visitSubLSystem = function(subLSystem){
-			var lid = subLSystem.lsystem.id,
-				args = ["this.ctx", lid];
-			
-			if(!l2js.utils.isUndefined(subLSystem.axiom)) {
+
+		ASTCompiler.prototype.visitSubLSystem = function(subLSystem) {
+			var lid = subLSystem.lsystem.id, args = ["this.ctx", lid];
+
+			if (!l2js.utils.isUndefined(subLSystem.axiom)) {
 				args.push(this.visitString(subLSystem.axiom, lid));
 			}
-			
-			if(!l2js.utils.isUndefined(subLSystem.maxIterations)) {
+
+			if (!l2js.utils.isUndefined(subLSystem.maxIterations)) {
 				args.push(this.visitExpression(subLSystem.maxIterations));
 			}
-			 
+
 			return "new env.SubLSystem(" + args.join(", ") + ").derive()";
 		};
-		
-		ASTCompiler.prototype.visitCall = function(call){
-			
+
+		ASTCompiler.prototype.visitCall = function(call) {
 
 			var lid = call.lsystem.id, src = "";
-			
+
 			// If main call then set derive parameters (axiom, lsystem, maxIterations) for the parent script
 			if (call.isMain) {
 
-				src += "this.main = "+ lid + ";\n";
-				
-				if(!l2js.utils.isUndefined(call.axiom)){
+				src += "this.main = " + lid + ";\n";
+
+				if (!l2js.utils.isUndefined(call.axiom)) {
 					this.states.unshift(ASTCompiler.states.GLOBAL);
 					src += this.visitString(call.axiom, lid) + ";\n";
 					this.states.shift();
 
 				}
-					
+
 				if (!l2js.utils.isUndefined(call.maxIterations)) {
 					src += "this.maxIterations = " + this.visitExpression(call.maxIterations) + " ;\n";
 				}
 
 			} else {
 				var args = [];
-				if(!l2js.utils.isUndefined(call.axiom)) {
+				if (!l2js.utils.isUndefined(call.axiom)) {
 					args.push(this.visitString(call.axiom, lid));
 				}
-				if(!l2js.utils.isUndefined(call.maxIterations)) {
-					args.push(this.visitExpression(call.maxIterations)); 
-				} 
-				var srcDerivation = (this.ruleType === "h") ? "interpretation":"derivation";
-				src = "new " + lid + "(" + (this.states[0] === ASTCompiler.states.GLOBAL?"ctx":"this.ctx")+ ").derive(" + args.join(", ") + ")."+srcDerivation+"\n";
+				if (!l2js.utils.isUndefined(call.maxIterations)) {
+					args.push(this.visitExpression(call.maxIterations));
+				}
+				var srcDerivation = (this.ruleType === "h") ? "interpretation" : "derivation";
+				src = "new " + lid + "(" + (this.states[0] === ASTCompiler.states.GLOBAL ? "ctx" : "this.ctx") + ").derive(" + args.join(", ") + ")." + srcDerivation + "\n";
 			}
 			return src;
 		};
-		
+
 		ASTCompiler.prototype.visitDerive = function(derive) {
 			return "return new " + derive.lscript.id + "(ctx).derive();";
-		}
-		
-		ASTCompiler.prototype.visitSuccessor = function(successor) {
-			
-			return "{\nprobability : " + successor.probability + ",\n" +
-					"successor : function("+ this.ruleParams.join(",")+") { \n" + 
-					"return " + this.visitString(successor.string) + ";\n" +
-					"}\n}\n";
 		};
-		
+
+		ASTCompiler.prototype.visitSuccessor = function(successor) {
+
+			return "{\nprobability : " + successor.probability + ",\n" + "successor : function(" + this.ruleParams.join(",") + ") { \n" + "return " + this.visitString(successor.string) + ";\n" + "}\n}\n";
+		};
+
 		ASTCompiler.prototype.visitRule = function(rule) {
 			var src = "", params = [], ancestor = rule.ancestor, successors = rule.successors;
-			
-			if(ancestor.params) {
+
+			if (ancestor.params) {
 				var i;
-				for(i=0; i<ancestor.params.length; i++) {
+				for ( i = 0; i < ancestor.params.length; i++) {
 					// params don't have dolar sign
 					params.push(ancestor.params[i].id);
 				}
 			}
-			
+
 			this.states.unshift(ASTCompiler.states.RULE);
 			this.ruleParams = params;
-			
+
 			var prevRuleType = this.ruleType;
-			
+
 			this.ruleType = rule.type;
-			
+
 			src += this.makeRule(ancestor, successors, rule.type);
-			
+
 			this.ruleType = prevRuleType;
-			
+
 			this.ruleParams = [];
-			
+
 			this.states.shift();
-			
+
 			return src;
 		};
-		
-		
+
 		return ASTCompiler;
+	})();
+
+/**
+ * Compiles AST of script to L2 language with proper formatting.
+ */
+
+
+	var lnodes = l2js.compiler.lnodes;
+
+	l2js.compiler.L2Compiler = (function() {
+
+		function L2Compiler(ast) {
+			this.ast = ast;
+			this.level = 0;
+		}
+
+		/**
+		 *  String for the one level of indentation
+		 */
+		L2Compiler.PREFIX = "   ";
+
+		L2Compiler.prototype.compile = function() {
+			if (this.ast instanceof lnodes.ASTBlock && this.ast.isRoot) {
+				return this.visitBlock(this.ast);
+			} else {
+				throw new Error("AST must be root block");
+			}
+
+		};
+
+		L2Compiler.prototype.visitNodes = function(nodes) {
+			var src = "";
+			for (var i = 0; i < nodes.length; i++) {
+				src += this.visitNode(nodes[i]);
+			}
+
+			return src;
+		};
+
+		L2Compiler.prototype.visitNode = function(node) {
+			var src = "";
+			if ( node instanceof lnodes.ASTBlock) {
+				src += this.visitBlock(node);
+			} else if ( node instanceof lnodes.ASTId) {
+				src += this.visitId(node);
+			} else if ( node instanceof lnodes.ASTAlphabet) {
+				src += this.visitAlphabet(node);
+			} else if ( node instanceof lnodes.ASTLSystem) {
+				src += this.visitLSystem(node);
+			} else if ( node instanceof lnodes.ASTLScript) {
+				src += this.visitLScript(node);
+			} else if ( node instanceof lnodes.ASTRule) {
+				src += this.visitRule(node);
+			} else if ( node instanceof lnodes.ASTCall) {
+				src += this.visitCall(node);
+			} else if ( node instanceof lnodes.ASTDerive) {
+				src += this.visitDerive(node);
+			} else if (node instanceof lnodes.ASTIncluded) {
+				src += this.visitIncluded(node);
+			} else {
+				throw new Error("Unexpected AST node ('" + node + "').");
+			}
+			return src;
+		};
+
+		L2Compiler.prototype.visitBlock = function(node) {
+			return this._printLine("include '" + node.file + "'");
+		};
+
+		L2Compiler.prototype.visitBlock = function(node) {
+			!node.isRoot && this.level++;
+			var src = this.visitNodes(node.entries);
+			!node.isRoot && this.level--;
+			return src;
+		};
+
+		L2Compiler.prototype.visitLScript = function(node) {
+			var src = this._printLine("lscript " + node.id.id + " {") + this.visitBlock(node.body);
+			src += this._printLine("};\n");
+
+			return src;
+		};
+
+		L2Compiler.prototype.visitAlphabet = function(node) {
+			var src = this._printLine("alphabet " + node.id.id + " {"), symbols = [];
+
+			for (var i = 0; i < node.symbols.length; i++) {
+				symbols.push(node.symbols[i].id);
+			}
+
+			this.level++;
+			src += this._printLine(symbols.join(", "));
+			this.level--;
+
+			src += this._printLine("};\n");
+
+			return src;
+		};
+
+		L2Compiler.prototype.visitLSystem = function(node) {
+
+			var argsArr = [], args;
+
+			node.axiom && argsArr.push(this.visitString(node.axiom));
+			!l2js.utils.isUndefined(node.maxIterations) && argsArr.push(this.visitExpression(node.maxIterations));
+			if (argsArr.length) {
+				args = "(" + argsArr.join(", ") + ")";
+			}
+
+			var src = this._printLine("lsystem " + node.id.id + args + " using " + node.alphabet.id + " {") + this.visitBlock(node.body);
+			src += this._printLine("};\n");
+
+			return src;
+		};
+
+		L2Compiler.prototype.visitString = function(str) {
+			var i, src = "", modules = [];
+			if (l2js.utils.isUndefined(str)) {
+				return "";
+			}
+
+			// foreach over modules
+			for ( i = 0; i < str.length; i++) {
+				var module = str[i];
+				if ( module instanceof lnodes.ASTModule) {
+					modules.push(this.visitModule(module));
+				} else if ( module instanceof lnodes.ASTSubLSystem) {
+					modules.push(this.visitSubLSystem(module));
+				} else if ( module instanceof lnodes.ASTCall) {
+					modules.push(this.visitCall(module));
+				} else {
+					throw new Error("Expected '" + module + "' to be module, call or sublsystem.");
+				}
+			}
+
+			return modules.join(" ");
+
+		};
+
+		L2Compiler.prototype.visitModule = function(module) {
+
+			if (l2js.utils.isUndefined(module.symbol) || l2js.utils.isUndefined(module.symbol.id)) {
+				throw new Error("Module symbol is undefined.");
+			}
+
+			var src, arr = module.args || module.params || [];
+
+			var j, args = [];
+			for ( j = 0; j < arr.length; j++) {
+				if (module.params) {
+					args.push(arr[j].id);
+				} else {
+					args.push(this.visitExpression(arr[j]));
+				}
+			}
+			src = module.symbol.id;
+			if (args.length) {
+				src += "(" + args.join(", ") + ")";
+			}
+			return src;
+
+		};
+
+		L2Compiler.prototype.visitSubLSystem = function(node) {
+			var lid = node.lsystem.id, args = [];
+
+			args.push(l2js.utils.isUndefined(node.axiom) && this.visitString(node.axiom) || "");
+			!l2js.utils.isUndefined(node.maxIterations) && args.push(this.visitExpression(node.maxIterations));
+
+			return "sublsystem " + lid + "(" + args.join(", ") + ")";
+		};
+
+		L2Compiler.prototype.visitCall = function(node) {
+			var lid = node.lsystem.id, src, args = [];
+
+			args.push(l2js.utils.isUndefined(node.axiom) && this.visitString(node.axiom) || "");
+			!l2js.utils.isUndefined(node.maxIterations) && args.push(this.visitExpression(node.maxIterations));
+
+			src = "call " + lid + "(" + args.join(", ") + ")";
+
+			if (node.isMain) {
+				src = this._printLine("main " + src + ";");
+			}
+			return src;
+		};
+
+		L2Compiler.prototype.visitDerive = function(node) {
+			return this._printLine("derive " + node.lscript.id + ";");
+		};
+
+		L2Compiler.prototype.visitSuccessor = function(successor) {
+			var src = this.visitString(successor.string);
+			if (!l2js.utils.isUndefined(successor.probability)) {
+				src += " : " + successor.probability;
+			}
+			return src;
+		};
+
+		L2Compiler.prototype.visitAncestor = function(ancestor) {
+			return this.visitModule(ancestor);
+		};
+
+		L2Compiler.prototype.visitRule = function(rule) {
+			var src = "", params = [], ancestor = rule.ancestor, successors = [];
+
+			var op = rule.type === "h" ? "-h>" : "-->";
+
+			for (var i = 0; i < rule.successors.length; i++) {
+				successors.push(this.visitSuccessor(rule.successors[i]));
+			}
+
+			src += this._printLine(this.visitAncestor(ancestor) + " " + op + " " + successors.join(" | ") + ";");
+
+			return src;
+		};
+
+		L2Compiler.prototype.visitId = function(node) {
+			var src = "";
+
+			if (node.type === "var") {
+				src = node.id;
+
+				if (node.e) {
+					src = this._printLine(src + " = " + this.visitExpression(node.e) + ";");
+				}
+			} else {
+				src += node.id;
+			}
+			return src;
+		};
+
+		L2Compiler.prototype.visitExpression = function(e) {
+			if ( e instanceof lnodes.ASTOperation) {
+				return this.visitExpression(e.left) + " " + e.op + " " + this.visitExpression(e.right);
+			} else if ( e instanceof lnodes.ASTBrackets) {
+				return "(" + this.visitExpression(e.e) + ")";
+			} else if ( e instanceof lnodes.ASTId) {
+				return this.visitId(e);
+			} else if ( e instanceof lnodes.ASTFunc) {
+				var exps = [];
+				for (var i = 0; i < e.args.length; i++) {
+					exps.push(this.visitExpression(e.args[i]));
+				}
+				return e.id + "(" + exps.join(",") + ")";
+			} else if ( typeof e === "number") {
+				return e;
+			} else {
+				throw new Error("Unexpected expression symbol: " + e);
+			}
+		};
+
+		L2Compiler.prototype.visitIncluded = function(node) {
+			return this._printLine('include "'+ node.file +'";');
+		};
+		
+		L2Compiler.prototype._printLine = function(text) {
+			var level = this.level, prefix = "";
+			while (level) {
+				prefix += L2Compiler.PREFIX;
+				level--;
+			}
+			return prefix + text + "\n";
+		};
+
+		return L2Compiler;
 	})();
 
 /**
@@ -1965,89 +2225,118 @@ return new Parser;
 		this.line = line;
 	}
 
+
 	ParseError.prototype.toString = function() {
 		return this.msg;
 	};
 
-	l2js.compiler.Compiler =  (function()	{
-	
+	l2js.compiler.Compiler = (function() {
+
 		function Compiler() {
 			this.ASTCompiler = l2js.compiler.ASTCompiler;
+			this.L2Compiler = l2js.compiler.L2Compiler;
 		};
-	
-	
+
 		/**
 		 * Get code by file name
 		 * @param {string} code
 		 */
 		Compiler.prototype.getFile = function(name) {
-			if(!l2js.files[name]) {
-				throw new Error("File ["+ name +"] does not exist.");
+			if (!l2js.files[name]) {
+				throw new Error("File [" + name + "] does not exist.");
 			}
 			return l2js.files[name];
 		};
-		
+
 		/**
-		 * link external code to pragram 
+		 * link external code to pragram
 		 * @param {string} code
 		 */
 		Compiler.prototype.linkCode = function(code) {
-			var that = this, 
-				replacer = function(match, file){
-				return that.getFile(file);
+			var matched, that = this, replacer = function(match, file) {
+				matched = true;
+				return "included '" + file + "' {" + that.getFile(file) + "};";
 			};
 			
-			return  code
-					.replace(/include\s+\"([^\"]+)\";/, replacer)
-					.replace(/include\s+\'([^\']+)\';/, replacer);
-	
+			do {
+				matched = false;
+				code = code.replace(/include\s+\"([^\"]+)\";/, replacer).replace(/include\s+\'([^\']+)\';/, replacer);
+			} while (matched);
+			return code;
 		};
-	
+
 		Compiler.prototype.compile = function(input) {
 			var that = this, q = l2js.core.q, deferred = q.deferred(), code = input;
-	
+
+			function errCb(e) {
+				deferred.reject(e);
+			}
+
 			setTimeout(function() {
 				try {
-					var ast, js;
-	
-					
-					var linkedCode = that.linkCode(code);
-					ast = that.toAST(linkedCode);
-					
-					console.log(ast);
-	
-					js = that.ASTToJS(ast);
-					console.log(js);
-					
-					
-								
-					deferred.resolve(js);
+
+					that.toAST(code).then(function(ast) {
+						that.ASTToJS(ast).then(function(src) {
+							deferred.resolve(src);
+						}, errCb);
+					}, errCb);
+
 				} catch (e) {
 					deferred.reject(e);
 				}
-	
+
 			}, 0);
-	
+
 			return deferred.promise;
 		};
-	
+
 		Compiler.prototype.toAST = function(code) {
-			return l2js.compiler.Lparser.parse(code);
+			var that = this, q = l2js.core.q, deferred = q.deferred();
+			setTimeout(function() {
+				try {
+					var linkedCode = that.linkCode(code), ast = l2js.compiler.Lparser.parse(linkedCode);
+					deferred.resolve(ast);
+				} catch (e) {
+					deferred.reject(e);
+				}
+			}, 0);
+			return deferred.promise;
 		};
-	
+
 		Compiler.prototype.ASTToJS = function(ast) {
-			var src; // generated js source of program
-			
-			src = new this.ASTCompiler().visitRoot(ast); 
-	
-	
-			return src;
+			var that = this, q = l2js.core.q, deferred = q.deferred();
+			setTimeout(function() {
+				try {
+					var src = new that.ASTCompiler().visitRoot(ast);
+					console.log(src)
+					deferred.resolve(src);
+
+				} catch (e) {
+					deferred.reject(e);
+				}
+			}, 0);
+			return deferred.promise;
 		};
-		
+
+		Compiler.prototype.ASTToL2 = function(ast) {
+			var that = this, deferred = l2js.core.q.deferred();
+			
+			setTimeout(function() {
+				try {
+					var src = new that.L2Compiler(ast).compile();
+					deferred.resolve(src);
+
+				} catch (e) {
+					deferred.reject(e);
+				}
+			}, 0);
+			return deferred.promise;
+		};
+
 		return Compiler;
 
 	})();
-	
+
 	l2js.compiler.Lparser.yy = l2js.compiler.lnodes;
 	l2js.compiler.Lparser.yy.ParseError = ParseError;
 
@@ -2444,17 +2733,40 @@ l2js.interpret = l2js.interpret || {};
 
 l2js.compile = function(code) {
 		return new l2js.compiler.Compiler().compile(code);
-	}
-	
+	};
+
 	l2js.derive = function(lsystemCode) {
-		var out = eval(lsystemCode);		
+		var out = eval(lsystemCode);
+		console.log(out.interpretation);
 		return out;
-	}
-	
+	};
+
 	l2js.interpretAll = function(symbols, options) {
 		return new l2js.interpret.Interpret(symbols, options).all();
-	}
+	};
 
+	l2js.format = function(lsystemCode) {
+		var deferred = l2js.core.q.deferred();
+		setTimeout(function() {
+			var errHandler = function(err) {
+				deferred.reject(err);
+			};
+			try {
+				var compiler = new l2js.compiler.Compiler();
+
+				compiler.toAST(lsystemCode).then(function(ast) {
+					compiler.ASTToL2(ast).then(function(l2) {
+						deferred.resolve(l2);
+					}, errHandler);
+				}, errHandler);
+			} catch(e) {
+				errHandler(e);
+			}
+
+		}, 0);
+
+		return deferred.promise;
+	};
 
 
 }));
