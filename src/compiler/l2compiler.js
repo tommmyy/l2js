@@ -127,6 +127,8 @@ window.l2js && window.l2js.utils && function(l2js) {
 					modules.push(this.visitSubLSystem(module));
 				} else if ( module instanceof lnodes.ASTCall) {
 					modules.push(this.visitCall(module));
+				} else if ( module instanceof lnodes.ASTStack) {
+					modules.push(this.visitStack(module));
 				} else {
 					throw new Error("Expected '" + module + "' to be module, call or sublsystem.");
 				}
@@ -157,6 +159,11 @@ window.l2js && window.l2js.utils && function(l2js) {
 				src += "(" + args.join(", ") + ")";
 			}
 			return src;
+
+		};
+
+		L2Compiler.prototype.visitStack = function(module) {
+			return module.start.symbol.id + ' ' + this.visitString(module.string) + ' ' + module.end.symbol.id;
 
 		};
 

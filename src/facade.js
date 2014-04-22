@@ -38,4 +38,9 @@ window.l2js && function(l2js) {
 
 		return deferred.promise;
 	};
+	
+	l2js.mutate = function() {
+		
+	};
+	
 }(window.l2js);

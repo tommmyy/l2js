@@ -40,6 +40,7 @@
 	function compiled(js) {
 		var derivation = l2js.derive(js);
 		//console.log(derivation)
+		
 		l2js.interpretAll(derivation, {
 			container : "script_output",
 			width : 480,

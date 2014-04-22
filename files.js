@@ -7,6 +7,7 @@ l2jsFiles = {
 	          "src/compiler/env.js",
 	          "src/compiler/env/alphabet.js",
 	          "src/compiler/env/sublsystem.js",
+	          "src/compiler/env/stack.js",
 	          "src/compiler/env/lsystem.js",
 	          "src/compiler/env/lscript.js",
 	          "src/compiler/env/sublscript.js",
@@ -18,6 +19,8 @@ l2jsFiles = {
 	          "src/interpret.js",
 	          "src/interpret/turtle2dbuilder.js",
 	          "src/interpret/interpret.js",
+	          "src/mutator.js",
+	          "src/mutator/mutator.js",
 	          "src/facade.js"
 	          ],
 	"parsers": ["src/compiler/lparser.js"],

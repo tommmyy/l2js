@@ -151,12 +151,12 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
 				var angle = symbol.arguments[0];
 				angle && (turtle.orientation = this._normalizeAngle(turtle.orientation + angle));
 			},
-			'SU': function(symbol, ctx) {
+			'[': function(symbol, ctx) {
 				var turtle2D = ctx.turtle2D;
 				turtle2D.stack = turtle2D.stack || [];
 				turtle2D.stack.unshift(l2js.utils.copy(turtle2D.turtle));
 			},
-			'SS': function(symbol, ctx) {
+			']': function(symbol, ctx) {
 				var turtle2D = ctx.turtle2D;
 				if(l2js.utils.isUndefined(turtle2D.stack)||!turtle2D.stack.length) {
 					throw new Error('Cannot read from undefined of empty indices stack.');

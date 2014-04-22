@@ -99,6 +99,12 @@ window.l2js && window.l2js.compiler && function(l2js) {
 			this.body = body;
 		};
 		
+		lnodes.ASTStack = function ASTStack(start, end, string) {
+			this.string = string;
+			this.start = start;
+			this.end = end;
+		};
+		
 		return lnodes;
 	
 	})();

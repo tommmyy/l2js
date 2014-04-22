@@ -60,8 +60,8 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env.SubLSystem && funct
 				};
 			for ( i = 0; i < max; i++) {
 
-				out.derivation = out.derivation ? this.deriveModule(out.derivation, "-") : axiom;
-				out.interpretation = this.deriveModule(out.derivation, "h");
+				out.derivation = out.derivation ? this.deriveString(out.derivation, "-") : axiom;
+				out.interpretation = this.deriveString(out.derivation, "h");
 
 				// add to history
 				// if (i !== 0) {
@@ -76,7 +76,7 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env.SubLSystem && funct
 		/**
 		  * @memberOf l2js.compiler.env.LSystem
 		  */
-		LSystem.prototype.deriveModule = function(ancestor, type) {
+		LSystem.prototype.deriveString = function(ancestor, type) {
 			var successor = [], j;
 			for ( j = 0; j < ancestor.length; j++) {
 
@@ -87,6 +87,8 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env.SubLSystem && funct
 				// Sub-L-systems should be derived only in main derivation
 				if (ancestor[j] instanceof l2js.compiler.env.SubLSystem) {
 					type === "-" && successor.push(l2js.utils.copy(ancestor[j]).derive()) || successor.push(l2js.utils.copy(ancestor[j]));
+				} else if (ancestor[j] instanceof l2js.compiler.env.Stack) {
+					successor.push(new l2js.compiler.env.Stack(ancestor[j].start, ancestor[j].end,this.deriveString(ancestor[j].string, type)));
 				} else {
 					var symbol = ancestor[j];
 					this.checkAlphabetSymbol(symbol.symbol);

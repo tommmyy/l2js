@@ -61,37 +61,35 @@
 				<div class="form-group">
 					<label for="toCompile">Code</label>
 					<textarea id="toCompile" name="toCompile" class="form-control" rows="10">
-$_step=0.05;
-
+$_step = 0.05;
 lscript LeafScript {
+   alphabet Turtle2D {
+      F, f, L, R
+   };
 
-	alphabet Turtle2D {
-		F, f, L, R
-	};
+   lsystem Leaf([ S($_K / 2) ] [ x  ] [ y ] , 6) using Turtle2D {
+      $_K = 0.1;
+      $_angle = 10;
+      x --> [ R($_angle) x PU V ] V z V PS;
+      y --> [ L($_angle) y PU V ] V z V PS;
+      z --> z F($_K);
+      
+      
+      S(len) --> F($len) R(1) S($len);
+      PU -h> PU(__color(0,255), 0.01, __color(255));
+      F(len) -h> F($len, 0.01, __color(255));
+      S(len) -h> F($len, 0.01, __color(255));
+   };
 
-	lsystem Leaf( SU S($_K/2) SS SU x SS SU y SS , 6) using Turtle2D  {
-		$_K = 0.1;
-$_angle = 10; 
+   lsystem Position(R(90) f(0.5) L(90) f(0.5) L(90) sublsystem Leaf(), 0) using Turtle2D {
+   };
 
-		x --> SU R($_angle) x PU V SS V z V PS;
-		y --> SU L($_angle) y PU V SS V z V PS;
-		z --> z F($_K);
-
-		S(len) --> F($len) R(1) S($len);
-		PU -h> PU(__color(0, 255), 0.01, __color(255));
-		F(len) -h> F($len, 0.01, __color(255));
-		S(len) -h> F($len, 0.01, __color(255));
-		
-	};
-	
-	lsystem Position(R(90) f(0.5) L(90) f(0.5) L(90) sublsystem Leaf(), 0) using Turtle2D  {
-
-	};
-	
-	main call Position(); 
+   main call Position();
 };
 
 derive LeafScript;
+
+
 </textarea>
 				</div>
 
@@ -113,6 +111,7 @@ derive LeafScript;
 		<script type="text/javascript" src="../src/compiler/env.js"></script>
 		<script type="text/javascript" src="../src/compiler/env/alphabet.js"></script>
 		<script type="text/javascript" src="../src/compiler/env/sublsystem.js"></script>
+		<script type="text/javascript" src="../src/compiler/env/stack.js"></script>
 		<script type="text/javascript" src="../src/compiler/env/lsystem.js"></script>
 		<script type="text/javascript" src="../src/compiler/env/lscript.js"></script>
 		<script type="text/javascript" src="../src/compiler/env/sublscript.js"></script>

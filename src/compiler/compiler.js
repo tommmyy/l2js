@@ -83,6 +83,7 @@ window.l2js && window.l2js.compiler.Lparser && window.l2js.compiler.lnodes && wi
 			setTimeout(function() {
 				try {
 					var linkedCode = that.linkCode(code), ast = l2js.compiler.Lparser.parse(linkedCode);
+					console.log(ast);
 					deferred.resolve(ast);
 				} catch (e) {
 					deferred.reject(e);

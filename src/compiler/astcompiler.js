@@ -100,7 +100,7 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 		};
 
 		ASTCompiler.prototype.handleInclude = function(nodes) {
-			for ( var i = 0; i < nodes.length; i++) {
+			for (var i = 0; i < nodes.length; i++) {
 				if (nodes[i] instanceof lnodes.ASTIncluded) {
 
 					for (var j = 0; j < nodes[i].body.length; j++) {
@@ -118,8 +118,8 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 
 			var src = "";
 			!skipInclude && this.handleInclude(nodes);
-			
-			for ( var i = 0; i < nodes.length; i++) {
+
+			for (var i = 0; i < nodes.length; i++) {
 				if (nodes[i] instanceof lnodes.ASTBlock) {
 					src += visitBlock(nodes[i]);
 				} else if (nodes[i] instanceof lnodes.ASTId) {
@@ -137,7 +137,7 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 				} else if (nodes[i] instanceof lnodes.ASTDerive) {
 					src += this.visitDerive(nodes[i]);
 				} else if (nodes[i] instanceof lnodes.ASTIncluded) {
-					
+
 				} else {
 					throw new Error("Unexpected AST node ('" + nodes[i] + "').");
 				}
@@ -230,7 +230,7 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 
 			// init function of declarations of context variables
 			src += id + ".prototype._init = function() {\n";
-			
+
 			this.handleInclude(lsystem.body.entries);
 			// separate variable declarations
 			var i, entries = lsystem.body.entries, decs = [];
@@ -254,10 +254,9 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 
 			src += this.makeRulesHashDecls();
 			src += blockSrc;
-
-			this.lsystems.shift();
-
 			src += id + ".prototype.axiom = function() {return " + this.visitString(lsystem.axiom, id) + ";};\n";
+			
+			this.lsystems.shift();
 
 			if (!l2js.utils.isUndefined(lsystem.maxIterations)) {
 				src += id + ".prototype.maxIterations = " + this.visitExpression(lsystem.maxIterations) + " ;\n";
@@ -340,6 +339,8 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 					modules.push("[" + this.visitSubLSystem(module) + "]");
 				} else if ( module instanceof lnodes.ASTCall) {
 					modules.push(this.visitCall(module));
+				} else if ( module instanceof lnodes.ASTStack) {
+					modules.push(this.visitStack(module, lsystem));
 				} else {
 					throw new Error("Expected '" + module + "' to be module, call or sublsystem.");
 				}
@@ -385,8 +386,17 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 
 		};
 
+		ASTCompiler.prototype.visitStack = function(stack, lsystem) {
+			return "[new env.Stack(" + this.visitModule(stack.start, lsystem) + " ," + this.visitModule(stack.end, lsystem) + ", " + this.visitString(stack.string) + ")]";
+		};
+
 		ASTCompiler.prototype.visitSubLSystem = function(subLSystem) {
 			var lid = subLSystem.lsystem.id, args = ["this.ctx", lid];
+
+			this.lsystems.unshift({
+				id : lid,
+				rulesHash : []
+			});
 
 			if (!l2js.utils.isUndefined(subLSystem.axiom)) {
 				args.push(this.visitString(subLSystem.axiom, lid));
@@ -395,6 +405,7 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 			if (!l2js.utils.isUndefined(subLSystem.maxIterations)) {
 				args.push(this.visitExpression(subLSystem.maxIterations));
 			}
+			this.lsystems.shift();
 
 			return "new env.SubLSystem(" + args.join(", ") + ").derive()";
 		};

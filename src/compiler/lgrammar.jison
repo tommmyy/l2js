@@ -34,6 +34,8 @@ name							[A-Za-z_][A-Za-z_0-9_]*
 "__"{name}						return 'FUNC'
 "$"{name}						return 'VAR'
 {name}							return 'ID'
+"["								return 'SU'
+"]"								return 'SS'
 "*"                   			return '*'
 "/"                   			return '/'
 "-"                   			return '-'
@@ -153,7 +155,15 @@ stmt
 		{$$ = new yy.ASTDerive($id);}
 	; 
 
-
+stack 
+	: SU string SS
+		{{
+			var start = new yy.ASTModule(new yy.ASTId($SU, "symbol")),
+			end = new yy.ASTModule(new yy.ASTId($SS, "symbol"));
+			$$ = new yy.ASTStack(start, end, $string);
+		}}
+	;
+	
 sublsystem
 	: SUBLSYSTEM id '(' axiom ')' 
 		{$id.type="lsystem"; $$ = new yy.ASTSubLSystem($id, $axiom);} 
@@ -247,7 +257,8 @@ module
 		{$$ = $1;}
 	| sublsystem
 		{$$ = $1;}
-
+	| stack
+		{$$ = $1;}
 	;
 
 arguments
