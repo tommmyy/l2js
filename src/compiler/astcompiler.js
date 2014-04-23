@@ -73,7 +73,7 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 				var src;
 
 				src = "(function(l2js){\n";
-				src += "var env = l2js.compiler.env,\n";
+				src += "var env = l2js.compiler.env, getModule = env.LSystem.getModule, getParamModule = env.LSystem.getParamModule,\n";
 				src += "ctx = {};\n";
 
 				var block = this.visitBlock(node);
@@ -382,7 +382,7 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 				}
 			}
 
-			return "env.LSystem." + method + "('" + module.symbol.id + "', [" + arrJs.join(", ") + "], " + alphabetLystem + ".alphabet" + ")";
+			return method + "('" + module.symbol.id + "', [" + arrJs.join(", ") + "], " + alphabetLystem + ".alphabet" + ")";
 
 		};
 

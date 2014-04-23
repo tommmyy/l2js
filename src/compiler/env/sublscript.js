@@ -18,6 +18,19 @@ window.l2js && window.l2js.utils && window.l2js.compiler && window.l2js.compiler
 
 		SubLScript.prototype.derive = function() {
 
+		var deferred = l2js.core.q.deferred();
+		setTimeout(function() {
+			try {
+				var out = eval(lsystemCode);
+				deferred.resolve(out);
+			} catch(err) {
+				deferred.reject(err);
+			}
+
+		}, 0);
+
+		return deferred.promise;
+
 			var result;
 			if (this.derivation) {
 				result = this.lscript.derive(this.derivation, this.maxIterations);

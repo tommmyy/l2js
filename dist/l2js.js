@@ -4,7 +4,7 @@
 * Copyright 2013, 2013 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-04-23T10:08:35.829Z
+* Date: 2014-04-23T14:26:58.451Z
 */
 
 (function( global, factory ) {'use strict';
@@ -471,27 +471,40 @@ l2js.compiler.env.Stack = (function() {
 
 /**
 	 * Abstract LScript class.
-	 * 
+	 *
 	 * @class
 	 */
 	l2js.compiler.env.LScript = (function() {
 
-		function LScript(ctx) {	
-			this.ctx = l2js.utils.copy(ctx);	
+		function LScript(ctx) {
+			this.ctx = l2js.utils.copy(ctx);
 		}
 
 		/**
-		  * @memberOf l2js.LScript
-		  */
+		 * @memberOf l2js.LScript
+		 */
 		LScript.prototype.derive = function(axiom, maxIterations) {
-			if(l2js.utils.isUndefined(this.main)) {
-				throw new Error('LScript (\'' + this.self.id + '\') has no main call.');
-			}
-			return new this.main(this.ctx).derive(axiom || this.axiom, maxIterations || this.maxIterations);
-		};
-		
 
-		
+			var deferred = l2js.core.q.deferred(), that = this;
+			setTimeout(function() {
+
+				try {
+					if (l2js.utils.isUndefined(that.main)) {
+						throw new Error('LScript (\'' + that.self.id + '\') has no main call.');
+					}
+					var der = new that.main(that.ctx);
+					var o = der.derive(axiom || that.axiom, maxIterations || that.maxIterations);
+					deferred.resolve(o);	
+				} catch(err) {
+					deferred.reject(err);
+				}
+
+			}, 0);
+
+			return deferred.promise;
+
+		};
+
 		return LScript;
 
 	})();
@@ -514,6 +527,19 @@ l2js.compiler.env.Stack = (function() {
 
 
 		SubLScript.prototype.derive = function() {
+
+		var deferred = l2js.core.q.deferred();
+		setTimeout(function() {
+			try {
+				var out = eval(lsystemCode);
+				deferred.resolve(out);
+			} catch(err) {
+				deferred.reject(err);
+			}
+
+		}, 0);
+
+		return deferred.promise;
 
 			var result;
 			if (this.derivation) {
@@ -1577,7 +1603,7 @@ return new Parser;
 				var src;
 
 				src = "(function(l2js){\n";
-				src += "var env = l2js.compiler.env,\n";
+				src += "var env = l2js.compiler.env, getModule = env.LSystem.getModule, getParamModule = env.LSystem.getParamModule,\n";
 				src += "ctx = {};\n";
 
 				var block = this.visitBlock(node);
@@ -1886,7 +1912,7 @@ return new Parser;
 				}
 			}
 
-			return "env.LSystem." + method + "('" + module.symbol.id + "', [" + arrJs.join(", ") + "], " + alphabetLystem + ".alphabet" + ")";
+			return method + "('" + module.symbol.id + "', [" + arrJs.join(", ") + "], " + alphabetLystem + ".alphabet" + ")";
 
 		};
 
@@ -2670,6 +2696,7 @@ l2js.interpret = l2js.interpret || {};
 		Interpret.prototype.next = function() {
 			var symbol = this.getNextSymbol();
 			if (symbol) {
+				//console.log(symbol)
 				this.getBuilder(symbol).interpret(symbol, this.ctx);
 			}
 			return symbol;
@@ -2726,11 +2753,12 @@ l2js.interpret = l2js.interpret || {};
 			this._indexBuf[0] = readIndex;
 			this._lSysBuf[0] = result;
 
-			if ( symbol instanceof l2js.compiler.env.SubLSystem) {
+			while ( symbol instanceof l2js.compiler.env.SubLSystem) {
 				this._trigger('newLSystem', symbol);
 				this._indexBuf.unshift(0);
 				this._lSysBuf.unshift(symbol);
 				symbol = symbol.interpretation[0];
+				
 			}
 			return symbol;
 		};
@@ -2820,8 +2848,21 @@ l2js.compile = function(code) {
 	};
 
 	l2js.derive = function(lsystemCode) {
-		var out = eval(lsystemCode);
-		return out;
+		// var deferred = l2js.core.q.deferred();
+		// setTimeout(function() {
+			// try {
+				// var out = eval(lsystemCode);
+				// deferred.resolve(out);
+			// } catch(err) {
+				// deferred.reject(err);
+			// }
+// 
+		// }, 0);
+// 
+		// return deferred.promise;
+
+		return eval(lsystemCode);
+		
 	};
 
 	l2js.interpretAll = function(symbols, options) {

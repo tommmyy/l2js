@@ -61,33 +61,48 @@
 				<div class="form-group">
 					<label for="toCompile">Code</label>
 					<textarea id="toCompile" name="toCompile" class="form-control" rows="10">
-$_step = 0.05;
-lscript LeafScript {
-   alphabet Turtle2D {
-      F, f, L, R
+alphabet Turtle2D {
+   
+};
+
+lscript Brushes {
+   lsystem S1(I(1, __color(5,5,5)), 4) using Turtle2D {
+      I(scale, color) --> PU($color) V A($scale) PS;
+      A(a) --> L(45) [ f($a / 2) V ] A($a);
+      L(a) --> L($a + 1);
+      L(a) --> L($a - 2);
+      PU(color) -h> PU($color, 0);
    };
 
-   lsystem Leaf([ S($_K / 2) ] [ x  ] [ y ] , 6) using Turtle2D {
-      $_K = 0.1;
-      $_angle = 10;
-      x --> [ R($_angle) x PU V ] V z V PS;
-      y --> [ L($_angle) y PU V ] V z V PS;
-      z --> z F($_K);
-      
-      
-      S(len) --> F($len) R(1) S($len);
-      PU -h> PU(__color(0,255), 0.01, __color(255));
-      F(len) -h> F($len, 0.01, __color(255));
-      S(len) -h> F($len, 0.01, __color(255));
+   lsystem B1(f(1), 2) using Turtle2D {
+      f(a) --> f($a / 2) [ L(90) G($a / 4) ] [ R(90) G($a / 4) ] f($a / 2);
+      f(a) --> f($a / 2) [ R(60) G($a / 4) ] [ L(70) G($a / 4) ] f($a / 2);
+      G(a) --> [ G($a) ] G($a);
+      G(a) -h> f($a) sublsystem S1(I($a, __color(0,255)), 5);
+      G(a) -h> f($a) sublsystem S1(I($a, __color(255)), 6);
    };
 
-   lsystem Position(R(90) f(0.5) L(90) f(0.5) L(90) sublsystem Leaf(), 0) using Turtle2D {
+   lsystem Painter(R(90) f(0.5) L(90) F(1), 1) using Turtle2D {
+      F(a) --> F($a / 3) f($a / 3) F($a / 3);
+      f(a) --> f($a / 3) f($a / 3) f($a / 3);
+      F(a) -h> sublsystem B1(f($a));
    };
+
+   lsystem KochFlake(I(1), 2) using Turtle2D {
+      $angle = 30;
+      I(a) --> F($a / 3) R($angle) R($angle) F($a / 3) R($angle) R($angle) F($a / 3);
+      F(a) --> F($a / 2) L($angle) F($a / 2) R($angle) R($angle) F($a / 2) L($angle) F($a / 2);
+      F(a) -h> sublsystem B1(f($a));
+   };
+
+   lsystem Position(R(90) F(0.1) L(90) A, 1) using Turtle2D {
+   A-->sublsystem KochFlake(I(1));
+};
 
    main call Position();
 };
 
-derive LeafScript;
+derive Brushes;
 
 
 </textarea>

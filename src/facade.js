@@ -7,8 +7,21 @@ window.l2js && function(l2js) {
 	};
 
 	l2js.derive = function(lsystemCode) {
-		var out = eval(lsystemCode);
-		return out;
+		// var deferred = l2js.core.q.deferred();
+		// setTimeout(function() {
+			// try {
+				// var out = eval(lsystemCode);
+				// deferred.resolve(out);
+			// } catch(err) {
+				// deferred.reject(err);
+			// }
+// 
+		// }, 0);
+// 
+		// return deferred.promise;
+
+		return eval(lsystemCode);
+		
 	};
 
 	l2js.interpretAll = function(symbols, options) {
