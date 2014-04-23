@@ -4,7 +4,7 @@
 * Copyright 2013, 2013 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-04-23T14:26:58.451Z
+* Date: 2014-04-23T18:28:43.982Z
 */
 
 (function( global, factory ) {'use strict';
@@ -1554,7 +1554,7 @@ return new Parser;
 
 
 		ASTCompiler.funcsSrc = {
-			"__color" : "__color: function(r, g, b) {" + "var rgb = r;" + "rgb = rgb << 8;" + "rgb |= g;" + "rgb = rgb << 8;" + "rgb |= b; return rgb/16581375;}"
+			"__color" : "__color: function(r, g, b, a) {" + "var rgba = r || 0;" + "rgba = rgba << 8;" + "rgba |= g|| 0;" + "rgba = rgba << 8;" + "rgba |= b|| 0; " + "rgba = rgba << 8;" + "rgba |= a|| 0; rgba = rgba >>> 0;" + "return rgba/4294967295;}"
 		};
 
 		ASTCompiler.states = {
@@ -1785,7 +1785,7 @@ return new Parser;
 			src += this.makeRulesHashDecls();
 			src += blockSrc;
 			src += id + ".prototype.axiom = function() {return " + this.visitString(lsystem.axiom, id) + ";};\n";
-			
+
 			this.lsystems.shift();
 
 			if (!l2js.utils.isUndefined(lsystem.maxIterations)) {
@@ -2507,9 +2507,10 @@ l2js.interpret = l2js.interpret || {};
 			var interval = angle % 360;
 			return angle<0?360+interval:interval;
 		};
-		 
+
 		Turtle2DBuilder.prototype._realColorToHexString= function(color) {
-			return '#' + l2js.utils.padLeft( Math.round(16581375*color).toString(16), 0, 6);
+			var hexStrAlpha = l2js.utils.padLeft( (4294967295*color).toString(16), 0, 8);
+			return {hex: '#' + hexStrAlpha.substring(0, 6), a: parseInt(hexStrAlpha.substring(6, 8), 16)/255};
 		};
 
 		Turtle2DBuilder.prototype._symbols = {
@@ -2523,16 +2524,17 @@ l2js.interpret = l2js.interpret || {};
 			'F': function(symbol, ctx) {
 				var step = this._normalizeStep(symbol.arguments[0]);
 				var stroke = this._normalizeStep(symbol.arguments[1]);
-				var color = this._realColorToHexString(symbol.arguments[2]);
+				var color = this._realColorToHexString(symbol.arguments[2] || 0);
 				var turtle2D = ctx.turtle2D;
 				var newPos = Turtle2DBuilder.turtleTransforms.forward(step, turtle2D.turtle);
 				
 				turtle2D.baseLayer.add( new Kinetic.Line({
 			        points: [turtle2D.turtle.position[0], turtle2D.turtle.position[1], newPos[0], newPos[1]],
-			        stroke: color,
+			        stroke: color.hex,
 			        strokeWidth: stroke,
 			        lineCap: 'round',
-			        lineJoin: 'round'
+			        lineJoin: 'round',
+			        opacity: stroke.a
 			    }));
      
 				turtle2D.baseLayer.batchDraw();
@@ -2595,14 +2597,15 @@ l2js.interpret = l2js.interpret || {};
 				turtle2D.polyStack = turtle2D.polyStack || [];
 				fillColor = this._realColorToHexString(symbol.arguments[0]);
 				stroke = this._normalizeStep(symbol.arguments[1]);
-				strokeColor = this._realColorToHexString(symbol.arguments[2]);
+				strokeColor = this._realColorToHexString(symbol.arguments[2] || 0);
 				
 				poly = new Kinetic.Line({
 			        points: [],
-			        fill: fillColor,
+			        fill: fillColor.hex,
 			        stroke: stroke,
-			        strokeWidth: strokeColor,
-			        closed: true
+			        strokeWidth: strokeColor.hex,
+			        closed: true,
+			        opacity: fillColor.a
 			    });
 				
 				turtle2D.baseLayer.add(poly);
