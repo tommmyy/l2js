@@ -4,7 +4,7 @@
 * Copyright 2013, 2013 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-04-22T22:26:53.498Z
+* Date: 2014-04-23T09:34:08.841Z
 */
 
 (function( global, factory ) {'use strict';
@@ -2160,7 +2160,7 @@ return new Parser;
 		L2Compiler.prototype.visitSubLSystem = function(node) {
 			var lid = node.lsystem.id, args = [];
 
-			args.push(l2js.utils.isUndefined(node.axiom) && this.visitString(node.axiom) || "");
+			args.push(!l2js.utils.isUndefined(node.axiom) && this.visitString(node.axiom) || "");
 			!l2js.utils.isUndefined(node.maxIterations) && args.push(this.visitExpression(node.maxIterations));
 
 			return "sublsystem " + lid + "(" + args.join(", ") + ")";
@@ -2359,7 +2359,6 @@ return new Parser;
 			setTimeout(function() {
 				try {
 					var src = new that.ASTCompiler().visitRoot(ast);
-					console.log(src)
 					deferred.resolve(src);
 
 				} catch (e) {
@@ -2671,7 +2670,6 @@ l2js.interpret = l2js.interpret || {};
 		Interpret.prototype.next = function() {
 			var symbol = this.getNextSymbol();
 			if (symbol) {
-				console.log(symbol)
 				this.getBuilder(symbol).interpret(symbol, this.ctx);
 			}
 			return symbol;
@@ -2823,7 +2821,6 @@ l2js.compile = function(code) {
 
 	l2js.derive = function(lsystemCode) {
 		var out = eval(lsystemCode);
-		console.log(out.interpretation);
 		return out;
 	};
 
@@ -2853,11 +2850,11 @@ l2js.compile = function(code) {
 
 		return deferred.promise;
 	};
-	
+
 	l2js.mutate = function() {
-		
+
 	};
-	
+
 
 
 }));
