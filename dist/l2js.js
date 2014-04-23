@@ -4,7 +4,7 @@
 * Copyright 2013, 2013 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-04-23T09:34:08.841Z
+* Date: 2014-04-23T10:08:35.829Z
 */
 
 (function( global, factory ) {'use strict';
@@ -2169,7 +2169,7 @@ return new Parser;
 		L2Compiler.prototype.visitCall = function(node) {
 			var lid = node.lsystem.id, src, args = [];
 
-			args.push(l2js.utils.isUndefined(node.axiom) && this.visitString(node.axiom) || "");
+			args.push(!l2js.utils.isUndefined(node.axiom) && this.visitString(node.axiom) || "");
 			!l2js.utils.isUndefined(node.maxIterations) && args.push(this.visitExpression(node.maxIterations));
 
 			src = "call " + lid + "(" + args.join(", ") + ")";

@@ -179,7 +179,7 @@ window.l2js && window.l2js.utils && function(l2js) {
 		L2Compiler.prototype.visitCall = function(node) {
 			var lid = node.lsystem.id, src, args = [];
 
-			args.push(l2js.utils.isUndefined(node.axiom) && this.visitString(node.axiom) || "");
+			args.push(!l2js.utils.isUndefined(node.axiom) && this.visitString(node.axiom) || "");
 			!l2js.utils.isUndefined(node.maxIterations) && args.push(this.visitExpression(node.maxIterations));
 
 			src = "call " + lid + "(" + args.join(", ") + ")";
