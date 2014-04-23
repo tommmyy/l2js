@@ -97,7 +97,6 @@ window.l2js && window.l2js.compiler.Lparser && window.l2js.compiler.lnodes && wi
 			setTimeout(function() {
 				try {
 					var src = new that.ASTCompiler().visitRoot(ast);
-					console.log(src)
 					deferred.resolve(src);
 
 				} catch (e) {

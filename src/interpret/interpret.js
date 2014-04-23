@@ -53,7 +53,6 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
 		Interpret.prototype.next = function() {
 			var symbol = this.getNextSymbol();
 			if (symbol) {
-				console.log(symbol)
 				this.getBuilder(symbol).interpret(symbol, this.ctx);
 			}
 			return symbol;
