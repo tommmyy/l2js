@@ -24,7 +24,7 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 
 
 		ASTCompiler.funcsSrc = {
-			"__color" : "__color: function(r, g, b) {" + "var rgb = r;" + "rgb = rgb << 8;" + "rgb |= g;" + "rgb = rgb << 8;" + "rgb |= b; return rgb/16581375;}"
+			"__color" : "__color: function(r, g, b, a) {" + "var rgba = r || 0;" + "rgba = rgba << 8;" + "rgba |= g|| 0;" + "rgba = rgba << 8;" + "rgba |= b|| 0; " + "rgba = rgba << 8;" + "rgba |= a|| 0; rgba = rgba >>> 0;" + "return rgba/4294967295;}"
 		};
 
 		ASTCompiler.states = {
@@ -255,7 +255,7 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 			src += this.makeRulesHashDecls();
 			src += blockSrc;
 			src += id + ".prototype.axiom = function() {return " + this.visitString(lsystem.axiom, id) + ";};\n";
-			
+
 			this.lsystems.shift();
 
 			if (!l2js.utils.isUndefined(lsystem.maxIterations)) {

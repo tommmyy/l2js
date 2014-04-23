@@ -66,7 +66,7 @@ alphabet Turtle2D {
 };
 
 lscript Brushes {
-   lsystem S1(I(1, __color(5,5,5)), 4) using Turtle2D {
+   lsystem S1(I(1, __color(5,5,5,255)), 2) using Turtle2D {
       I(scale, color) --> PU($color) V A($scale) PS;
       A(a) --> L(45) [ f($a / 2) V ] A($a);
       L(a) --> L($a + 1);
@@ -77,27 +77,20 @@ lscript Brushes {
    lsystem B1(f(1), 2) using Turtle2D {
       f(a) --> f($a / 2) [ L(90) G($a / 4) ] [ R(90) G($a / 4) ] f($a / 2);
       f(a) --> f($a / 2) [ R(60) G($a / 4) ] [ L(70) G($a / 4) ] f($a / 2);
-      G(a) --> [ G($a) ] G($a);
-      G(a) -h> f($a) sublsystem S1(I($a, __color(0,255)), 5);
-      G(a) -h> f($a) sublsystem S1(I($a, __color(255)), 6);
-   };
-
-   lsystem Painter(R(90) f(0.5) L(90) F(1), 1) using Turtle2D {
-      F(a) --> F($a / 3) f($a / 3) F($a / 3);
-      f(a) --> f($a / 3) f($a / 3) f($a / 3);
-      F(a) -h> sublsystem B1(f($a));
+      G(a) -h> f($a) sublsystem S1(I($a * 5, __color(0,255,0,128)), 3);
+      G(a) -h> f($a) sublsystem S1(I($a * 5, __color(255,0,0,128)), 3);
    };
 
    lsystem KochFlake(I(1), 2) using Turtle2D {
-      $angle = 30;
+      $angle = 60;
       I(a) --> F($a / 3) R($angle) R($angle) F($a / 3) R($angle) R($angle) F($a / 3);
       F(a) --> F($a / 2) L($angle) F($a / 2) R($angle) R($angle) F($a / 2) L($angle) F($a / 2);
       F(a) -h> sublsystem B1(f($a));
    };
 
-   lsystem Position(R(90) F(0.1) L(90) A, 1) using Turtle2D {
-   A-->sublsystem KochFlake(I(1));
-};
+   lsystem Position(R(90) f(0.2) L(90) A, 1) using Turtle2D {
+      A --> sublsystem KochFlake(I(0.5));
+   };
 
    main call Position();
 };
@@ -105,6 +98,7 @@ lscript Brushes {
 derive Brushes;
 
 
+derive Brushes;
 </textarea>
 				</div>
 
