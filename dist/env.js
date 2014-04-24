@@ -1,39 +1,22 @@
 /*!
 * L-System to Javascript Library v0.0.2
 *
-* Copyright 2013, 2013 Tomáš Konrády (tomas.konrady@uhk.cz)
+* Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-04-24T16:46:24.291Z
+* Date: 2014-04-24T18:06:24.001Z
 */
 
 (function( global, factory ) {'use strict';
-
-        if ( typeof module === "object" && typeof module.exports === "object" ) {
-                // For CommonJS and CommonJS-like environments where a proper window is present,
-                // execute the factory and get jQuery
-                // For environments that do not inherently posses a window with a document
-                // (such as Node.js), expose a jQuery-making factory as module.exports
-                // This accentuates the need for the creation of a real window
-                // e.g. var jQuery = require("jquery")(window);
-                // See ticket #14549 for more info
-                module.exports = global.document ?
-                        factory( global ) :
-                        function( w ) {
-                                if ( !w.document ) {
-                                        throw new Error( "l2js requires a window with a document" );
-                                }
-                                return factory( w );
-                        };
-        } else {
-                factory( global );
-        }
-
-// Pass this, window may not be defined yet
+	if ( typeof module === "object" && typeof module.exports === "object" ) {
+		factory( global, true);
+	} else {
+		factory( global );
+	}
 }(this, function( window ) {
 
-var _l2js = window.l2js;
-window.l2js = window.l2js || (window.l2js = {});
+var _l2js = l2js;
+var l2js = window.l2js = window.l2js || (window.l2js = {});
 window.l2js.files = {};
 
 /**
@@ -486,9 +469,7 @@ l2js.compiler.env.Stack = (function() {
 		LScript.prototype.derive = function(axiom, maxIterations) {
 
 			var der = new this.main(this.ctx);
-			var o = der.derive(axiom || this.axiom, maxIterations || this.maxIterations);
-
-			return o;
+			return der.derive(axiom || this.axiom, maxIterations || this.maxIterations);
 
 		};
 
@@ -545,7 +526,47 @@ l2js.compiler.env.Stack = (function() {
 		return SubLScript;
 
 	})();
-	
+
+l2js.compile = function(code) {
+		return new l2js.compiler.Compiler().compile(code);
+	};
+
+	l2js.derive = function(lsystemCode) {
+		return eval(lsystemCode);
+		
+	};
+
+	l2js.interpretAll = function(symbols, options) {
+		return new l2js.interpret.Interpret(symbols, options).all();
+	};
+
+	l2js.format = function(lsystemCode) {
+		var deferred = l2js.core.q.deferred();
+		setTimeout(function() {
+			var errHandler = function(err) {
+				deferred.reject(err);
+			};
+			try {
+				var compiler = new l2js.compiler.Compiler();
+
+				compiler.toAST(lsystemCode).then(function(ast) {
+					compiler.ASTToL2(ast).then(function(l2) {
+						deferred.resolve(l2);
+					}, errHandler);
+				}, errHandler);
+			} catch(e) {
+				errHandler(e);
+			}
+
+		}, 0);
+
+		return deferred.promise;
+	};
+
+	l2js.mutate = function() {
+
+	};
+
 
 
 }));
