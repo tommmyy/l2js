@@ -25,7 +25,19 @@ l2jsFiles = {
 	          ],
 	"parsers": ["src/compiler/lparser.js"],
 
- 
+ 	"env" : [ "src/l2js.js", 
+	          "src/core.js", 
+	          "src/core/deferred.js",
+	          "src/utils.js",
+	          "src/compiler.js",
+	          "src/compiler/env.js",
+	          "src/compiler/env/alphabet.js",
+	          "src/compiler/env/sublsystem.js",
+	          "src/compiler/env/stack.js",
+	          "src/compiler/env/lsystem.js",
+	          "src/compiler/env/lscript.js",
+	          "src/compiler/env/sublscript.js"
+	          ],
  	"test" : ["dist/l2js.js", 
 	          "test/*.js", 
 	          "test/core/*.js", 
