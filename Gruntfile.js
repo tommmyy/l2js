@@ -36,6 +36,12 @@ module.exports = function(grunt) {
 				dest : "dist/l2js.js",
 				src : wrap(files.src, "build")
 
+			},
+			env : {
+				// dest : "dist/l2js-v<%= pkg.version %>.js",
+				dest : "dist/env.js",
+				src : wrap(files.env, "build")
+
 			}
 		},
 		tests : {
@@ -46,6 +52,29 @@ module.exports = function(grunt) {
 				files : {
 					// "dist/l2js-v<%= pkg.version %>.min.js" : ["dist/l2js-v<%= pkg.version %>.js"]
 					"dist/l2js.min.js" : ["dist/l2js.js"]
+				},
+				options : {
+					preserveComments : false,
+					// sourceMap : "dist/l2js-v<%= pkg.version %>.min.map",
+					// sourceMappingURL : "dist/l2js-v<%= pkg.version %>.min.map",
+					sourceMap : "dist/l2js.min.map",
+					sourceMappingURL : "dist/l2js.min.map",
+					report : "min",
+					beautify : {
+						ascii_only : true
+					},
+					banner : "/*! L2JS v<%= pkg.version %> | " + "Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz). | " + "MIT licence */",
+					compress : {
+						hoist_funs : false,
+						loops : false,
+						unused : false
+					}
+				}
+			},
+			env : {
+				files : {
+					// "dist/l2js-v<%= pkg.version %>.min.js" : ["dist/l2js-v<%= pkg.version %>.js"]
+					"dist/env.min.js" : ["dist/env.js"]
 				},
 				options : {
 					preserveComments : false,

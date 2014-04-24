@@ -4,7 +4,7 @@
 * Copyright 2013, 2013 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-04-23T18:28:43.982Z
+* Date: 2014-04-24T16:46:24.276Z
 */
 
 (function( global, factory ) {'use strict';
@@ -485,23 +485,10 @@ l2js.compiler.env.Stack = (function() {
 		 */
 		LScript.prototype.derive = function(axiom, maxIterations) {
 
-			var deferred = l2js.core.q.deferred(), that = this;
-			setTimeout(function() {
+			var der = new this.main(this.ctx);
+			var o = der.derive(axiom || this.axiom, maxIterations || this.maxIterations);
 
-				try {
-					if (l2js.utils.isUndefined(that.main)) {
-						throw new Error('LScript (\'' + that.self.id + '\') has no main call.');
-					}
-					var der = new that.main(that.ctx);
-					var o = der.derive(axiom || that.axiom, maxIterations || that.maxIterations);
-					deferred.resolve(o);	
-				} catch(err) {
-					deferred.reject(err);
-				}
-
-			}, 0);
-
-			return deferred.promise;
+			return o;
 
 		};
 
@@ -2851,19 +2838,6 @@ l2js.compile = function(code) {
 	};
 
 	l2js.derive = function(lsystemCode) {
-		// var deferred = l2js.core.q.deferred();
-		// setTimeout(function() {
-			// try {
-				// var out = eval(lsystemCode);
-				// deferred.resolve(out);
-			// } catch(err) {
-				// deferred.reject(err);
-			// }
-// 
-		// }, 0);
-// 
-		// return deferred.promise;
-
 		return eval(lsystemCode);
 		
 	};
