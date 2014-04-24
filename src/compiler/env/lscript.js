@@ -18,23 +18,8 @@ window.l2js && window.l2js.utils && window.l2js.compiler && window.l2js.compiler
 		 */
 		LScript.prototype.derive = function(axiom, maxIterations) {
 
-			var deferred = l2js.core.q.deferred(), that = this;
-			setTimeout(function() {
-
-				try {
-					if (l2js.utils.isUndefined(that.main)) {
-						throw new Error('LScript (\'' + that.self.id + '\') has no main call.');
-					}
-					var der = new that.main(that.ctx);
-					var o = der.derive(axiom || that.axiom, maxIterations || that.maxIterations);
-					deferred.resolve(o);	
-				} catch(err) {
-					deferred.reject(err);
-				}
-
-			}, 0);
-
-			return deferred.promise;
+			var der = new this.main(this.ctx);
+			return der.derive(axiom || this.axiom, maxIterations || this.maxIterations);
 
 		};
 
