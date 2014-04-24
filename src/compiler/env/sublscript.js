@@ -1,35 +1,35 @@
 'use strict';
 
-/** 
- * SubLScript wraps LScript for keeping result of last derivation. 
- * Derivation process can be called individually step by step, derivation by derivation respectively. 
+/**
+ * SubLScript wraps LScript for keeping result of last derivation.
+ * Derivation process can be called individually step by step, derivation by derivation respectively.
  **/
 
 window.l2js && window.l2js.utils && window.l2js.compiler && window.l2js.compiler.env && function(l2js) {
-	
+
 	l2js.compiler.env.SubLScript = (function() {
 
 		function SubLScript(lscript, axiom, maxIterations) {
-			this.lscript = lscript; // instance
+			this.lscript = lscript;
 			this.axiom = axiom;
 			this.maxIterations = maxIterations;
+			this.type = "sublscript";
 		}
-
 
 		SubLScript.prototype.derive = function() {
 
-		var deferred = l2js.core.q.deferred();
-		setTimeout(function() {
-			try {
-				var out = eval(lsystemCode);
-				deferred.resolve(out);
-			} catch(err) {
-				deferred.reject(err);
-			}
+			var deferred = l2js.core.q.deferred();
+			setTimeout(function() {
+				try {
+					var out = eval(lsystemCode);
+					deferred.resolve(out);
+				} catch(err) {
+					deferred.reject(err);
+				}
 
-		}, 0);
+			}, 0);
 
-		return deferred.promise;
+			return deferred.promise;
 
 			var result;
 			if (this.derivation) {
@@ -48,5 +48,5 @@ window.l2js && window.l2js.utils && window.l2js.compiler && window.l2js.compiler
 		return SubLScript;
 
 	})();
-	
+
 }(window.l2js);

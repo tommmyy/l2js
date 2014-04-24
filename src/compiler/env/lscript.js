@@ -11,6 +11,7 @@ window.l2js && window.l2js.utils && window.l2js.compiler && window.l2js.compiler
 
 		function LScript(ctx) {
 			this.ctx = l2js.utils.copy(ctx);
+			this.type = "lscript";
 		}
 
 		/**

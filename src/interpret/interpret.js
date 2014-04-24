@@ -110,7 +110,7 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
 			this._indexBuf[0] = readIndex;
 			this._lSysBuf[0] = result;
 
-			while ( symbol instanceof l2js.compiler.env.SubLSystem) {
+			while ( symbol.type && symbol.type === "sublsystem") {
 				this._trigger('newLSystem', symbol);
 				this._indexBuf.unshift(0);
 				this._lSysBuf.unshift(symbol);
@@ -142,7 +142,7 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
 			if (result.interpretation) {
 				var dels = [];
 				for (var i = 0; i < result.interpretation.length; i++) {
-					if (result.interpretation[i] instanceof l2js.compiler.env.SubLSystem) {
+					if (result.interpretation[i].type && result.interpretation[i].type === "sublsystem") {
 						result.interpretation[i] = this._clearOutEmptyLSystems(result.interpretation[i]);
 						if (!result.interpretation[i].interpretation || result.interpretation[i].interpretation.length === 0) {
 							dels.push(i);
@@ -162,12 +162,12 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
 			if (result.interpretation) {
 				var dels = [];
 				for (var i = 0; i < result.interpretation.length; i++) {
-					if (result.interpretation[i] instanceof l2js.compiler.env.SubLSystem) {
+					if (result.interpretation[i].type && result.interpretation[i].type === "sublsystem") {
 						result.interpretation[i] = this._serializeBuffers(result.interpretation[i]);
 					}
 					
 					
-					if (result.interpretation[i] instanceof l2js.compiler.env.Stack) {
+					if (result.interpretation[i].type && result.interpretation[i].type === "stack") {
 						
 						var stack = result.interpretation.splice(i, 1)[0];
 						result.interpretation.splice(i, 0, stack.start);

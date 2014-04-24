@@ -36,8 +36,7 @@
 
 	function compiled(js) {
 		var t1 = new Date();
-		var derivation = l2js.derive(js).then(function(derivation) {
-			console.log(new Date().getTime() - t1.getTime());
+		var derivation = l2js.derive(js);
 			l2js.interpretAll(derivation, {
 				container : "script_output",
 				width : 480,
@@ -47,8 +46,6 @@
 				//initOrientation: 0
 				//}
 			});
-		});
-
 	}
 
 	function handleError(error) {

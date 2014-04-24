@@ -7,19 +7,6 @@ window.l2js && function(l2js) {
 	};
 
 	l2js.derive = function(lsystemCode) {
-		// var deferred = l2js.core.q.deferred();
-		// setTimeout(function() {
-			// try {
-				// var out = eval(lsystemCode);
-				// deferred.resolve(out);
-			// } catch(err) {
-				// deferred.reject(err);
-			// }
-// 
-		// }, 0);
-// 
-		// return deferred.promise;
-
 		return eval(lsystemCode);
 		
 	};

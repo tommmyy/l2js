@@ -36,7 +36,8 @@ l2jsFiles = {
 	          "src/compiler/env/stack.js",
 	          "src/compiler/env/lsystem.js",
 	          "src/compiler/env/lscript.js",
-	          "src/compiler/env/sublscript.js"
+	          "src/compiler/env/sublscript.js",
+	          "src/facade.js"
 	          ],
  	"test" : ["dist/l2js.js", 
 	          "test/*.js", 
