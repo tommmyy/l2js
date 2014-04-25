@@ -4,7 +4,7 @@
 * Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-04-24T18:49:40.579Z
+* Date: 2014-04-25T00:02:07.669Z
 */
 
 (function( global, factory ) {'use strict';
@@ -92,7 +92,7 @@ window.l2js.files = {};
 	
 	l2js.utils = {
 		copy: function (obj) {
-			if (l2js.utils.isUndefined(obj) || typeof obj !== "object") {
+			if (l2js.utils.isUndefined(obj) || typeof obj !== "object" || obj === null) {
 				return obj;
 			}
 

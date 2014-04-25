@@ -7,7 +7,7 @@ window.l2js && function(l2js) {
 	
 	l2js.utils = {
 		copy: function (obj) {
-			if (l2js.utils.isUndefined(obj) || typeof obj !== "object") {
+			if (l2js.utils.isUndefined(obj) || typeof obj !== "object" || obj === null) {
 				return obj;
 			}
 
