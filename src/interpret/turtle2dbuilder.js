@@ -20,7 +20,8 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
 			width : 100,
 			height : 100,
 			skipUnknownSymbols : true,
-			symbolsPerFrame: 10,
+			symbolsPerFrame : 10,
+			bgColor: '#ffffff',
 			turtle : {
 				initPosition : [0, 0],
 				initOrientation : 0
@@ -49,14 +50,14 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
 			this.symbolsStack.push(symbol);
 			this._startAnimation();
 		};
-		
+
 		Turtle2DBuilder.prototype._handlerError = function(err) {
 			this._stopAnimation();
 			throw new Error(err);
 		};
 
 		Turtle2DBuilder.prototype._resolveNextSymbol = function() {
-			if(!this.symbolsStack.length) {
+			if (!this.symbolsStack.length) {
 				this._stopAnimation();
 				return;
 			}
@@ -82,6 +83,16 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
 				height : opts.height
 			});
 			turtle2D.baseLayer = new Kinetic.Layer();
+
+			var bg = new Kinetic.Rect({
+				x : 0,
+				y : 0,
+				width : opts.width,
+				height :opts.height,
+				fill : opts.bgColor
+			});
+			turtle2D.baseLayer.add(bg);
+
 			turtle2D.stage.add(turtle2D.baseLayer);
 
 			turtle2D.stack = [];
@@ -89,34 +100,33 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
 				position : opts.turtle.initPosition,
 				orientation : opts.turtle.initOrientation
 			};
-			this.symbolsStack = [];			
+			this.symbolsStack = [];
 			this._initAnimation();
 
 		};
 
 		Turtle2DBuilder.prototype._initAnimation = function() {
 			var that = this;
-			this._stopAnimation();	
+			this._stopAnimation();
 			this.animation = new Kinetic.Animation(function(frame) {
-				var howMany = frame.timeDiff>1?frame.timeDiff*that.options.symbolsPerFrame:1;
+				var howMany = frame.timeDiff > 1 ? frame.timeDiff * that.options.symbolsPerFrame : 1;
 				var i = 0;
-				while(howMany>i && that.symbolsStack.length){
+				while (howMany > i && that.symbolsStack.length) {
 					that._resolveNextSymbol();
 					i++;
 				}
-				!that.symbolsStack.length &&  that._stopAnimation();
-				
+				!that.symbolsStack.length && that._stopAnimation();
+
 			}, this.ctx.turtle2D.baseLayer);
 		};
-		
-		Turtle2DBuilder.prototype._startAnimation =  function() {
+
+		Turtle2DBuilder.prototype._startAnimation = function() {
 			this.animation && !this.animation.isRunning() && this.animation.start();
 		};
-		
-		Turtle2DBuilder.prototype._stopAnimation =  function() {
+
+		Turtle2DBuilder.prototype._stopAnimation = function() {
 			this.animation && this.animation.stop();
 		};
-		
 
 		Turtle2DBuilder.prototype._normalizeStep = function(step) {
 			return step * Math.max(this.options.width, this.options.height);
@@ -247,7 +257,7 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
 			'V' : function(symbol) {
 				var turtle2D = this.ctx.turtle2D, turtle = turtle2D.turtle;
 				if (l2js.utils.isUndefined(turtle2D.polyStack) || !turtle2D.polyStack.length) {
-					this.handlerError('Cannot read from undefined of empty polygon stack.');	
+					this.handlerError('Cannot read from undefined of empty polygon stack.');
 				}
 				var poly = turtle2D.polyStack[0];
 				poly.points(poly.points().concat(turtle.position));
