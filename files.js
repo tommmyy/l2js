@@ -19,8 +19,8 @@ l2jsFiles = {
 	          "src/interpret.js",
 	          "src/interpret/turtle2dbuilder.js",
 	          "src/interpret/interpret.js",
-	          "src/mutator.js",
-	          "src/mutator/mutator.js",
+	          "src/evolver.js",
+	          "src/evolver/evolver.js",
 	          "src/facade.js"
 	          ],
 	"parsers": ["src/compiler/lparser.js"],
