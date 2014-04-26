@@ -45,7 +45,7 @@ window.l2js && window.l2js.compiler.Lparser && window.l2js.compiler.lnodes && wi
 				matched = true;
 				return "included '" + file + "' {" + that.getFile(file) + "};";
 			};
-			
+
 			do {
 				matched = false;
 				code = code.replace(/include\s+\"([^\"]+)\";/, replacer).replace(/include\s+\'([^\']+)\';/, replacer);
@@ -108,7 +108,7 @@ window.l2js && window.l2js.compiler.Lparser && window.l2js.compiler.lnodes && wi
 
 		Compiler.prototype.ASTToL2 = function(ast) {
 			var that = this, deferred = l2js.core.q.deferred();
-			
+
 			setTimeout(function() {
 				try {
 					var src = new that.L2Compiler(ast).compile();

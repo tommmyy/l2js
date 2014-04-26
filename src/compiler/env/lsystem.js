@@ -9,7 +9,7 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env.SubLSystem && funct
 	 */
 	l2js.compiler.env.LSystem = (function(l2js) {
 
-		function LSystem(ctx) {
+		function LSystem(ctx, opts) {
 			this.ctx = ctx ? l2js.utils.copy(ctx) : {};
 			this.rulesProbabilities = {};
 			this.type = "lsystem";
@@ -63,10 +63,10 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env.SubLSystem && funct
 				out.interpretation = this.deriveString(out.derivation, "h");
 
 				// add to history
-				// if (i !== 0) {
-				out.derivations.push(l2js.utils.copy(out.derivation));
-				out.interpretations.push(l2js.utils.copy(out.interpretation));
-				// }
+				if (l2js.options.keepDerivations) {
+					out.derivations.push(l2js.utils.copy(out.derivation));
+					out.interpretations.push(l2js.utils.copy(out.interpretation));
+				}
 			}
 
 			return out;

@@ -4,7 +4,7 @@
 * Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-04-25T00:02:07.686Z
+* Date: 2014-04-26T09:48:12.725Z
 */
 
 (function( global, factory ) {'use strict';
@@ -17,6 +17,8 @@
 
 var _l2js = l2js;
 var l2js = window.l2js = window.l2js || (window.l2js = {});
+
+l2js.options = {keepDerivations: false};
 window.l2js.files = {};
 
 /**
@@ -267,7 +269,7 @@ l2js.compiler.env.Stack = (function() {
 	 */
 	l2js.compiler.env.LSystem = (function(l2js) {
 
-		function LSystem(ctx) {
+		function LSystem(ctx, opts) {
 			this.ctx = ctx ? l2js.utils.copy(ctx) : {};
 			this.rulesProbabilities = {};
 			this.type = "lsystem";
@@ -321,10 +323,10 @@ l2js.compiler.env.Stack = (function() {
 				out.interpretation = this.deriveString(out.derivation, "h");
 
 				// add to history
-				// if (i !== 0) {
-				out.derivations.push(l2js.utils.copy(out.derivation));
-				out.interpretations.push(l2js.utils.copy(out.interpretation));
-				// }
+				if (l2js.options.keepDerivations) {
+					out.derivations.push(l2js.utils.copy(out.derivation));
+					out.interpretations.push(l2js.utils.copy(out.interpretation));
+				}
 			}
 
 			return out;
@@ -537,11 +539,17 @@ l2js.compile = function(code) {
 	};
 
 	l2js.derive = function(lsystemCode) {
-		return eval(lsystemCode);
+		console.log(lsystemCode);
+		var t1 = new Date().getTime();
+		var out = eval(lsystemCode);
+		console.log((new Date().getTime() - t1)/1000);
+		return out;
 		
 	};
 
 	l2js.interpretAll = function(symbols, options) {
+		console.log(symbols);
+		return;
 		return new l2js.interpret.Interpret(symbols, options).all();
 	};
 

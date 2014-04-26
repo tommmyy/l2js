@@ -7,11 +7,17 @@ window.l2js && function(l2js) {
 	};
 
 	l2js.derive = function(lsystemCode) {
-		return eval(lsystemCode);
+		console.log(lsystemCode);
+		var t1 = new Date().getTime();
+		var out = eval(lsystemCode);
+		console.log((new Date().getTime() - t1)/1000);
+		return out;
 		
 	};
 
 	l2js.interpretAll = function(symbols, options) {
+		console.log(symbols);
+		return;
 		return new l2js.interpret.Interpret(symbols, options).all();
 	};
 
