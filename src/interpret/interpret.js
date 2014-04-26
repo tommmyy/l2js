@@ -28,9 +28,9 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
 		};
 
 		function Interpret(result, options) {
-			this.result = this._clearOutEmptyLSystems(this._serializeBuffers(l2js.utils.copy(result)));
+			this.result = this._serializeBuffers(result);
+			this.result = this._clearOutEmptyLSystems(this.result);
 			this.options = options && l2js.utils.extend(l2js.utils.copy(Interpret.options), options) || Interpret.options;
-			this.ctx = {};
 		};
 
 		/**
@@ -41,7 +41,7 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
 		Interpret.prototype.getBuilder = function(symbol) {
 			switch(symbol.alphabet.id) {
 				case "Turtle2D":
-					this._turtle2dBuilder || (this._turtle2dBuilder = new l2js.interpret.Turtle2DBuilder(this.options), this.ctx);
+					this._turtle2dBuilder || (this._turtle2dBuilder = new l2js.interpret.Turtle2DBuilder(this.options));
 					return this._turtle2dBuilder;
 			}
 			throw new Error("Unsupported alphabet: '" + symbol.alphabet.id + "'");
@@ -51,10 +51,12 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
 		 * Interpret next symbol
 		 */
 		Interpret.prototype.next = function() {
+
 			var symbol = this.getNextSymbol();
+
 			if (symbol) {
 				//console.log(symbol)
-				this.getBuilder(symbol).interpret(symbol, this.ctx);
+				this.getBuilder(symbol).interpret(symbol);
 			}
 			return symbol;
 		};
@@ -63,9 +65,11 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
 		 * Interpret all the symbols
 		 */
 		Interpret.prototype.all = function() {
+			var t1 = new Date().getTime();
 			while (this.hasNextSymbol()) {
 				this.next();
 			}
+			console.log((new Date().getTime() - t1) / 1000, "all");
 		};
 
 		Interpret.prototype.hasNextSymbol = function() {
@@ -110,12 +114,12 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
 			this._indexBuf[0] = readIndex;
 			this._lSysBuf[0] = result;
 
-			while ( symbol.type && symbol.type === "sublsystem") {
+			while (symbol.type && symbol.type === "sublsystem") {
 				this._trigger('newLSystem', symbol);
 				this._indexBuf.unshift(0);
 				this._lSysBuf.unshift(symbol);
 				symbol = symbol.interpretation[0];
-				
+
 			}
 			return symbol;
 		};
@@ -160,26 +164,24 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
 		Interpret.prototype._serializeBuffers = function(result) {
 
 			if (result.interpretation) {
-				var dels = [];
+
 				for (var i = 0; i < result.interpretation.length; i++) {
+					
 					if (result.interpretation[i].type && result.interpretation[i].type === "sublsystem") {
-						result.interpretation[i] = this._serializeBuffers(result.interpretation[i]);
+						 result.interpretation[i] = this._serializeBuffers(result.interpretation[i]);
 					}
-					
-					
+
 					if (result.interpretation[i].type && result.interpretation[i].type === "stack") {
-						
 						var stack = result.interpretation.splice(i, 1)[0];
-						result.interpretation.splice(i, 0, stack.start);
-						for (var j = 0; j < stack.string.length; j++) {
-							result.interpretation.splice(1 + i + j, 0, stack.string[j]);
-						}
-						result.interpretation.splice(1 + i + j, 0, stack.end);	
-						
+						var args = stack.string;
+						args.unshift(stack.start);
+						args.unshift(0);
+						args.unshift(i);
+						args.push(stack.end);
+						result.interpretation.splice.apply(result.interpretation, args);
 					}
 
 				}
-				
 
 			}
 			return result;

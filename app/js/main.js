@@ -41,6 +41,7 @@
 				container : "script_output",
 				width : 480,
 				height : 320,
+				symbolsPerFrame: 30,
 				//turtle: {
 				//initPosition: [100, 100],
 				//initOrientation: 0

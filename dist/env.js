@@ -4,7 +4,7 @@
 * Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-04-26T09:48:12.725Z
+* Date: 2014-04-26T14:34:38.116Z
 */
 
 (function( global, factory ) {'use strict';
@@ -539,18 +539,19 @@ l2js.compile = function(code) {
 	};
 
 	l2js.derive = function(lsystemCode) {
-		console.log(lsystemCode);
-		var t1 = new Date().getTime();
+		//console.log(lsystemCode);
+		//var t1 = new Date().getTime();
 		var out = eval(lsystemCode);
-		console.log((new Date().getTime() - t1)/1000);
+		//console.log((new Date().getTime() - t1)/1000);
 		return out;
 		
 	};
 
 	l2js.interpretAll = function(symbols, options) {
-		console.log(symbols);
-		return;
-		return new l2js.interpret.Interpret(symbols, options).all();
+		
+		var t1 = new Date().getTime();
+		new l2js.interpret.Interpret(symbols, options).all();
+		console.log((new Date().getTime() - t1)/1000);
 	};
 
 	l2js.format = function(lsystemCode) {
