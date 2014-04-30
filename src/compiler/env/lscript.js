@@ -18,7 +18,7 @@ window.l2js && window.l2js.utils && window.l2js.compiler && window.l2js.compiler
 		 * @memberOf l2js.LScript
 		 */
 		LScript.prototype.derive = function(axiom, maxIterations) {
-
+			this.ctx.stats.numberOfDerivedSymbols = 0;
 			var der = new this.main(this.ctx);
 			return der.derive(axiom || this.axiom, maxIterations || this.maxIterations);
 

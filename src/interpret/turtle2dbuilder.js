@@ -21,7 +21,7 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
 			height : 100,
 			skipUnknownSymbols : true,
 			symbolsPerFrame : 10,
-			bgColor: '#ffffff',
+			bgColor : '#ffffff',
 			turtle : {
 				initPosition : [0, 0],
 				initOrientation : 0
@@ -51,7 +51,7 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
 			this._startAnimation();
 		};
 
-		Turtle2DBuilder.prototype._handlerError = function(err) {
+		Turtle2DBuilder.prototype._handleError = function(err) {
 			this._stopAnimation();
 			throw new Error(err);
 		};
@@ -88,7 +88,7 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
 				x : 0,
 				y : 0,
 				width : opts.width,
-				height :opts.height,
+				height : opts.height,
 				fill : opts.bgColor
 			});
 			turtle2D.baseLayer.add(bg);
@@ -129,19 +129,22 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
 		};
 
 		Turtle2DBuilder.prototype._normalizeStep = function(step) {
-			return step * Math.max(this.options.width, this.options.height);
+			var step = Math.abs(step);
+			var rough = step>1?1:step;
+
+			return  rough* Math.max(this.options.width, this.options.height);
 		};
 
 		Turtle2DBuilder.prototype._normalizeAngle = function(angle) {
-			var interval = angle % 360;
-			return angle < 0 ? 360 + interval : interval;
+			return l2js.utils.normalizeAngle(angle);
 		};
 
-		Turtle2DBuilder.prototype._realColorToHexString = function(color) {
-			var hexStrAlpha = l2js.utils.padLeft((4294967295 * color).toString(16), 0, 8);
+		Turtle2DBuilder.prototype._colorToHexString = function(color) {
+
+			var hexStrAlpha = l2js.utils.padLeft(Math.round(4294967295 * color).toString(16), 0, 8);
 			return {
 				hex : '#' + hexStrAlpha.substring(0, 6),
-				a : parseInt(hexStrAlpha.substring(6, 8), 16) / 255
+				a : parseInt(hexStrAlpha.substring(6, 8), 16)/256
 			};
 		};
 
@@ -155,7 +158,7 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
 			'F' : function(symbol) {
 				var step = this._normalizeStep(symbol.arguments[0]);
 				var stroke = this._normalizeStep(symbol.arguments[1]);
-				var color = this._realColorToHexString(symbol.arguments[2] || 0);
+				var color = this._colorToHexString(symbol.arguments[2]);
 				var turtle2D = this.ctx.turtle2D;
 				var newPos = Turtle2DBuilder.turtleTransforms.forward(step, turtle2D.turtle);
 
@@ -209,7 +212,7 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
 			']' : function(symbol) {
 				var turtle2D = this.ctx.turtle2D;
 				if (l2js.utils.isUndefined(turtle2D.stack) || !turtle2D.stack.length) {
-					this.handlerError('Cannot read from undefined of empty indices stack.');
+					this._handleError('Cannot read from undefined of empty indices stack.');
 				}
 				turtle2D.turtle = turtle2D.stack.shift();
 			},
@@ -223,15 +226,15 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
 			'PU' : function(symbol) {
 				var turtle2D = this.ctx.turtle2D, poly, fillColor, stroke, strokeColor;
 				turtle2D.polyStack = turtle2D.polyStack || [];
-				fillColor = this._realColorToHexString(symbol.arguments[0]);
+				fillColor = this._colorToHexString(symbol.arguments[0]);
 				stroke = this._normalizeStep(symbol.arguments[1]);
-				strokeColor = this._realColorToHexString(symbol.arguments[2] || 0);
+				strokeColor = symbol.arguments[2] && this._colorToHexString(symbol.arguments[2]);
 
 				poly = new Kinetic.Line({
 					points : [],
 					fill : fillColor.hex,
 					stroke : stroke,
-					strokeWidth : strokeColor.hex,
+					strokeWidth : strokeColor && strokeColor.hex,
 					closed : true,
 					opacity : fillColor.a
 				});
@@ -246,7 +249,8 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
 			'PS' : function(symbol) {
 				var turtle2D = this.ctx.turtle2D;
 				if (l2js.utils.isUndefined(turtle2D.polyStack) || !turtle2D.polyStack.length) {
-					this.handlerError('Cannot read from undefined of empty polygon stack.');
+					//this._handleError('Cannot read from undefined of empty polygon stack.');
+					return;
 				}
 				turtle2D.polyStack.shift();
 			},
@@ -257,7 +261,8 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
 			'V' : function(symbol) {
 				var turtle2D = this.ctx.turtle2D, turtle = turtle2D.turtle;
 				if (l2js.utils.isUndefined(turtle2D.polyStack) || !turtle2D.polyStack.length) {
-					this.handlerError('Cannot read from undefined of empty polygon stack.');
+					//this._handleError('Cannot read from undefined of empty polygon stack.');
+					return;
 				}
 				var poly = turtle2D.polyStack[0];
 				poly.points(poly.points().concat(turtle.position));

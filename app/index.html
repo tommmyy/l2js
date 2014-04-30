@@ -58,6 +58,12 @@
 				<button type="button" id="format" class="btn btn-default">
 					Format
 				</button>
+				<button type="button" id="init-evolution" class="btn btn-default">
+					Start evolution
+				</button>
+				<button type="button" id="evolve" class="btn btn-default">
+					Evolve
+				</button>
 				<div class="form-group">
 					<label for="toCompile">Code</label>
 					<textarea id="toCompile" name="toCompile" class="form-control" rows="10">
@@ -65,9 +71,11 @@ alphabet Turtle2D {
    
 };
 
-lscript Brushes {
-   lsystem S1(I(1, __color(5,5,5,255)), 2) using Turtle2D {
-      I(scale, color) --> PU($color) V A($scale) PS;
+lscript FancyKochSnowflakesScript {
+  lsystem S1(I(1, __rgb(5,5,5,255)), 5) using Turtle2D {
+$variation = __rgb(5,5,5,0);
+      I(scale, color) --> PU($color + $scale*$variation) V A($scale) PS;
+      I(scale, color) --> PU($color - $scale*$variation) V A($scale) PS;
       A(a) --> L(45) [ f($a / 2) V ] A($a);
       L(a) --> L($a + 1);
       L(a) --> L($a - 2);
@@ -77,33 +85,31 @@ lscript Brushes {
    lsystem B1(f(1), 2) using Turtle2D {
       f(a) --> f($a / 2) [ L(90) G($a / 4) ] [ R(90) G($a / 4) ] f($a / 2);
       f(a) --> f($a / 2) [ R(60) G($a / 4) ] [ L(70) G($a / 4) ] f($a / 2);
-      G(a) -h> f($a) sublsystem S1(I($a * 5, __color(0,255,0,128)), 3);
-      G(a) -h> f($a) sublsystem S1(I($a * 5, __color(255,0,0,128)), 3);
+      G(a) -h> f($a) sublsystem S1(I($a * 20, __hsv(120,1, 1,128)));
+      G(a) -h> f($a) sublsystem S1(I($a * 25, __hsv(0,1,1,128)));
    };
 
-   lsystem KochFlake(I(1), 2) using Turtle2D {
+   lsystem KochFlake(I(1), 4) using Turtle2D {
       $angle = 60;
       I(a) --> F($a / 3) R($angle) R($angle) F($a / 3) R($angle) R($angle) F($a / 3);
       F(a) --> F($a / 2) L($angle) F($a / 2) R($angle) R($angle) F($a / 2) L($angle) F($a / 2);
       F(a) -h> sublsystem B1(f($a));
    };
 
-   lsystem Position(R(90) f(0.2) L(90) A, 1) using Turtle2D {
-      A --> sublsystem KochFlake(I(0.5));
+   lsystem Position(A, 1) using Turtle2D {
+      A --> sublsystem KochFlake(I(0.5)) ;
    };
 
    main call Position();
 };
 
-derive Brushes;
-
-
-derive Brushes;
+derive FancyKochSnowflakesScript;
 </textarea>
 				</div>
 
 			</form>
 			<div id="script_output"></div>
+			<div id="mutation_output"></div>
 		</div>
 
 		<script type="text/javascript" src="js/jquery.min.js"></script>
@@ -112,6 +118,7 @@ derive Brushes;
 		<!--
 		<script type="text/javascript" src="../dist/l2js-v0.0.1.min.js"></script>
 		-->
+
 		<script type="text/javascript" src="../src/l2js.js"></script>
 		<script type="text/javascript" src="../src/core.js"></script>
 		<script type="text/javascript" src="../src/core/deferred.js"></script>
@@ -126,9 +133,14 @@ derive Brushes;
 		<script type="text/javascript" src="../src/compiler/env/sublscript.js"></script>
 		<script type="text/javascript" src="../src/compiler/lnodes.js"></script>
 		<script type="text/javascript" src="../src/compiler/lparser.js"></script>
+		<script type="text/javascript" src="../src/compiler/astutils.js"></script>
 		<script type="text/javascript" src="../src/compiler/astcompiler.js"></script>
 		<script type="text/javascript" src="../src/compiler/l2compiler.js"></script>
 		<script type="text/javascript" src="../src/compiler/compiler.js"></script>
+		<script type="text/javascript" src="../src/evolver.js"></script>
+		<script type="text/javascript" src="../src/evolver/eutils.js"></script>
+		<script type="text/javascript" src="../src/evolver/ruleutils.js"></script>
+		<script type="text/javascript" src="../src/evolver/evolver.js"></script>
 		<script type="text/javascript" src="../src/interpret.js"></script>
 		<script type="text/javascript" src="../src/interpret/turtle2dbuilder.js"></script>
 		<script type="text/javascript" src="../src/interpret/interpret.js"></script>
@@ -143,6 +155,9 @@ derive Brushes;
 		<!--
 		<script type="text/javascript" src="js/lscripts/cantorsetscript.js"></script>
 		-->
-
+		<!--
+		<script type="text/javascript" src="../dist/env.js"></script>
+		<script type="text/javascript" src="js/foo.js"></script>
+		-->
 	</body>
 </html>

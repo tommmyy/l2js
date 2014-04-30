@@ -28,8 +28,7 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
 		};
 
 		function Interpret(result, options) {
-			this.result = this._serializeBuffers(result);
-			this.result = this._clearOutEmptyLSystems(this.result);
+			this.result = this._clearOutEmptyLSystems(this._serializeBuffers(result));
 			this.options = options && l2js.utils.extend(l2js.utils.copy(Interpret.options), options) || Interpret.options;
 		};
 

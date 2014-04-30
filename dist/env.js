@@ -4,7 +4,7 @@
 * Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-04-26T21:25:15.933Z
+* Date: 2014-04-29T01:37:24.852Z
 */
 
 (function( global, factory ) {'use strict';
@@ -91,9 +91,59 @@ window.l2js.files = {};
  */
 
 
-	
+
+	(function() {
+
+		/**
+		 * Decimal adjustment of a number.
+		 *
+		 * @param	{String}	type	The type of adjustment.
+		 * @param	{Number}	value	The number.
+		 * @param	{Integer}	exp		The exponent (the 10 logarithm of the adjustment base).
+		 * @returns	{Number}			The adjusted value.
+		 */
+		function decimalAdjust(type, value, exp) {
+			// If the exp is undefined or zero...
+			if ( typeof exp === 'undefined' || +exp === 0) {
+				return Math[type](value);
+			}
+			value = +value;
+			exp = +exp;
+			// If the value is not a number or the exp is not an integer...
+			if (isNaN(value) || !( typeof exp === 'number' && exp % 1 === 0)) {
+				return NaN;
+			}
+			// Shift
+			value = value.toString().split('e');
+			value = Math[type](+(value[0] + 'e' + (value[1] ? (+value[1] - exp) : -exp)));
+			// Shift back
+			value = value.toString().split('e');
+			return +(value[0] + 'e' + (value[1] ? (+value[1] + exp) : exp));
+		}
+
+		// Decimal round
+		if (!Math.round10) {
+			Math.round10 = function(value, exp) {
+				return decimalAdjust('round', value, exp);
+			};
+		}
+		// Decimal floor
+		if (!Math.floor10) {
+			Math.floor10 = function(value, exp) {
+				return decimalAdjust('floor', value, exp);
+			};
+		}
+		// Decimal ceil
+		if (!Math.ceil10) {
+			Math.ceil10 = function(value, exp) {
+				return decimalAdjust('ceil', value, exp);
+			};
+		}
+
+	})();
+
 	l2js.utils = {
-		copy: function (obj) {
+		copy : function(obj) {
 			if (l2js.utils.isUndefined(obj) || typeof obj !== "object" || obj === null) {
 				return obj;
 			}
@@ -106,10 +156,10 @@ window.l2js.files = {};
 			return out;
 		},
 
-		hasProp: {}.hasOwnProperty,
+		hasProp : {}.hasOwnProperty,
 
 		// coffeescript
-		extend: function (child, parent) {
+		extend : function(child, parent) {
 			for (var key in parent) {
 				if (l2js.utils.hasProp.call(parent, key))
 					child[key] = parent[key];
@@ -126,7 +176,7 @@ window.l2js.files = {};
 		},
 
 		// prototype
-		indexOf: function (arr, item, i) {
+		indexOf : function(arr, item, i) {
 			i || ( i = 0);
 			var length = arr.length;
 			if (i < 0)
@@ -137,30 +187,30 @@ window.l2js.files = {};
 			return -1;
 		},
 
-		isUndefined: function (v) {
+		isUndefined : function(v) {
 			return typeof v === 'undefined';
-		}, 
-		isFunction:function (functionToCheck) {
-		 var getType = {};
-		 return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
 		},
-		toUpperFirstLetter: function (string) {
-		    return string.charAt(0).toUpperCase() + string.slice(1);
+		isFunction : function(functionToCheck) {
+			var getType = {};
+			return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
 		},
-		/** 
-		 * http://xazure.net/2011/06/tips-snippets/javascript/padding-string-in-javascript/ 
-		 * @param str - The string to pad. 
-		 * @param padChar - The character to pad the string with. 
-		 * @param length - The length of the resulting string. 
+		toUpperFirstLetter : function(string) {
+			return string.charAt(0).toUpperCase() + string.slice(1);
+		},
+		/**
+		 * http://xazure.net/2011/06/tips-snippets/javascript/padding-string-in-javascript/
+		 * @param str - The string to pad.
+		 * @param padChar - The character to pad the string with.
+		 * @param length - The length of the resulting string.
 		 *
-		 * @return The padded string. 
-		 */ 
-		padLeft: function (str, padChar, length) { 
-		
-		    while(str.length < length) 
-		        str = padChar + str;
-		    return str; 
-		} 	
+		 * @return The padded string.
+		 */
+		padLeft : function(str, padChar, length) {
+
+			while (str.length < length)
+			str = padChar + str;
+			return str;
+		}
 	};
 
 l2js.compiler = l2js.compiler || {};
@@ -544,14 +594,14 @@ l2js.compile = function(code) {
 		var out = eval(lsystemCode);
 		//console.log((new Date().getTime() - t1)/1000);
 		return out;
-		
+
 	};
 
 	l2js.interpretAll = function(symbols, options) {
-		
+
 		var t1 = new Date().getTime();
 		new l2js.interpret.Interpret(symbols, options).all();
-		console.log((new Date().getTime() - t1)/1000);
+		console.log((new Date().getTime() - t1) / 1000);
 	};
 
 	l2js.format = function(lsystemCode) {
@@ -563,11 +613,9 @@ l2js.compile = function(code) {
 			try {
 				var compiler = new l2js.compiler.Compiler();
 
-				compiler.toAST(lsystemCode).then(function(ast) {
-					compiler.ASTToL2(ast).then(function(l2) {
-						deferred.resolve(l2);
-					}, errHandler);
-				}, errHandler);
+				var ast = compiler.toAST(lsystemCode);
+				var l2 = compiler.ASTToL2(ast);
+				deferred.resolve(l2);
 			} catch(e) {
 				errHandler(e);
 			}
@@ -577,8 +625,26 @@ l2js.compile = function(code) {
 		return deferred.promise;
 	};
 
-	l2js.mutate = function() {
+	l2js.evolve = function(numberOfIndividuals, scripts, lscript, lsystems) {
 
+		var compiler = new l2js.compiler.Compiler();
+		var asts = [];
+		for (var i = 0; i < scripts.length; i++) {
+			if(typeof scripts[i] === "string") {
+				scripts[i] = {code: scripts[i]};
+			}
+			var ast = compiler.toAST(scripts[i].code);
+			asts.push({
+				evaluation : scripts[i].evaluation || 0,
+				ast : ast
+			});
+		}
+
+		return new l2js.evolver.Evolver(asts, {
+			numberOfIndividuals : numberOfIndividuals,
+			lsystems: lsystems,
+			lscript: lscript
+		});
 	};
 
 

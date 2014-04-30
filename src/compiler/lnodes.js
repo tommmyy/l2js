@@ -33,6 +33,10 @@ window.l2js && window.l2js.compiler && function(l2js) {
 			this.e = e;
 		};
 		
+		lnodes.ASTRef = function ASTRef(val){
+			this.val = val;
+		};
+		
 		lnodes.ASTFunc = function ASTFunc(id, args) {
 			this.id = id;
 			this.args = args;

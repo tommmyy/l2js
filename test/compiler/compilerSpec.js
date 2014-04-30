@@ -50,7 +50,7 @@ describe("Compiler", function(){
 			cantorSetScriptDone();
 		});
 		
-		it('that is executable and returns derivation of lscript', function(cantorSetScriptDone){
+		it('that is executable and returns derivation of lscript', function(cantorSetScriptDone){debugger
 			var derivation = eval(code);
 			expect(derivation).toBeTruthy();
 			cantorSetScriptDone();

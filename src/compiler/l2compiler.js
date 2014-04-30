@@ -63,10 +63,6 @@ window.l2js && window.l2js.utils && function(l2js) {
 		};
 
 		L2Compiler.prototype.visitBlock = function(node) {
-			return this._printLine("include '" + node.file + "'");
-		};
-
-		L2Compiler.prototype.visitBlock = function(node) {
 			!node.isRoot && this.level++;
 			var src = this.visitNodes(node.entries);
 			!node.isRoot && this.level--;
@@ -215,7 +211,18 @@ window.l2js && window.l2js.utils && function(l2js) {
 				successors.push(this.visitSuccessor(rule.successors[i]));
 			}
 
-			src += this._printLine(this.visitAncestor(ancestor) + " " + op + " " + successors.join(" | ") + ";");
+			if(successors.length === 1 ){
+				src += this._printLine(this.visitAncestor(ancestor) + " " + op + " " + successors.join(" | ") + ";");
+			} else {
+				src += this._printLine(this.visitAncestor(ancestor) + " " + op + " " + successors[0] +" | ");
+				
+				this.level++;
+				for(var i=1; i<successors.length; i++) {
+					src += this._printLine(successors[i] + ((i !== successors.length-1)?" | ": ";") );
+				}
+				this.level--;
+			}
+			
 
 			return src;
 		};
@@ -248,6 +255,8 @@ window.l2js && window.l2js.utils && function(l2js) {
 					exps.push(this.visitExpression(e.args[i]));
 				}
 				return e.id + "(" + exps.join(",") + ")";
+			} else if ( e instanceof lnodes.ASTRef) {
+				return e.val;
 			} else if ( typeof e === "number") {
 				return e;
 			} else {

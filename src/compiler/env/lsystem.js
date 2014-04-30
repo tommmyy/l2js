@@ -82,7 +82,12 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env.SubLSystem && funct
 				if (l2js.utils.isUndefined(ancestor[j])) {
 					throw Error("Undefined ancestor.");
 				}
-
+				
+				this.ctx.stats.numberOfDerivedSymbols++;
+				if(this.ctx.stats.numberOfDerivedSymbols > l2js.options.maxDerivedSymbols) {
+					throw new Error("Reached the limit of maximum derived symbols per derivation of script.");
+				}
+				
 				// Sub-L-systems should be derived only in main derivation
 				if (ancestor[j] instanceof l2js.compiler.env.SubLSystem) {
 					type === "-" && successor.push(l2js.utils.copy(ancestor[j]).derive()) || successor.push(l2js.utils.copy(ancestor[j]));

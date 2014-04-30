@@ -144,7 +144,7 @@ describe("LParser", function(){
 				expect(sublsys.axiom).toBeDefined();
 				expect(sublsys.axiom.length).toBe(1);
 				
-				expect(sublsys.maxIterations).toBe(0);
+				expect(sublsys.maxIterations.val).toBe(0);
 				
 			});
 			
@@ -176,7 +176,7 @@ describe("LParser", function(){
 				expect(sublsys instanceof lnodes.ASTSubLSystem).toBeTruthy();
 				
 				expect(sublsys.axiom).not.toBeDefined();
-				expect(sublsys.maxIterations).toBe(1);
+				expect(sublsys.maxIterations.val).toBe(1);
 			});
 		});	
 		
@@ -199,7 +199,7 @@ describe("LParser", function(){
 				expect(sublsys.axiom).toBeDefined();
 				expect(sublsys.axiom.length).toBe(1);
 				
-				expect(sublsys.maxIterations).toBe(0);
+				expect(sublsys.maxIterations.val).toBe(0);
 				
 			});
 			
@@ -231,7 +231,7 @@ describe("LParser", function(){
 				expect(sublsys instanceof lnodes.ASTCall).toBeTruthy();
 				
 				expect(sublsys.axiom).not.toBeDefined();
-				expect(sublsys.maxIterations).toBe(1);
+				expect(sublsys.maxIterations.val).toBe(1);
 			});
 		});	
 		

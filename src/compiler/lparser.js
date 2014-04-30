@@ -134,13 +134,13 @@ case 10:
 		
 break;
 case 11:
-			if($$[$0-6] % 1 !== 0) {
+			if($$[$0-6].val % 1 !== 0) {
 				var errMsg = "Number of iterations should be integer.";
 				throw new yy.ParseError('Parse error on ' + this._$.first_line + ':' + this._$.last_column + '. ' + errMsg );
 			}
 			var block = new yy.ASTBlock(); 
 			block.entries = $$[$0-1];
-			this.$ = new yy.ASTLSystem($$[$0-10], $$[$0-3], $$[$0-8], $$[$0-6], block);
+			this.$ = new yy.ASTLSystem($$[$0-10], $$[$0-3], $$[$0-8], $$[$0-6].val, block);
 		
 break;
 case 12:
@@ -198,11 +198,11 @@ break;
 case 30:this.$ = $$[$0]
 break;
 case 31:
-			if($$[$0] % 1 !== 0) {
+			if($$[$0].val % 1 !== 0) {
 				var errMsg = "Number of iterations should be integer.";
 				throw new yy.ParseError('Parse error on ' + this._$.first_line + ':' + this._$.last_column + '. ' + errMsg );
 			}
-			this.$ = $$[$0];
+			this.$ = $$[$0].val;
 		
 break;
 case 32:this.$ = new yy.ASTAncestor($$[$0-3], $$[$0-1]);
@@ -213,7 +213,7 @@ case 34:this.$ = $$[$0]; this.$.unshift($$[$0-2]);
 break;
 case 35:this.$ = [$$[$0]];
 break;
-case 36:this.$ = new yy.ASTSuccessor($$[$0-2], $$[$0]);
+case 36:this.$ = new yy.ASTSuccessor($$[$0-2], $$[$0].val);
 break;
 case 37:this.$ = new yy.ASTSuccessor($$[$0]);
 break;
@@ -287,7 +287,7 @@ case 71:this.$ = new yy.ASTBrackets($$[$0-1]);
 break;
 case 72:this.$ = String(yytext);
 break;
-case 73:this.$ =  Number(yytext);
+case 73:this.$ = new yy.ASTRef(Number(yytext));
 break;
 }
 },

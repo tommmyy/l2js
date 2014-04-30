@@ -126,13 +126,13 @@ stmt
 		}}
 	| LSYSTEM id '(' axiom ',' number ')' USING id '{' stmts '}'
 		{{
-			if($number % 1 !== 0) {
+			if($number.val % 1 !== 0) {
 				var errMsg = "Number of iterations should be integer.";
 				throw new yy.ParseError('Parse error on ' + @$.first_line + ':' + @$.last_column + '. ' + errMsg );
 			}
 			var block = new yy.ASTBlock(); 
 			block.entries = $stmts;
-			$$ = new yy.ASTLSystem($id1, $id2, $axiom, $number, block);
+			$$ = new yy.ASTLSystem($id1, $id2, $axiom, $number.val, block);
 		}}
 	| ALPHABET id '{' symbols '}'
 		{{
@@ -209,11 +209,11 @@ axiom
 iterations
 	: number
 		{{
-			if($number % 1 !== 0) {
+			if($number.val % 1 !== 0) {
 				var errMsg = "Number of iterations should be integer.";
 				throw new yy.ParseError('Parse error on ' + @$.first_line + ':' + @$.last_column + '. ' + errMsg );
 			}
-			$$ = $1;
+			$$ = $1.val;
 		}}
 	;
 	
@@ -234,7 +234,7 @@ successors
 
 successor
 	: string ':' number
-		{$$ = new yy.ASTSuccessor($1, $3);}
+		{$$ = new yy.ASTSuccessor($1, $3.val);}
 	| string
 		{$$ = new yy.ASTSuccessor($1);}
 	;	
@@ -356,7 +356,7 @@ text
 
 number
 	: NUMBER
-        {$$ =  Number(yytext);}
+        {$$ = new yy.ASTRef(Number(yytext));}
 	;
 
 	

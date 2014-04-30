@@ -62,13 +62,10 @@ window.l2js && window.l2js.compiler.Lparser && window.l2js.compiler.lnodes && wi
 
 			setTimeout(function() {
 				try {
-
-					that.toAST(code).then(function(ast) {
-						that.ASTToJS(ast).then(function(src) {
-							deferred.resolve(src);
-						}, errCb);
-					}, errCb);
-
+					var ast = that.toAST(code),
+						src = that.ASTToJS(ast);
+						
+					deferred.resolve(src);
 				} catch (e) {
 					deferred.reject(e);
 				}
@@ -79,46 +76,18 @@ window.l2js && window.l2js.compiler.Lparser && window.l2js.compiler.lnodes && wi
 		};
 
 		Compiler.prototype.toAST = function(code) {
-			var that = this, q = l2js.core.q, deferred = q.deferred();
-			setTimeout(function() {
-				try {
-					var linkedCode = that.linkCode(code), ast = l2js.compiler.Lparser.parse(linkedCode);
-					console.log(ast);
-					deferred.resolve(ast);
-				} catch (e) {
-					deferred.reject(e);
-				}
-			}, 0);
-			return deferred.promise;
+			var linkedCode = this.linkCode(code), ast = l2js.compiler.Lparser.parse(linkedCode);
+			console.log(ast)
+			return ast;
+
 		};
 
 		Compiler.prototype.ASTToJS = function(ast) {
-			var that = this, q = l2js.core.q, deferred = q.deferred();
-			setTimeout(function() {
-				try {
-					var src = new that.ASTCompiler().visitRoot(ast);
-					deferred.resolve(src);
-
-				} catch (e) {
-					deferred.reject(e);
-				}
-			}, 0);
-			return deferred.promise;
+			return new this.ASTCompiler().visitRoot(ast);
 		};
 
 		Compiler.prototype.ASTToL2 = function(ast) {
-			var that = this, deferred = l2js.core.q.deferred();
-
-			setTimeout(function() {
-				try {
-					var src = new that.L2Compiler(ast).compile();
-					deferred.resolve(src);
-
-				} catch (e) {
-					deferred.reject(e);
-				}
-			}, 0);
-			return deferred.promise;
+			return new this.L2Compiler(ast).compile();
 		};
 
 		return Compiler;

@@ -24,7 +24,8 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 
 
 		ASTCompiler.funcsSrc = {
-			"__color" : "__color: function(r, g, b, a) {" + "var rgba = r || 0;" + "rgba = rgba << 8;" + "rgba |= g|| 0;" + "rgba = rgba << 8;" + "rgba |= b|| 0; " + "rgba = rgba << 8;" + "rgba |= a|| 0; rgba = rgba >>> 0;" + "return rgba/4294967295;}"
+			"__rgb" : "__rgb: function(r, g, b, a) {return l2js.utils.RGBToInt({model: 'rgb', r:r, g:g, b:b, a:a});}",
+			"__hsv" : "__hsv: function(h, s, v, a) {return l2js.utils.RGBToInt(l2js.utils.HSVToRGB({model: 'hsv', h:h, s:s, v:v, a:a}));}"
 		};
 
 		ASTCompiler.states = {
@@ -74,7 +75,8 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 
 				src = "(function(l2js){\n";
 				src += "var env = l2js.compiler.env, getModule = env.LSystem.getModule, getParamModule = env.LSystem.getParamModule,\n";
-				src += "ctx = {};\n";
+				src += "stats = {numberOfDerivedSymbols: 0},\n";
+				src += "ctx = {stats: stats};\n";
 
 				var block = this.visitBlock(node);
 				if (this.funcs && this.funcs.length) {
@@ -233,7 +235,8 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 
 			this.handleInclude(lsystem.body.entries);
 			// separate variable declarations
-			var i, entries = lsystem.body.entries, decs = [];
+			var body = l2js.utils.copy(lsystem.body);
+			var i, entries = body.entries, decs = [];
 			for ( i = entries.length - 1; i >= 0; i--) {
 				if (entries[i] instanceof lnodes.ASTId) {
 					decs.unshift(entries.splice(i, 1)[0]);
@@ -250,7 +253,7 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 			src += id + ".alphabet = " + lsystem.alphabet.id + ";\n" + id + ".id = '" + id + "';\n";
 
 			// properties
-			var blockSrc = this.visitBlock(lsystem.body, true);
+			var blockSrc = this.visitBlock(body, true);
 
 			src += this.makeRulesHashDecls();
 			src += blockSrc;
@@ -314,9 +317,11 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 					exps.push(this.visitExpression(e.args[i]));
 				}
 				if (l2js.utils.indexOf(this.funcs, e.id) === -1) {
-					this.funcs.push(e.id);
+					this.funcs.push(e.id );
 				}
 				return "funcs." + e.id + "(" + exps.join(",") + ")";
+			} else if (  e instanceof lnodes.ASTRef) {
+				return e.val;
 			} else if ( typeof e === "number") {
 				return e;
 			} else {
