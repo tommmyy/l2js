@@ -4,7 +4,7 @@
 * Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-04-29T01:37:24.852Z
+* Date: 2014-04-30T23:59:58.449Z
 */
 
 (function( global, factory ) {'use strict';
@@ -18,7 +18,7 @@
 var _l2js = l2js;
 var l2js = window.l2js = window.l2js || (window.l2js = {});
 
-l2js.options = {keepDerivations: false};
+l2js.options = {keepDerivations: false, maxDerivedSymbols: 5000};
 window.l2js.files = {};
 
 /**
@@ -210,6 +210,57 @@ window.l2js.files = {};
 			while (str.length < length)
 			str = padChar + str;
 			return str;
+		},
+		normalizeAngle: function(angle) {
+			var interval = angle % 360;
+			return angle < 0 ? 360 + interval : interval;
+		},
+		HSVToRGB: function(color) {
+			var h = l2js.utils.normalizeAngle(color.h);
+			var s = color.s < 0 ? 0 : (color.s > 1 ? 1 : color.s);
+			var v = color.v < 0 ? 0 : (color.v > 1 ? 1 : color.v);
+
+			var C = v * s;
+			var X = C * (1 - Math.abs((h / 60) % 2 - 1));
+			var m = v - C;
+
+			var rgb_;
+			if (h < 60) {
+				rgb_ = [C, X, 0];
+			} else if (60 <= h < 120) {
+				rgb_ = [X, C, 0];
+			} else if (120 <= h < 180) {
+				rgb_ = [0, C, X];
+			} else if (180 <= h < 240) {
+				rgb_ = [0, X, C];
+			} else if (240 <= h < 300) {
+				rgb_ = [X, 0, C];
+			} else if (300 <= h <= 360) {
+				rgb_ = [C, 0, X];
+			}
+
+			var r = (rgb_[0] + m) * 255;
+			var g = (rgb_[1] + m) * 255;
+			var b = (rgb_[2] + m) * 255;
+			
+			return {model: "rgb", r: r, g: g, b: b, a:color.a};
+		},
+		RGBToInt : function(color) {
+			
+			function norm(c) {
+				return c;
+				return (!c||c<0)?0:((c>255)?255:c);
+			}
+			var rgba = norm(color.r) || 0;
+			rgba = rgba << 8;
+			rgba |= norm(color.g);
+			rgba = rgba << 8;
+			rgba |= norm(color.b);
+			rgba = rgba << 8;
+			rgba |= norm(color.a);
+			rgba = rgba >>> 0;
+			
+			return rgba / 4294967295;
 		}
 	};
 
@@ -392,7 +443,12 @@ l2js.compiler.env.Stack = (function() {
 				if (l2js.utils.isUndefined(ancestor[j])) {
 					throw Error("Undefined ancestor.");
 				}
-
+				
+				this.ctx.stats.numberOfDerivedSymbols++;
+				if(this.ctx.stats.numberOfDerivedSymbols > l2js.options.maxDerivedSymbols) {
+					throw new Error("Reached the limit of maximum derived symbols per derivation of script.");
+				}
+				
 				// Sub-L-systems should be derived only in main derivation
 				if (ancestor[j] instanceof l2js.compiler.env.SubLSystem) {
 					type === "-" && successor.push(l2js.utils.copy(ancestor[j]).derive()) || successor.push(l2js.utils.copy(ancestor[j]));
@@ -524,7 +580,7 @@ l2js.compiler.env.Stack = (function() {
 		 * @memberOf l2js.LScript
 		 */
 		LScript.prototype.derive = function(axiom, maxIterations) {
-
+			this.ctx.stats.numberOfDerivedSymbols = 0;
 			var der = new this.main(this.ctx);
 			return der.derive(axiom || this.axiom, maxIterations || this.maxIterations);
 
