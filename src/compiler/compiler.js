@@ -13,7 +13,6 @@ window.l2js && window.l2js.compiler.Lparser && window.l2js.compiler.lnodes && wi
 		this.line = line;
 	}
 
-
 	ParseError.prototype.toString = function() {
 		return this.msg;
 	};
@@ -77,7 +76,6 @@ window.l2js && window.l2js.compiler.Lparser && window.l2js.compiler.lnodes && wi
 
 		Compiler.prototype.toAST = function(code) {
 			var linkedCode = this.linkCode(code), ast = l2js.compiler.Lparser.parse(linkedCode);
-			console.log(ast)
 			return ast;
 
 		};

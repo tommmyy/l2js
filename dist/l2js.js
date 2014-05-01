@@ -4,7 +4,7 @@
 * Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-04-30T23:59:58.386Z
+* Date: 2014-05-01T09:55:18.914Z
 */
 
 (function( global, factory ) {'use strict';
@@ -261,7 +261,21 @@ window.l2js.files = {};
 			rgba = rgba >>> 0;
 			
 			return rgba / 4294967295;
+		},
+		colorToHexString:function(colorInt) {
+			function hexStringToInt(str) {
+				return parseInt(str, 16);
+			};
+			var hexStrAlpha = l2js.utils.padLeft(Math.round(4294967295 * colorInt).toString(16), 0, 8); 
+			return {
+				hex : '#' + hexStrAlpha.substring(0, 6),		
+				r : hexStringToInt(hexStrAlpha.substring(0, 2)),
+				g : hexStringToInt(hexStrAlpha.substring(2, 4)),
+				b : hexStringToInt(hexStrAlpha.substring(4, 6)),
+				a : hexStringToInt(hexStrAlpha.substring(6, 8))/256
+			};
 		}
+
 	};
 
 l2js.compiler = l2js.compiler || {};
@@ -1692,11 +1706,22 @@ return new Parser;
 
 		}
 
-
+		//@formatter:off
 		ASTCompiler.funcsSrc = {
+			//RGB to INT <0;1>
 			"__rgb" : "__rgb: function(r, g, b, a) {return l2js.utils.RGBToInt({model: 'rgb', r:r, g:g, b:b, a:a});}",
-			"__hsv" : "__hsv: function(h, s, v, a) {return l2js.utils.RGBToInt(l2js.utils.HSVToRGB({model: 'hsv', h:h, s:s, v:v, a:a}));}"
+			//HSV to RGB to INT <0;1>
+			"__hsv" : "__hsv: function(h, s, v, a) {return l2js.utils.RGBToInt(l2js.utils.HSVToRGB({model: 'hsv', h:h, s:s, v:v, a:a}));}",
+			// Color * scalar
+			"__xC" : "__xC: function(s, color) {var rgb = l2js.utils.colorToHexString(color);"
+				+ "rgb.r *=s;rgb.g *=s;rgb.b *=s;rgb.a*=s;"
+				+ "return l2js.utils.RGBToInt({model: 'rgb', r:rgb.r, g:rgb.g, b:rgb.b, a:rgb.a}) }",
+			// Color x Color
+			"__XC" : "__XC: function(A, B) {var cA = l2js.utils.colorToHexString(A), cB = l2js.utils.colorToHexString(B);"
+				+ "cA.r *=cB.r; cA.g *=cB.g; cA.b*=cB.b; cA.a*=256; cB.a*=256;  cA.a*=cB.a;"
+				+ "return l2js.utils.RGBToInt({model: 'rgb', r:cA.r, g:cA.g, b:cA.b, a:cA.a}) }"
 		};
+		//@formatter:on
 
 		ASTCompiler.states = {
 			"GLOBAL" : "global",
@@ -2455,7 +2480,6 @@ return new Parser;
 		this.line = line;
 	}
 
-
 	ParseError.prototype.toString = function() {
 		return this.msg;
 	};
@@ -2519,7 +2543,6 @@ return new Parser;
 
 		Compiler.prototype.toAST = function(code) {
 			var linkedCode = this.linkCode(code), ast = l2js.compiler.Lparser.parse(linkedCode);
-			console.log(ast)
 			return ast;
 
 		};
@@ -2671,7 +2694,6 @@ l2js.interpret = l2js.interpret || {};
 		};
 
 		Turtle2DBuilder.prototype._normalizeStep = function(step) {
-			var step = Math.abs(step);
 			var rough = step>1?1:step;
 
 			return  rough* Math.max(this.options.width, this.options.height);
@@ -2682,12 +2704,7 @@ l2js.interpret = l2js.interpret || {};
 		};
 
 		Turtle2DBuilder.prototype._colorToHexString = function(color) {
-
-			var hexStrAlpha = l2js.utils.padLeft(Math.round(4294967295 * color).toString(16), 0, 8);
-			return {
-				hex : '#' + hexStrAlpha.substring(0, 6),
-				a : parseInt(hexStrAlpha.substring(6, 8), 16)/256
-			};
+			return l2js.utils.colorToHexString(color);
 		};
 
 		Turtle2DBuilder.prototype._symbols = {
@@ -2710,7 +2727,7 @@ l2js.interpret = l2js.interpret || {};
 					strokeWidth : stroke,
 					lineCap : 'round',
 					lineJoin : 'round',
-					opacity : stroke.a
+					opacity : color.a
 				}));
 
 				turtle2D.baseLayer.batchDraw();
@@ -2881,11 +2898,11 @@ l2js.interpret = l2js.interpret || {};
 		 * Interpret all the symbols
 		 */
 		Interpret.prototype.all = function() {
-			var t1 = new Date().getTime();
+			//var t1 = new Date().getTime();
 			while (this.hasNextSymbol()) {
 				this.next();
 			}
-			console.log((new Date().getTime() - t1) / 1000, "all");
+			//console.log((new Date().getTime() - t1) / 1000, "all");
 		};
 
 		Interpret.prototype.hasNextSymbol = function() {
@@ -3635,7 +3652,7 @@ l2js.evolver = l2js.evolver || {};
 		Evolver.prototype._variateInExpression = function(e, terminals) {
 
 			var nodes = this.EUtils.findAll(function(node) {
-				return node instanceof lnodes.ASTId || node instanceof lnodes.ASTRef || node instanceof lnodes.ASTOperation || node instanceof lnodes.ASTBrackets || ( node instanceof lnodes.ASTFunc && utils.indexOf(["__rgb", "__hsv"], node.id) !== -1);
+				return node instanceof lnodes.ASTId || node instanceof lnodes.ASTRef || node instanceof lnodes.ASTOperation || node instanceof lnodes.ASTBrackets || ( node instanceof lnodes.ASTFunc && utils.indexOf(["__rgb", "__hsv", "__xC", "__XC"], node.id) !== -1);
 			}, e);
 
 			var node = this._getRandomFromArray(nodes);
@@ -3649,8 +3666,13 @@ l2js.evolver = l2js.evolver || {};
 			} else if ( node instanceof lnodes.ASTBrackets) {
 				this._variateInExpression(node.e);
 
-			} else if ( node instanceof lnodes.ASTFunc) {
+			} else if ( node instanceof lnodes.ASTFunc &&  utils.indexOf(["__rgb", "__hsv"], node.id)) {
 				this._mutateColor(node);
+			} else if ( node instanceof lnodes.ASTFunc &&  utils.indexOf(["__xC", "__XC"], node.id)) {
+				for(var i = 0; i<node.args.length; i++) {
+					node.args[i] = this.__variateInExpression(node.args[i]);
+				}
+				
 			} else if ( node instanceof lnodes.ASTRef) {
 				node.val = node.val * this._getRandomVariation(this.options.numberMutation.variation);
 			} else if ( node instanceof lnodes.ASTId && terminals) {
@@ -3802,9 +3824,9 @@ l2js.compile = function(code) {
 
 	l2js.interpretAll = function(symbols, options) {
 
-		var t1 = new Date().getTime();
+		//var t1 = new Date().getTime();
 		new l2js.interpret.Interpret(symbols, options).all();
-		console.log((new Date().getTime() - t1) / 1000);
+		//console.log((new Date().getTime() - t1) / 1000);
 	};
 
 	l2js.format = function(lsystemCode) {

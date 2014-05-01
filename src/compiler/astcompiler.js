@@ -22,11 +22,22 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 
 		}
 
-
+		//@formatter:off
 		ASTCompiler.funcsSrc = {
+			//RGB to INT <0;1>
 			"__rgb" : "__rgb: function(r, g, b, a) {return l2js.utils.RGBToInt({model: 'rgb', r:r, g:g, b:b, a:a});}",
-			"__hsv" : "__hsv: function(h, s, v, a) {return l2js.utils.RGBToInt(l2js.utils.HSVToRGB({model: 'hsv', h:h, s:s, v:v, a:a}));}"
+			//HSV to RGB to INT <0;1>
+			"__hsv" : "__hsv: function(h, s, v, a) {return l2js.utils.RGBToInt(l2js.utils.HSVToRGB({model: 'hsv', h:h, s:s, v:v, a:a}));}",
+			// Color * scalar
+			"__xC" : "__xC: function(s, color) {var rgb = l2js.utils.colorToHexString(color);"
+				+ "rgb.r *=s;rgb.g *=s;rgb.b *=s;rgb.a*=s;"
+				+ "return l2js.utils.RGBToInt({model: 'rgb', r:rgb.r, g:rgb.g, b:rgb.b, a:rgb.a}) }",
+			// Color x Color
+			"__XC" : "__XC: function(A, B) {var cA = l2js.utils.colorToHexString(A), cB = l2js.utils.colorToHexString(B);"
+				+ "cA.r *=cB.r; cA.g *=cB.g; cA.b*=cB.b; cA.a*=256; cB.a*=256;  cA.a*=cB.a;"
+				+ "return l2js.utils.RGBToInt({model: 'rgb', r:cA.r, g:cA.g, b:cA.b, a:cA.a}) }"
 		};
+		//@formatter:on
 
 		ASTCompiler.states = {
 			"GLOBAL" : "global",

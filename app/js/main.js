@@ -4,9 +4,6 @@
 		evolver : {}
 	};
 	
-
-	
-	console.log(_colorToHexString(i * j));
 	
 	l2js.files = {
 		"file1.l2" : "include \"file2.l2\";",

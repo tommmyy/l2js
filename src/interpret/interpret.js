@@ -64,11 +64,11 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
 		 * Interpret all the symbols
 		 */
 		Interpret.prototype.all = function() {
-			var t1 = new Date().getTime();
+			//var t1 = new Date().getTime();
 			while (this.hasNextSymbol()) {
 				this.next();
 			}
-			console.log((new Date().getTime() - t1) / 1000, "all");
+			//console.log((new Date().getTime() - t1) / 1000, "all");
 		};
 
 		Interpret.prototype.hasNextSymbol = function() {

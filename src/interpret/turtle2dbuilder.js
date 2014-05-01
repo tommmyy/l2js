@@ -129,7 +129,6 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
 		};
 
 		Turtle2DBuilder.prototype._normalizeStep = function(step) {
-			var step = Math.abs(step);
 			var rough = step>1?1:step;
 
 			return  rough* Math.max(this.options.width, this.options.height);
@@ -140,12 +139,7 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
 		};
 
 		Turtle2DBuilder.prototype._colorToHexString = function(color) {
-
-			var hexStrAlpha = l2js.utils.padLeft(Math.round(4294967295 * color).toString(16), 0, 8);
-			return {
-				hex : '#' + hexStrAlpha.substring(0, 6),
-				a : parseInt(hexStrAlpha.substring(6, 8), 16)/256
-			};
+			return l2js.utils.colorToHexString(color);
 		};
 
 		Turtle2DBuilder.prototype._symbols = {
@@ -168,7 +162,7 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
 					strokeWidth : stroke,
 					lineCap : 'round',
 					lineJoin : 'round',
-					opacity : stroke.a
+					opacity : color.a
 				}));
 
 				turtle2D.baseLayer.batchDraw();

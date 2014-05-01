@@ -174,6 +174,20 @@ window.l2js && function(l2js) {
 			rgba = rgba >>> 0;
 			
 			return rgba / 4294967295;
+		},
+		colorToHexString:function(colorInt) {
+			function hexStringToInt(str) {
+				return parseInt(str, 16);
+			};
+			var hexStrAlpha = l2js.utils.padLeft(Math.round(4294967295 * colorInt).toString(16), 0, 8); 
+			return {
+				hex : '#' + hexStrAlpha.substring(0, 6),		
+				r : hexStringToInt(hexStrAlpha.substring(0, 2)),
+				g : hexStringToInt(hexStrAlpha.substring(2, 4)),
+				b : hexStringToInt(hexStrAlpha.substring(4, 6)),
+				a : hexStringToInt(hexStrAlpha.substring(6, 8))/256
+			};
 		}
+
 	};
 }(window.l2js);

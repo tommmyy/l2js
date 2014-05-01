@@ -4,7 +4,7 @@
 * Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-04-30T23:59:58.449Z
+* Date: 2014-05-01T09:55:18.935Z
 */
 
 (function( global, factory ) {'use strict';
@@ -261,7 +261,21 @@ window.l2js.files = {};
 			rgba = rgba >>> 0;
 			
 			return rgba / 4294967295;
+		},
+		colorToHexString:function(colorInt) {
+			function hexStringToInt(str) {
+				return parseInt(str, 16);
+			};
+			var hexStrAlpha = l2js.utils.padLeft(Math.round(4294967295 * colorInt).toString(16), 0, 8); 
+			return {
+				hex : '#' + hexStrAlpha.substring(0, 6),		
+				r : hexStringToInt(hexStrAlpha.substring(0, 2)),
+				g : hexStringToInt(hexStrAlpha.substring(2, 4)),
+				b : hexStringToInt(hexStrAlpha.substring(4, 6)),
+				a : hexStringToInt(hexStrAlpha.substring(6, 8))/256
+			};
 		}
+
 	};
 
 l2js.compiler = l2js.compiler || {};
@@ -655,9 +669,9 @@ l2js.compile = function(code) {
 
 	l2js.interpretAll = function(symbols, options) {
 
-		var t1 = new Date().getTime();
+		//var t1 = new Date().getTime();
 		new l2js.interpret.Interpret(symbols, options).all();
-		console.log((new Date().getTime() - t1) / 1000);
+		//console.log((new Date().getTime() - t1) / 1000);
 	};
 
 	l2js.format = function(lsystemCode) {

@@ -488,7 +488,7 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 		Evolver.prototype._variateInExpression = function(e, terminals) {
 
 			var nodes = this.EUtils.findAll(function(node) {
-				return node instanceof lnodes.ASTId || node instanceof lnodes.ASTRef || node instanceof lnodes.ASTOperation || node instanceof lnodes.ASTBrackets || ( node instanceof lnodes.ASTFunc && utils.indexOf(["__rgb", "__hsv"], node.id) !== -1);
+				return node instanceof lnodes.ASTId || node instanceof lnodes.ASTRef || node instanceof lnodes.ASTOperation || node instanceof lnodes.ASTBrackets || ( node instanceof lnodes.ASTFunc && utils.indexOf(["__rgb", "__hsv", "__xC", "__XC"], node.id) !== -1);
 			}, e);
 
 			var node = this._getRandomFromArray(nodes);
@@ -502,8 +502,13 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 			} else if ( node instanceof lnodes.ASTBrackets) {
 				this._variateInExpression(node.e);
 
-			} else if ( node instanceof lnodes.ASTFunc) {
+			} else if ( node instanceof lnodes.ASTFunc &&  utils.indexOf(["__rgb", "__hsv"], node.id)) {
 				this._mutateColor(node);
+			} else if ( node instanceof lnodes.ASTFunc &&  utils.indexOf(["__xC", "__XC"], node.id)) {
+				for(var i = 0; i<node.args.length; i++) {
+					node.args[i] = this.__variateInExpression(node.args[i]);
+				}
+				
 			} else if ( node instanceof lnodes.ASTRef) {
 				node.val = node.val * this._getRandomVariation(this.options.numberMutation.variation);
 			} else if ( node instanceof lnodes.ASTId && terminals) {
