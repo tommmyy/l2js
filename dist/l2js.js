@@ -4,7 +4,7 @@
 * Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-05-02T18:25:10.075Z
+* Date: 2014-05-02T19:19:52.073Z
 */
 
 (function( global, factory ) {'use strict';
@@ -3198,8 +3198,8 @@ l2js.evolver = l2js.evolver || {};
 			numberMutation : {// in percent
 				variation : 20
 			},
-			selection: {
-				elitism: 0 //  number of the best individuals to carry over to the next generation 
+			selection : {
+				elitism : 0 //  number of the best individuals to carry over to the next generation
 			},
 			newRuleProbabilityFactor : 2,
 			evolveLScriptExpressions : true,
@@ -3241,13 +3241,13 @@ l2js.evolver = l2js.evolver || {};
 
 			this._sortByEvaluation(this.population);
 			var nextGeneration = [];
-			
-			if(this.options.selection.elitism) {
+
+			if (this.options.selection.elitism) {
 				var elitism = this.options.selection.elitism;
-				elitism > this.population.length && (elitism = this.population.length);
+				elitism > this.population.length && ( elitism = this.population.length);
 				nextGeneration = utils.copy(this.population.slice(-elitism));
 			}
-			
+
 			while (nextGeneration.length < this.options.numberOfIndividuals) {
 
 				nextGeneration = nextGeneration.concat(this.breed());
@@ -3471,7 +3471,7 @@ l2js.evolver = l2js.evolver || {};
 						terms.push(arg);
 						mod.args[j] = this.mutateExpression(mod.args[j], terms);
 					}
-				} else if (mod instanceof lnodes.ASTSubLSystem) {
+				} else if ( mod instanceof lnodes.ASTSubLSystem) {
 					var terms = params && this._getArgsFromParams(params) || [];
 					this.mutateSymbolsArgsInString(mod.axiom, terms);
 				}
@@ -3484,17 +3484,20 @@ l2js.evolver = l2js.evolver || {};
 		 * and from symbols from the 'rule' successors.
 		 */
 		Evolver.prototype.mutateStringInRule = function(lsys, rule) {
-			var mutSucc = this._getSuccessorForMutation(rule);
 
-			var rules = this.ASTUtils.findAll(function(node) {
-				return node instanceof lnodes.ASTRule && (("-" === node.type || !node.type) || (rule.type === "h" && "h" === node.type));
-			}, lsys.body);
+			var mutSucc = this._getSuccessorForMutation(rule);
 
 			var terminals = [], blackList = this.options.stringMutation.blackList;
 
-			for (var i = 0; i < rules.length; i++) {
-				utils.indexOf(blackList, rules[i].ancestor.symbol.id) === -1 && terminals.push(utils.copy(rules[i].ancestor));
+			if ("-" === rule.type || !rule.type) {
+				var rules = this.ASTUtils.findAll(function(node) {
+					return node instanceof lnodes.ASTRule && (("-" === node.type || !node.type) || (rule.type === "h" && "h" === node.type) );
+				}, lsys.body);
+				for (var i = 0; i < rules.length; i++) {
+					utils.indexOf(blackList, rules[i].ancestor.symbol.id) === -1 && terminals.push(utils.copy(rules[i].ancestor));
+				}
 			}
+
 			for (var i = 0; i < mutSucc.string.length; i++) {
 
 				if (mutSucc.string[i] instanceof lnodes.ASTStack || (mutSucc.string[i] instanceof lnodes.ASTModule && utils.indexOf(blackList, mutSucc.string[i].symbol.id) === -1)) {
