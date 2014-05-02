@@ -15,28 +15,31 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 			lsystems : [], // L-systems names to evolve within individual, default is main call
 			lsystemsDeps : {}, // key - name of lsystem, value - array of ids of lsystem dependecies
 			opProbabilities : {
-				expressionsVariationMutation : 1,
-				expressionsCreationMutation : 1,
-				rulesCrossover : 0,
-				rulesCrossoverAsNewRule : 0,
-				rulesSymbolEpressionMutation : 0,
-				rulesStringMutation : 0,
-				rulesMutationAsNewRule : 1,
+				expressionsVariationMutation : 0.1,
+				expressionsCreationMutation : 0.1,
+				rulesCrossover : 0.1,
+				rulesCrossoverAsNewRule : 0.1,
+				rulesSymbolEpressionMutation : 0.1,
+				rulesStringMutation : 0.1,
+				rulesMutationAsNewRule : 0.1,
 				stringsPermutation : 0.1
 			},
 			colorMutation : {
 				h : [60, 180, 30, 0], // degrees
 				hVariation : 10, // percents
-				sVariation : 50,
-				vVariation : 50,
-				rVariation : 50,
-				gVariation : 50,
-				bVariation : 50,
-				aVariation : 50
+				sVariation : 20,
+				vVariation : 20,
+				rVariation : 20,
+				gVariation : 20,
+				bVariation : 20,
+				aVariation : 20
 			},
 			numberMutation : {// in percent
-				variation : 30
+				variation : 20
 			},
+			selection: {
+				elitism: 1 // 
+			}
 			newRuleProbabilityFactor : 2,
 			evolveLScriptExpressions : true,
 			maxLevelForRandomExpressions : 3,
