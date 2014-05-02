@@ -38,8 +38,8 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 				variation : 20
 			},
 			selection: {
-				elitism: 1 // 
-			}
+				elitism: 0 //  number of the best individuals to carry over to the next generation 
+			},
 			newRuleProbabilityFactor : 2,
 			evolveLScriptExpressions : true,
 			maxLevelForRandomExpressions : 3,
@@ -80,6 +80,13 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 
 			this._sortByEvaluation(this.population);
 			var nextGeneration = [];
+			
+			if(this.options.selection.elitism) {
+				var elitism = this.options.selection.elitism;
+				elitism > this.population.length && (elitism = this.population.length);
+				nextGeneration = utils.copy(this.population.slice(-elitism));
+			}
+			
 			while (nextGeneration.length < this.options.numberOfIndividuals) {
 
 				nextGeneration = nextGeneration.concat(this.breed());
@@ -113,7 +120,6 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 		 *
 		 * @param howMany How many individuals algorithm will select
 		 */
-		// TODO: implement elitism
 		Evolver.prototype.select = function(howMany) {
 
 			var threshold, individuals = [], dn = this.population.length * (this.population.length + 1);
