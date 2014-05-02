@@ -16,10 +16,10 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 			lsystemsDeps : {}, // key - name of lsystem, value - array of ids of lsystem dependecies
 			opProbabilities : {
 				expressionsVariationMutation : 1,
-				expressionsCreationMutation : 0,
+				expressionsCreationMutation : 1,
 				rulesCrossover : 0,
-				rulesCrossoverAsNewRule : 1,
-				rulesSymbolEpressionMutation : 0.5,
+				rulesCrossoverAsNewRule : 0,
+				rulesSymbolEpressionMutation : 0,
 				rulesStringMutation : 0,
 				rulesMutationAsNewRule : 1,
 				stringsPermutation : 0.1
@@ -35,9 +35,9 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 				aVariation : 50
 			},
 			numberMutation : {// in percent
-				variation : 10
+				variation : 30
 			},
-			newRuleProbabilityFactor: 2,
+			newRuleProbabilityFactor : 2,
 			evolveLScriptExpressions : true,
 			maxLevelForRandomExpressions : 3,
 			stringMutation : {
@@ -63,7 +63,8 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 
 			this.population = this._initPopulation(population);
 		}
-		
+
+
 		Evolver.prototype.setOptions = function(options) {
 			this.options = options && l2js.utils.extend(l2js.utils.copy(Evolver.options), options) || Evolver.options;
 		};
@@ -160,7 +161,7 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 								successorB = this._getRandomFromArray(ruleB.successors);
 
 								// result crossover probably  cause duplication
-								if(successorA.string.length <= 1 && successorB.string.length <= 1) {
+								if (successorA.string.length <= 1 && successorB.string.length <= 1) {
 									return;
 								}
 
@@ -174,9 +175,9 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 									crossA = successorA;
 									crossB = successorB;
 								}
-								
-								this._crossStrings(crossA, crossB);	
-								
+
+								this._crossStrings(crossA, crossB);
+
 							}
 						}
 					}
@@ -192,8 +193,7 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 		 * @param b Array of ASTModules
 		 */
 		Evolver.prototype._crossStrings = function(a, b) {
-			
-			
+
 			// get all strings and substrings
 			var stringsA = this.RuleUtils.findAll(function(node) {
 				return node instanceof Array;
@@ -271,7 +271,7 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 			if (this._decide(this.options.opProbabilities.rulesMutationAsNewRule)) {
 				mutSucc = utils.copy(succ);
 				rule.successors.push(mutSucc);
-				mutSucc.probability = mutSucc.probability? mutSucc.probability / this.options.newRuleProbabilityFactor:0.5;
+				mutSucc.probability = mutSucc.probability ? mutSucc.probability / this.options.newRuleProbabilityFactor : 0.5;
 
 			} else {
 				mutSucc = succ;
@@ -282,29 +282,35 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 		Evolver.prototype.mutateSymbolsArgsInRule = function(rule) {
 
 			var mutSucc = this._getSuccessorForMutation(rule);
-			this.mutateSymbolsArgsInString(mutSucc, rule.ancestor.params);
+			this.mutateSymbolsArgsInString(mutSucc.string, rule.ancestor.params);
 		};
 
-		Evolver.prototype.mutateSymbolsArgsInString = function(mutSucc, params) {
+		Evolver.prototype.mutateSymbolsArgsInString = function(string, params) {
 
 			var parametricMods = this.RuleUtils.findAll(function(node) {
-				return node instanceof lnodes.ASTModule && node.args && node.args.length;
-			}, mutSucc.string);
+				return ( node instanceof lnodes.ASTModule && node.args && node.args.length) || ( node instanceof lnodes.ASTSubLSystem && node.axiom && node.axiom.length);
+			}, string);
 
 			for (var i = 0; i < parametricMods.length; i++) {
 				var mod = parametricMods[i];
-				for (var j = 0; j < mod.args.length; j++) {
+
+				if ( mod instanceof lnodes.ASTModule) {
+					for (var j = 0; j < mod.args.length; j++) {
+						var terms = params && this._getArgsFromParams(params) || [];
+						var arg = mod.args[j];
+						terms.push(arg);
+						mod.args[j] = this.mutateExpression(mod.args[j], terms);
+					}
+				} else if (mod instanceof lnodes.ASTSubLSystem) {
 					var terms = params && this._getArgsFromParams(params) || [];
-					var arg = mod.args[j];
-					terms.push(arg);
-					mod.args[j] = this.mutateExpression(mod.args[j], terms);
+					this.mutateSymbolsArgsInString(mod.axiom, terms);
 				}
 
 			}
 		};
 
 		/**
-		 * Terminals for new substring is determined by successors of 'lsys' rules (not interpretation rules) 
+		 * Terminals for new substring is determined by successors of 'lsys' rules (not interpretation rules)
 		 * and from symbols from the 'rule' successors.
 		 */
 		Evolver.prototype.mutateStringInRule = function(lsys, rule) {
@@ -315,21 +321,20 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 			}, lsys.body);
 
 			var terminals = [], blackList = this.options.stringMutation.blackList;
-			
+
 			for (var i = 0; i < rules.length; i++) {
 				utils.indexOf(blackList, rules[i].ancestor.symbol.id) === -1 && terminals.push(utils.copy(rules[i].ancestor));
 			}
 			for (var i = 0; i < mutSucc.string.length; i++) {
 
-				if (mutSucc.string[i] instanceof lnodes.ASTStack || 
-				(mutSucc.string[i] instanceof lnodes.ASTModule && utils.indexOf(blackList, mutSucc.string[i].symbol.id) === -1)) {
+				if (mutSucc.string[i] instanceof lnodes.ASTStack || (mutSucc.string[i] instanceof lnodes.ASTModule && utils.indexOf(blackList, mutSucc.string[i].symbol.id) === -1)) {
 					continue;
 				}
 				terminals.push(utils.copy(mutSucc.string[i]));
 			}
 
 			var substring = this._createRandomString(terminals, 1 + this._getRandomInt(mutSucc.string.length), 3);
-			[].splice.apply(mutSucc.string, [this._getRandomInt(mutSucc.string.length), 0].concat(substring));		
+			[].splice.apply(mutSucc.string, [this._getRandomInt(mutSucc.string.length), 0].concat(substring));
 
 		};
 
@@ -365,7 +370,7 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 					} else if ( parametricTerminal instanceof lnodes.ASTSubLSystem) {
 						var sublsys = utils.copy(parametricTerminal);
 						sublsys.maxIterations = parametricTerminal.maxIterations;
-						
+
 						if (sublsys.axiom && sublsys.axiom.length) {
 							this.mutateSymbolsArgsInString(sublsys.axiom);
 						}
@@ -402,7 +407,7 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 				if (this.options.evolveLScriptExpressions && individual.expressions) {
 					for (var j = 0; j < individual.expressions.length; j++) {
 						individual.expressions[j].e = this.mutateExpression(individual.expressions[j].e);
-						
+
 					}
 				}
 
@@ -413,7 +418,7 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 
 					for (var k = 0; k < result.length; k++) {
 						result[k].e = this.mutateExpression(result[k].e);
-						
+
 					}
 
 				}
@@ -422,12 +427,12 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 
 		Evolver.prototype.mutateExpression = function(e, terminals) {
 			var probs = this.options.opProbabilities;
-			
-			if(this._decide(probs.expressionsVariationMutation)) {
+
+			if (this._decide(probs.expressionsVariationMutation)) {
 				this._variateInExpression(e, terminals);
 			}
-			
-			if(this._decide(probs.expressionsCreationMutation)) {
+
+			if (this._decide(probs.expressionsCreationMutation)) {
 				e = this._beCreativeInExpression(e, terminals);
 			}
 			return e;
@@ -516,14 +521,14 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 			} else if ( node instanceof lnodes.ASTBrackets) {
 				this._variateInExpression(node.e);
 
-			} else if ( node instanceof lnodes.ASTFunc &&  utils.indexOf(["__rgb", "__hsv"], node.id) !==-1) {
+			} else if ( node instanceof lnodes.ASTFunc && utils.indexOf(["__rgb", "__hsv"], node.id) !== -1) {
 				this._mutateColor(node, terminals);
-			} else if ( node instanceof lnodes.ASTFunc &&  utils.indexOf(["__xC", "__XC"] , node.id) !==-1 ) {
-				
-				for(var i = 0; i<node.args.length; i++) {
+			} else if ( node instanceof lnodes.ASTFunc && utils.indexOf(["__xC", "__XC"], node.id) !== -1) {
+
+				for (var i = 0; i < node.args.length; i++) {
 					node.args[i] = this._variateInExpression(node.args[i], terminals);
 				}
-				
+
 			} else if ( node instanceof lnodes.ASTRef) {
 				node.val = node.val * this._getRandomVariation(this.options.numberMutation.variation);
 			} else if ( node instanceof lnodes.ASTId && terminals) {
@@ -544,16 +549,14 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 		 *
 		 * @param {Object} color ASTFunc either __hsv or __rgb
 		 */
-		Evolver.prototype._mutateColor = function(color, terminals) {
-debugger
+		Evolver.prototype._mutateColor = function(color, terminals) { debugger
 			var colorOpts = this.options.colorMutation, expressionMutationProb = this.options.opProbabilities.expressionsMutation;
 			var inColor = utils.copy(color);
 			var that = this;
 			function vary(inArg, outArg, variation) {
-				if(outArg instanceof lnodes.ASTRef && outArg.val === 0) {
+				if ( outArg instanceof lnodes.ASTRef && outArg.val === 0) {
 					outArg.val = that._getRandomVariation(variation);
-				}
-				else {
+				} else {
 					outArg = new lnodes.ASTOperation("*", new lnodes.ASTRef(that._getRandomVariation(variation)), new lnodes.ASTBrackets(inArg));
 					if (that._decide(expressionMutationProb)) {
 						outArg = that.mutateExpression(outArg, terminals);
