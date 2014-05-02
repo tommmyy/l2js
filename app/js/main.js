@@ -32,7 +32,7 @@
 
 	function initEvolutionClick() {
 		var code = $("#toCompile").val();
-		app.evolver = l2js.evolve(2, [code, {
+		app.evolver = l2js.evolve(4, [code, {
 			code : code,
 			evaluation : 1
 		}, code], null, ["KochFlake"]);
@@ -47,9 +47,8 @@
 		var $out = $("#mutation_output");
 
 		$out.find("[data-index]").each(function() {
-			if (population[i]) {
-
-				var i = $(this).data('index');
+			var i = $(this).data('index');
+			if (population[i]) {			
 				var val = $(this).val() || 0;
 				population[i].evaluation = parseInt(val);
 			}
@@ -62,7 +61,7 @@
 			var js = c.ASTToJS(newpopulation[i].ast);
 			var l2 = c.ASTToL2(newpopulation[i].ast);
 			$output.append("<div id='mutation_output-" + i + "'></div>");
-			$output.append("<div id='mutation_code-" + i + "'><textarea rows='30' class='form-control'>" + l2 + "</textarea><input type='text' id='mutation_evaluation-" + i + "' data-index='" + i + "'></div>");
+			$output.append("<div id='mutation_code-" + i + "'><textarea rows='30' class='form-control'>" + l2 + "</textarea><input type='text' value='"+newpopulation[i].evaluation+"' id='mutation_evaluation-" + i + "' data-index='" + i + "'></div>");
 			compiled(js, "mutation_output-" + i);
 		}
 
