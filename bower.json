@@ -1,6 +1,6 @@
 {
-	"name": "LSystem2JS",
-	"version": "0.0.2",
+	"name": "L2JS",
+	"version": "0.1.0",
 	"main": "./dist/l2js.js",
 	"devDependencies": {
 		"jquery": "~1.10.2",

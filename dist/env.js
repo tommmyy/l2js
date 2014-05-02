@@ -1,10 +1,10 @@
 /*!
-* L-System to Javascript Library v0.0.2
+* L-System to Javascript Library v0.1.0
 *
 * Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-05-02T17:53:45.410Z
+* Date: 2014-05-02T18:25:10.099Z
 */
 
 (function( global, factory ) {'use strict';

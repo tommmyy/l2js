@@ -1,10 +1,10 @@
 /*!
-* L-System to Javascript Library v0.0.2
+* L-System to Javascript Library v0.1.0
 *
 * Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-05-02T17:53:45.374Z
+* Date: 2014-05-02T18:25:10.075Z
 */
 
 (function( global, factory ) {'use strict';
@@ -3176,27 +3176,30 @@ l2js.evolver = l2js.evolver || {};
 			lsystems : [], // L-systems names to evolve within individual, default is main call
 			lsystemsDeps : {}, // key - name of lsystem, value - array of ids of lsystem dependecies
 			opProbabilities : {
-				expressionsVariationMutation : 1,
-				expressionsCreationMutation : 1,
-				rulesCrossover : 0,
-				rulesCrossoverAsNewRule : 0,
-				rulesSymbolEpressionMutation : 0,
-				rulesStringMutation : 0,
-				rulesMutationAsNewRule : 1,
+				expressionsVariationMutation : 0.1,
+				expressionsCreationMutation : 0.1,
+				rulesCrossover : 0.1,
+				rulesCrossoverAsNewRule : 0.1,
+				rulesSymbolEpressionMutation : 0.1,
+				rulesStringMutation : 0.1,
+				rulesMutationAsNewRule : 0.1,
 				stringsPermutation : 0.1
 			},
 			colorMutation : {
 				h : [60, 180, 30, 0], // degrees
 				hVariation : 10, // percents
-				sVariation : 50,
-				vVariation : 50,
-				rVariation : 50,
-				gVariation : 50,
-				bVariation : 50,
-				aVariation : 50
+				sVariation : 20,
+				vVariation : 20,
+				rVariation : 20,
+				gVariation : 20,
+				bVariation : 20,
+				aVariation : 20
 			},
 			numberMutation : {// in percent
-				variation : 30
+				variation : 20
+			},
+			selection: {
+				elitism: 0 //  number of the best individuals to carry over to the next generation 
 			},
 			newRuleProbabilityFactor : 2,
 			evolveLScriptExpressions : true,
@@ -3238,6 +3241,13 @@ l2js.evolver = l2js.evolver || {};
 
 			this._sortByEvaluation(this.population);
 			var nextGeneration = [];
+			
+			if(this.options.selection.elitism) {
+				var elitism = this.options.selection.elitism;
+				elitism > this.population.length && (elitism = this.population.length);
+				nextGeneration = utils.copy(this.population.slice(-elitism));
+			}
+			
 			while (nextGeneration.length < this.options.numberOfIndividuals) {
 
 				nextGeneration = nextGeneration.concat(this.breed());
@@ -3271,7 +3281,6 @@ l2js.evolver = l2js.evolver || {};
 		 *
 		 * @param howMany How many individuals algorithm will select
 		 */
-		// TODO: implement elitism
 		Evolver.prototype.select = function(howMany) {
 
 			var threshold, individuals = [], dn = this.population.length * (this.population.length + 1);
