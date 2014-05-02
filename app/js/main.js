@@ -3,8 +3,7 @@
 	var app = {
 		evolver : {}
 	};
-	
-	
+
 	l2js.files = {
 		"file1.l2" : "include \"file2.l2\";",
 		"file2.l2" : "$_angle = 10;"
@@ -33,7 +32,7 @@
 
 	function initEvolutionClick() {
 		var code = $("#toCompile").val();
-		app.evolver = l2js.evolve(6, [code, {
+		app.evolver = l2js.evolve(2, [code, {
 			code : code,
 			evaluation : 1
 		}, code], null, ["KochFlake"]);
@@ -43,15 +42,17 @@
 	}
 
 	function evolve() {
-		
 
 		var population = app.evolver.getPopulation();
 		var $out = $("#mutation_output");
 
 		$out.find("[data-index]").each(function() {
-			var i = $(this).data('index');
-			var val = $(this).val() || 0;
-			population[i].evaluation = parseInt(val);
+			if (population[i]) {
+
+				var i = $(this).data('index');
+				var val = $(this).val() || 0;
+				population[i].evaluation = parseInt(val);
+			}
 		});
 		app.evolver.nextGeneration();
 		newpopulation = app.evolver.getPopulation();
@@ -61,7 +62,7 @@
 			var js = c.ASTToJS(newpopulation[i].ast);
 			var l2 = c.ASTToL2(newpopulation[i].ast);
 			$output.append("<div id='mutation_output-" + i + "'></div>");
-			$output.append("<div id='mutation_code-" + i + "'><textarea rows='10' class='form-control'>" + l2 + "</textarea><input type='text' id='mutation_evaluation-" + i + "' data-index='" + i + "'></div>");
+			$output.append("<div id='mutation_code-" + i + "'><textarea rows='30' class='form-control'>" + l2 + "</textarea><input type='text' id='mutation_evaluation-" + i + "' data-index='" + i + "'></div>");
 			compiled(js, "mutation_output-" + i);
 		}
 

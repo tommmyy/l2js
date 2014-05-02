@@ -15,12 +15,12 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 			lsystems : [], // L-systems names to evolve within individual, default is main call
 			lsystemsDeps : {}, // key - name of lsystem, value - array of ids of lsystem dependecies
 			opProbabilities : {
-				expressionsVariationMutation : 0.5,
-				expressionsCreationMutation : 0.5,
-				rulesCrossover : 0.8,
-				rulesCrossoverAsNewRule : 0.5,
+				expressionsVariationMutation : 1,
+				expressionsCreationMutation : 0,
+				rulesCrossover : 0,
+				rulesCrossoverAsNewRule : 1,
 				rulesSymbolEpressionMutation : 0.5,
-				rulesStringMutation : 1,
+				rulesStringMutation : 0,
 				rulesMutationAsNewRule : 1,
 				stringsPermutation : 0.1
 			},
@@ -63,6 +63,10 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 
 			this.population = this._initPopulation(population);
 		}
+		
+		Evolver.prototype.setOptions = function(options) {
+			this.options = options && l2js.utils.extend(l2js.utils.copy(Evolver.options), options) || Evolver.options;
+		};
 
 		/**
 		 * Apply selection and breeding until the population of new generation reach the maximum size.
@@ -155,6 +159,11 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 								successorA = this._getRandomFromArray(ruleA.successors);
 								successorB = this._getRandomFromArray(ruleB.successors);
 
+								// result crossover probably  cause duplication
+								if(successorA.string.length <= 1 && successorB.string.length <= 1) {
+									return;
+								}
+
 								var crossA, crossB;
 								if (this._decide(this.options.opProbabilities.rulesCrossoverAsNewRule)) {
 									crossA = utils.copy(successorA);
@@ -165,8 +174,9 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 									crossA = successorA;
 									crossB = successorB;
 								}
-
-								this._crossStrings(crossA, crossB);
+								
+								this._crossStrings(crossA, crossB);	
+								
 							}
 						}
 					}
@@ -182,6 +192,8 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 		 * @param b Array of ASTModules
 		 */
 		Evolver.prototype._crossStrings = function(a, b) {
+			
+			
 			// get all strings and substrings
 			var stringsA = this.RuleUtils.findAll(function(node) {
 				return node instanceof Array;
@@ -217,7 +229,6 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 			var rules = this.ASTUtils.findAll(function(node) {
 				return node instanceof lnodes.ASTRule;
 			}, lsys.body);
-
 			return rules && this._getRandomFromArray(rules);
 		};
 
@@ -283,22 +294,24 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 			for (var i = 0; i < parametricMods.length; i++) {
 				var mod = parametricMods[i];
 				for (var j = 0; j < mod.args.length; j++) {
-					var arg = mod.args[j];
 					var terms = params && this._getArgsFromParams(params) || [];
-					arg = this.mutateExpression(arg, terms);
+					var arg = mod.args[j];
+					terms.push(arg);
+					mod.args[j] = this.mutateExpression(mod.args[j], terms);
 				}
 
 			}
 		};
 
 		/**
-		 * Terminals for new substring is determined by successors of 'lsys' rules (not interpretation rules) and from symbols from the 'rule' successors.
+		 * Terminals for new substring is determined by successors of 'lsys' rules (not interpretation rules) 
+		 * and from symbols from the 'rule' successors.
 		 */
 		Evolver.prototype.mutateStringInRule = function(lsys, rule) {
 			var mutSucc = this._getSuccessorForMutation(rule);
 
 			var rules = this.ASTUtils.findAll(function(node) {
-				return node instanceof lnodes.ASTRule && ("-" === node.type || !node.type);
+				return node instanceof lnodes.ASTRule && (("-" === node.type || !node.type) || (rule.type === "h" && "h" === node.type));
 			}, lsys.body);
 
 			var terminals = [], blackList = this.options.stringMutation.blackList;
@@ -308,16 +321,15 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 			}
 			for (var i = 0; i < mutSucc.string.length; i++) {
 
-				if (mutSucc.string[i] instanceof lnodes.ASTModule || (mutSucc.string[i] instanceof lnodes.ASTModule && utils.indexOf(blackList, mutSucc.string[i].symbol.id) === -1)) {
-					return;
+				if (mutSucc.string[i] instanceof lnodes.ASTStack || 
+				(mutSucc.string[i] instanceof lnodes.ASTModule && utils.indexOf(blackList, mutSucc.string[i].symbol.id) === -1)) {
+					continue;
 				}
 				terminals.push(utils.copy(mutSucc.string[i]));
 			}
 
 			var substring = this._createRandomString(terminals, 1 + this._getRandomInt(mutSucc.string.length), 3);
-
-			[].splice.apply(mutSucc.string, [this._getRandomInt(mutSucc.string.length), 0].concat(substring));
-			
+			[].splice.apply(mutSucc.string, [this._getRandomInt(mutSucc.string.length), 0].concat(substring));		
 
 		};
 
@@ -337,7 +349,7 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 						var expTerms = this._getArgsFromParams(parametricTerminal.params);
 						if (expTerms) {
 							for (var j = 0; j < expTerms.length; j++) {
-								var expr = this._createRandomExpression(expTerms, this._decide(0.5) ? 2 : 1);
+								var expr = this._createRandomExpression(expTerms, this._decide(0.5) ? 3 : 4);
 								args.push(expr);
 							}
 						}
@@ -389,10 +401,8 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 
 				if (this.options.evolveLScriptExpressions && individual.expressions) {
 					for (var j = 0; j < individual.expressions.length; j++) {
-
-						if (this._decide(this.options.opProbabilities.expressionsMutation)) {
-							individual.expressions[j].e = this.mutateExpression(individual.expressions[j].e);
-						}
+						individual.expressions[j].e = this.mutateExpression(individual.expressions[j].e);
+						
 					}
 				}
 
@@ -402,9 +412,8 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 					}, individual.lsystems[j].body);
 
 					for (var k = 0; k < result.length; k++) {
-						if (this._decide(this.options.opProbabilities.expressionsMutation)) {
-							result[k].e = this.mutateExpression(result[k].e);
-						}
+						result[k].e = this.mutateExpression(result[k].e);
+						
 					}
 
 				}
@@ -448,7 +457,7 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 				var terms = terminals || [], that = this;
 
 				var getExp = function() {
-					return that._createRandomExpression(terms, that._getRandomInt(that.options.maxLevelForRandomExpressions + 1));
+					return that._createRandomExpression(terms, that._getRandomInt(that.options.maxLevelForRandomExpressions) + 1);
 				};
 				if ( node instanceof lnodes.ASTId || node instanceof lnodes.ASTRef) {
 					e = getExp();
@@ -468,7 +477,7 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 		 */
 		Evolver.prototype._createRandomExpression = function(terminals, level) {
 			if (level > 1) {// functions
-				if (this._decide(0.5)) {
+				if (this._decide(0.8)) {
 					var left = this._createRandomExpression(terminals, level - 1);
 					var right = this._createRandomExpression(terminals, level - 1);
 					return new lnodes.ASTOperation(this._getRandomFromArray(["*", "/", "+", "-"]), left, right);
@@ -486,10 +495,15 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 		};
 
 		Evolver.prototype._variateInExpression = function(e, terminals) {
-
+			//@formatter:off
 			var nodes = this.EUtils.findAll(function(node) {
-				return node instanceof lnodes.ASTId || node instanceof lnodes.ASTRef || node instanceof lnodes.ASTOperation || node instanceof lnodes.ASTBrackets || ( node instanceof lnodes.ASTFunc && utils.indexOf(["__rgb", "__hsv", "__xC", "__XC"], node.id) !== -1);
+				return node instanceof lnodes.ASTId || 
+				node instanceof lnodes.ASTRef || 
+				node instanceof lnodes.ASTOperation || 
+				node instanceof lnodes.ASTBrackets || 
+				( node instanceof lnodes.ASTFunc && utils.indexOf(["__rgb", "__hsv", "__xC", "__XC"], node.id) !== -1);
 			}, e);
+			//@formatter:on
 
 			var node = this._getRandomFromArray(nodes);
 
@@ -502,11 +516,12 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 			} else if ( node instanceof lnodes.ASTBrackets) {
 				this._variateInExpression(node.e);
 
-			} else if ( node instanceof lnodes.ASTFunc &&  utils.indexOf(["__rgb", "__hsv"], node.id)) {
-				this._mutateColor(node);
-			} else if ( node instanceof lnodes.ASTFunc &&  utils.indexOf(["__xC", "__XC"], node.id)) {
+			} else if ( node instanceof lnodes.ASTFunc &&  utils.indexOf(["__rgb", "__hsv"], node.id) !==-1) {
+				this._mutateColor(node, terminals);
+			} else if ( node instanceof lnodes.ASTFunc &&  utils.indexOf(["__xC", "__XC"] , node.id) !==-1 ) {
+				
 				for(var i = 0; i<node.args.length; i++) {
-					node.args[i] = this.__variateInExpression(node.args[i]);
+					node.args[i] = this._variateInExpression(node.args[i], terminals);
 				}
 				
 			} else if ( node instanceof lnodes.ASTRef) {
@@ -529,15 +544,20 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 		 *
 		 * @param {Object} color ASTFunc either __hsv or __rgb
 		 */
-		Evolver.prototype._mutateColor = function(color) {
-
+		Evolver.prototype._mutateColor = function(color, terminals) {
+debugger
 			var colorOpts = this.options.colorMutation, expressionMutationProb = this.options.opProbabilities.expressionsMutation;
 			var inColor = utils.copy(color);
 			var that = this;
 			function vary(inArg, outArg, variation) {
-				outArg = new lnodes.ASTOperation("*", new lnodes.ASTRef(that._getRandomVariation(variation)), new lnodes.ASTBrackets(inArg));
-				if (that._decide(expressionMutationProb)) {
-					outArg = that.mutateExpression(outArg);
+				if(outArg instanceof lnodes.ASTRef && outArg.val === 0) {
+					outArg.val = that._getRandomVariation(variation);
+				}
+				else {
+					outArg = new lnodes.ASTOperation("*", new lnodes.ASTRef(that._getRandomVariation(variation)), new lnodes.ASTBrackets(inArg));
+					if (that._decide(expressionMutationProb)) {
+						outArg = that.mutateExpression(outArg, terminals);
+					}
 				}
 				return outArg;
 			}
@@ -548,7 +568,7 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 
 				color.args[0] = new lnodes.ASTOperation(angle < 0 ? "-" : "+", new lnodes.ASTBrackets(inColor.args[0]), angle);
 				if (this._decide(expressionMutationProb)) {
-					color.args[0] = this.mutateExpression(color.args[0]);
+					color.args[0] = this.mutateExpression(color.args[0], terminals);
 				}
 				color.args[1] = vary(inColor.args[1], color.args[1], colorOpts.sVariation);
 				color.args[2] = vary(inColor.args[2], color.args[2], colorOpts.vVariation);

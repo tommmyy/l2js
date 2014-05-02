@@ -35,9 +35,6 @@ window.l2js && window.l2js.utils && window.l2js.compiler && window.l2js.evolver 
 					result.push(node);
 				}
 				for (var i = 0; i < node.length; i++) {
-					if (matcher(node[i])) {
-						result.push(node[i]);
-					}
 					var founded = this.findAll(matcher, node[i]);
 					founded.length && ( result = result.concat(founded));
 				}
