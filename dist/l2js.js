@@ -4,7 +4,7 @@
 * Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-05-02T19:19:52.073Z
+* Date: 2014-05-03T00:06:03.374Z
 */
 
 (function( global, factory ) {'use strict';
@@ -3073,46 +3073,59 @@ l2js.evolver = l2js.evolver || {};
 		 * @param {Object} matcher Function that returns true of false. Input parameter is node from lnodes
 		 * @param {Object} node Expression
 		 */
-		EUtils.prototype.findAll = function(matcher, node) {
+		EUtils.prototype.findAll = function(matcher, node, level) {
 			var result = [];
+			level = level || 0;
 
 			if ( node instanceof lnodes.ASTBrackets) {
-				if (matcher(node)) {
+				if (matcher(node, level)) {
 					result.push(node);
 				}
-				var founded = this.findAll(matcher, node.e);
+				var founded = this.findAll(matcher, node.e, level + 1);
 				founded.length && ( result = result.concat(founded));
 
 			} else if ( node instanceof lnodes.ASTOperation) {
-				if (matcher(node)) {
+				if (matcher(node, level)) {
 					result.push(node);
 				}
 
-				var founded = this.findAll(matcher, node.left);
+				var founded = this.findAll(matcher, node.left, level + 1);
 				founded.length && ( result = result.concat(founded));
 
-				founded = this.findAll(matcher, node.right);
+				founded = this.findAll(matcher, node.right, level + 1);
 				founded.length && ( result = result.concat(founded));
 
-			} else if ( node instanceof lnodes.ASTId && matcher(node)) {
+			} else if ( node instanceof lnodes.ASTId && matcher(node, level)) {
 				result.push(node);
 			} else if ( node instanceof lnodes.ASTFunc) {
-				if (matcher(node)) {
+				if (matcher(node, level)) {
 					result.push(node);
 				}
 				// TODO: expand functions
 
 			} else if ( node instanceof lnodes.ASTRef) {
-				if (matcher(node)) {
+				if (matcher(node, level)) {
 					result.push(node);
 				}
 			} else if ( typeof node === "number") {
-				if (matcher(node)) {
-					result.push(node);
+				if (matcher(node, level)) {
+					result.push(node, level);
 				}
 			}
 
 			return result;
+		};
+
+		EUtils.prototype.isTerminal = function(node) {
+			return ( node instanceof lnodes.ASTRef) || ( node instanceof lnodes.ASTId) || ( node instanceof lnodes.ASTFunc);
+		};
+
+		EUtils.prototype.findAllTerminals = function(node) {
+			var that = this;
+			var terms = this.findAll(function(node) {
+				return that.isTerminal(node);
+			}, node);
+			return terms;
 		};
 
 		return EUtils;
@@ -3204,6 +3217,7 @@ l2js.evolver = l2js.evolver || {};
 			newRuleProbabilityFactor : 2,
 			evolveLScriptExpressions : true,
 			maxLevelForRandomExpressions : 3,
+			maxExpressionLevel : 2,
 			stringMutation : {
 				blackList : ["PU", "PS"]
 			}
@@ -3223,14 +3237,14 @@ l2js.evolver = l2js.evolver || {};
 			this.ASTUtils = new l2js.compiler.ASTUtils();
 			this.RuleUtils = new l2js.evolver.RuleUtils();
 			this.EUtils = new l2js.evolver.EUtils();
-			this.options = options && l2js.utils.extend(l2js.utils.copy(Evolver.options), options) || Evolver.options;
+			this.options = options && l2js.utils.extend(l2js.utils.copy(Evolver.options), options) || utils.copy(Evolver.options);
 
 			this.population = this._initPopulation(population);
 		}
 
 
 		Evolver.prototype.setOptions = function(options) {
-			this.options = options && l2js.utils.extend(l2js.utils.copy(Evolver.options), options) || Evolver.options;
+			this.options = options && l2js.utils.extend(l2js.utils.copy(Evolver.options), options) || utils.copy(Evolver.options);
 		};
 
 		/**
@@ -3506,7 +3520,7 @@ l2js.evolver = l2js.evolver || {};
 				terminals.push(utils.copy(mutSucc.string[i]));
 			}
 
-			var substring = this._createRandomString(terminals, 1 + this._getRandomInt(mutSucc.string.length), 3);
+			var substring = this._createRandomString(terminals, Math.min(1 + this._getRandomInt(mutSucc.string.length), 3), 3);
 			[].splice.apply(mutSucc.string, [this._getRandomInt(mutSucc.string.length), 0].concat(substring));
 
 		};
@@ -3527,7 +3541,8 @@ l2js.evolver = l2js.evolver || {};
 						var expTerms = this._getArgsFromParams(parametricTerminal.params);
 						if (expTerms) {
 							for (var j = 0; j < expTerms.length; j++) {
-								var expr = this._createRandomExpression(expTerms, this._decide(0.5) ? 3 : 4);
+								var expr = this._createRandomExpression(expTerms, this.options.maxLevelForRandomExpressions);
+								expr = this._reduceExpression(expr, this.options.maxExpressionLevel);
 								args.push(expr);
 							}
 						}
@@ -3635,7 +3650,9 @@ l2js.evolver = l2js.evolver || {};
 				var terms = terminals || [], that = this;
 
 				var getExp = function() {
-					return that._createRandomExpression(terms, that._getRandomInt(that.options.maxLevelForRandomExpressions) + 1);
+					//return new lnodes.ASTRef(1);
+					var exp = that._createRandomExpression(terms, that._getRandomInt(that.options.maxLevelForRandomExpressions) + 1);
+					return exp;					
 				};
 				if ( node instanceof lnodes.ASTId || node instanceof lnodes.ASTRef) {
 					e = getExp();
@@ -3646,9 +3663,33 @@ l2js.evolver = l2js.evolver || {};
 				}
 
 			}
-
-			return e;
+			return this._reduceExpression(e, this.options.maxExpressionLevel);
 		};
+
+	Evolver.prototype._reduceExpression = function(exp, maxLevel) {
+		// non-terminals
+		var onTheEdge = this.EUtils.findAll(function(node, level) {
+			return level === maxLevel && ( node instanceof lnodes.ASTOperation || node instanceof lnodes.ASTBrackets );
+		}, exp);
+
+		for (var i = 0; i < onTheEdge.length; i++) {
+			var node = onTheEdge[i];
+			if ( node instanceof lnodes.ASTOperation) {
+				var terms = this.EUtils.findAllTerminals(node);
+				node.left = utils.copy(this._getRandomFromArray(terms));
+				node.right = utils.copy(this._getRandomFromArray(terms));
+				
+
+			} else if ( node instanceof lnodes.ASTBrackets) {
+				var terms = this.EUtils.findAllTerminals(node);
+				node.e= utils.copy(this._getRandomFromArray(terms));
+
+			}
+		}
+
+		return exp;
+	};
+	
 
 		/**
 		 * Creates random expression
@@ -3664,7 +3705,7 @@ l2js.evolver = l2js.evolver || {};
 				}
 			} else {// terminals
 				if (terminals && terminals.length) {
-					return this._getRandomFromArray(terminals);
+					return utils.copy(this._getRandomFromArray(terminals));
 				} else {
 					return new lnodes.ASTRef(Math.round10(Math.random()));
 				}
@@ -3722,7 +3763,7 @@ l2js.evolver = l2js.evolver || {};
 		 *
 		 * @param {Object} color ASTFunc either __hsv or __rgb
 		 */
-		Evolver.prototype._mutateColor = function(color, terminals) { debugger
+		Evolver.prototype._mutateColor = function(color, terminals) { 
 			var colorOpts = this.options.colorMutation, expressionMutationProb = this.options.opProbabilities.expressionsMutation;
 			var inColor = utils.copy(color);
 			var that = this;
