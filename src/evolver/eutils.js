@@ -50,46 +50,59 @@ window.l2js && window.l2js.utils && window.l2js.compiler && window.l2js.evolver 
 		 * @param {Object} matcher Function that returns true of false. Input parameter is node from lnodes
 		 * @param {Object} node Expression
 		 */
-		EUtils.prototype.findAll = function(matcher, node) {
+		EUtils.prototype.findAll = function(matcher, node, level) {
 			var result = [];
+			level = level || 0;
 
 			if ( node instanceof lnodes.ASTBrackets) {
-				if (matcher(node)) {
+				if (matcher(node, level)) {
 					result.push(node);
 				}
-				var founded = this.findAll(matcher, node.e);
+				var founded = this.findAll(matcher, node.e, level + 1);
 				founded.length && ( result = result.concat(founded));
 
 			} else if ( node instanceof lnodes.ASTOperation) {
-				if (matcher(node)) {
+				if (matcher(node, level)) {
 					result.push(node);
 				}
 
-				var founded = this.findAll(matcher, node.left);
+				var founded = this.findAll(matcher, node.left, level + 1);
 				founded.length && ( result = result.concat(founded));
 
-				founded = this.findAll(matcher, node.right);
+				founded = this.findAll(matcher, node.right, level + 1);
 				founded.length && ( result = result.concat(founded));
 
-			} else if ( node instanceof lnodes.ASTId && matcher(node)) {
+			} else if ( node instanceof lnodes.ASTId && matcher(node, level)) {
 				result.push(node);
 			} else if ( node instanceof lnodes.ASTFunc) {
-				if (matcher(node)) {
+				if (matcher(node, level)) {
 					result.push(node);
 				}
 				// TODO: expand functions
 
 			} else if ( node instanceof lnodes.ASTRef) {
-				if (matcher(node)) {
+				if (matcher(node, level)) {
 					result.push(node);
 				}
 			} else if ( typeof node === "number") {
-				if (matcher(node)) {
-					result.push(node);
+				if (matcher(node, level)) {
+					result.push(node, level);
 				}
 			}
 
 			return result;
+		};
+
+		EUtils.prototype.isTerminal = function(node) {
+			return ( node instanceof lnodes.ASTRef) || ( node instanceof lnodes.ASTId) || ( node instanceof lnodes.ASTFunc);
+		};
+
+		EUtils.prototype.findAllTerminals = function(node) {
+			var that = this;
+			var terms = this.findAll(function(node) {
+				return that.isTerminal(node);
+			}, node);
+			return terms;
 		};
 
 		return EUtils;
