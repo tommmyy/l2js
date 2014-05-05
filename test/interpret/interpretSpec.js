@@ -1,8 +1,8 @@
-var turtle2D = new l2js.compiler.env.Alphabet('Turtle2D');
+
 function makeSymbol(sym, alp) {
 		return {
 			symbol : sym,
-			alphabet : alp || turtle2D
+			alphabet : alp || "Turtle2D"
 		};
 	}
 

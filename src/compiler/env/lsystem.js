@@ -172,7 +172,7 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env.SubLSystem && funct
 		 */
 		LSystem.getModule = function(symbol, args, alphabet) {
 			return {
-				alphabet : alphabet,
+				alphabet : alphabet.id,
 				symbol : symbol,
 				arguments : args
 			};
@@ -190,7 +190,7 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env.SubLSystem && funct
 		 */
 		LSystem.getParamModule = function(symbol, params, alphabet) {
 			return {
-				alphabet : alphabet,
+				alphabet : alphabet.id,
 				symbol : symbol,
 				params : params
 			};

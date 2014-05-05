@@ -4,7 +4,7 @@
 * Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-05-03T00:06:03.374Z
+* Date: 2014-05-05T17:04:46.988Z
 */
 
 (function( global, factory ) {'use strict';
@@ -547,7 +547,7 @@ l2js.compiler.env.Stack = (function() {
 		 */
 		LSystem.getModule = function(symbol, args, alphabet) {
 			return {
-				alphabet : alphabet,
+				alphabet : alphabet.id,
 				symbol : symbol,
 				arguments : args
 			};
@@ -565,7 +565,7 @@ l2js.compiler.env.Stack = (function() {
 		 */
 		LSystem.getParamModule = function(symbol, params, alphabet) {
 			return {
-				alphabet : alphabet,
+				alphabet : alphabet.id,
 				symbol : symbol,
 				params : params
 			};
@@ -2872,7 +2872,7 @@ l2js.interpret = l2js.interpret || {};
 		 * @return Implementation of Builder according Alphabet including 'symbol'
 		 */
 		Interpret.prototype.getBuilder = function(symbol) {
-			switch(symbol.alphabet.id) {
+			switch(symbol.alphabet) {
 				case "Turtle2D":
 					this._turtle2dBuilder || (this._turtle2dBuilder = new l2js.interpret.Turtle2DBuilder(this.options));
 					return this._turtle2dBuilder;

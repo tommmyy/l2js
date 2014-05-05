@@ -38,7 +38,7 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
 		 * @return Implementation of Builder according Alphabet including 'symbol'
 		 */
 		Interpret.prototype.getBuilder = function(symbol) {
-			switch(symbol.alphabet.id) {
+			switch(symbol.alphabet) {
 				case "Turtle2D":
 					this._turtle2dBuilder || (this._turtle2dBuilder = new l2js.interpret.Turtle2DBuilder(this.options));
 					return this._turtle2dBuilder;

@@ -4,7 +4,7 @@
 * Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-05-03T00:06:03.402Z
+* Date: 2014-05-05T17:04:47.012Z
 */
 
 (function( global, factory ) {'use strict';
@@ -547,7 +547,7 @@ l2js.compiler.env.Stack = (function() {
 		 */
 		LSystem.getModule = function(symbol, args, alphabet) {
 			return {
-				alphabet : alphabet,
+				alphabet : alphabet.id,
 				symbol : symbol,
 				arguments : args
 			};
@@ -565,7 +565,7 @@ l2js.compiler.env.Stack = (function() {
 		 */
 		LSystem.getParamModule = function(symbol, params, alphabet) {
 			return {
-				alphabet : alphabet,
+				alphabet : alphabet.id,
 				symbol : symbol,
 				params : params
 			};
