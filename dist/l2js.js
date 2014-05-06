@@ -4,7 +4,7 @@
 * Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-05-05T17:04:46.988Z
+* Date: 2014-05-06T14:06:29.602Z
 */
 
 (function( global, factory ) {'use strict';
@@ -1708,6 +1708,8 @@ return new Parser;
 
 		//@formatter:off
 		ASTCompiler.funcsSrc = {
+			"__random": "__random: function() {return Math.random();}",
+			"__pow": "__pow: function(x, y) {return Math.pow(x, y);}",
 			//RGB to INT <0;1>
 			"__rgb" : "__rgb: function(r, g, b, a) {return l2js.utils.RGBToInt({model: 'rgb', r:r, g:g, b:b, a:a});}",
 			//HSV to RGB to INT <0;1>
@@ -3720,7 +3722,7 @@ l2js.evolver = l2js.evolver || {};
 				node instanceof lnodes.ASTRef || 
 				node instanceof lnodes.ASTOperation || 
 				node instanceof lnodes.ASTBrackets || 
-				( node instanceof lnodes.ASTFunc && utils.indexOf(["__rgb", "__hsv", "__xC", "__XC"], node.id) !== -1);
+				( node instanceof lnodes.ASTFunc && utils.indexOf(["__rgb", "__hsv", "__xC", "__XC", "__pow", "__random"], node.id) !== -1);
 			}, e);
 			//@formatter:on
 
@@ -3737,7 +3739,7 @@ l2js.evolver = l2js.evolver || {};
 
 			} else if ( node instanceof lnodes.ASTFunc && utils.indexOf(["__rgb", "__hsv"], node.id) !== -1) {
 				this._mutateColor(node, terminals);
-			} else if ( node instanceof lnodes.ASTFunc && utils.indexOf(["__xC", "__XC"], node.id) !== -1) {
+			} else if ( node instanceof lnodes.ASTFunc && utils.indexOf(["__xC", "__XC", "__pow", "__random"], node.id) !== -1) {
 
 				for (var i = 0; i < node.args.length; i++) {
 					node.args[i] = this._variateInExpression(node.args[i], terminals);

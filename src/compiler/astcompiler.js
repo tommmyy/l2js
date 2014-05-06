@@ -24,6 +24,8 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env && window.l2js.comp
 
 		//@formatter:off
 		ASTCompiler.funcsSrc = {
+			"__random": "__random: function() {return Math.random();}",
+			"__pow": "__pow: function(x, y) {return Math.pow(x, y);}",
 			//RGB to INT <0;1>
 			"__rgb" : "__rgb: function(r, g, b, a) {return l2js.utils.RGBToInt({model: 'rgb', r:r, g:g, b:b, a:a});}",
 			//HSV to RGB to INT <0;1>

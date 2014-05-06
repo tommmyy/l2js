@@ -546,7 +546,7 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 				node instanceof lnodes.ASTRef || 
 				node instanceof lnodes.ASTOperation || 
 				node instanceof lnodes.ASTBrackets || 
-				( node instanceof lnodes.ASTFunc && utils.indexOf(["__rgb", "__hsv", "__xC", "__XC"], node.id) !== -1);
+				( node instanceof lnodes.ASTFunc && utils.indexOf(["__rgb", "__hsv", "__xC", "__XC", "__pow", "__random"], node.id) !== -1);
 			}, e);
 			//@formatter:on
 
@@ -563,7 +563,7 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 
 			} else if ( node instanceof lnodes.ASTFunc && utils.indexOf(["__rgb", "__hsv"], node.id) !== -1) {
 				this._mutateColor(node, terminals);
-			} else if ( node instanceof lnodes.ASTFunc && utils.indexOf(["__xC", "__XC"], node.id) !== -1) {
+			} else if ( node instanceof lnodes.ASTFunc && utils.indexOf(["__xC", "__XC", "__pow", "__random"], node.id) !== -1) {
 
 				for (var i = 0; i < node.args.length; i++) {
 					node.args[i] = this._variateInExpression(node.args[i], terminals);
