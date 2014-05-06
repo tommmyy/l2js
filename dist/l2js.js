@@ -4,7 +4,7 @@
 * Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2014-05-06T14:06:29.602Z
+* Date: 2014-05-06T16:44:26.903Z
 */
 
 (function( global, factory ) {'use strict';
@@ -211,46 +211,59 @@ window.l2js.files = {};
 			str = padChar + str;
 			return str;
 		},
-		normalizeAngle: function(angle) {
+		normalizeAngle : function(angle) {
 			var interval = angle % 360;
 			return angle < 0 ? 360 + interval : interval;
 		},
-		HSVToRGB: function(color) {
-			var h = l2js.utils.normalizeAngle(color.h);
+		HSVToRGB : function(color) {
+			var h = l2js.utils.normalizeAngle(color.h) / 360;
 			var s = color.s < 0 ? 0 : (color.s > 1 ? 1 : color.s);
 			var v = color.v < 0 ? 0 : (color.v > 1 ? 1 : color.v);
 
-			var C = v * s;
-			var X = C * (1 - Math.abs((h / 60) % 2 - 1));
-			var m = v - C;
+			var r, g, b;
 
-			var rgb_;
-			if (h < 60) {
-				rgb_ = [C, X, 0];
-			} else if (60 <= h < 120) {
-				rgb_ = [X, C, 0];
-			} else if (120 <= h < 180) {
-				rgb_ = [0, C, X];
-			} else if (180 <= h < 240) {
-				rgb_ = [0, X, C];
-			} else if (240 <= h < 300) {
-				rgb_ = [X, 0, C];
-			} else if (300 <= h <= 360) {
-				rgb_ = [C, 0, X];
+			var i = Math.floor(h * 6);
+			var f = h * 6 - i;
+			var p = v * (1 - s);
+			var q = v * (1 - f * s);
+			var t = v * (1 - (1 - f) * s);
+
+			switch (i % 6) {
+				case 0:
+					r = v, g = t, b = p;
+					break;
+				case 1:
+					r = q, g = v, b = p;
+					break;
+				case 2:
+					r = p, g = v, b = t;
+					break;
+				case 3:
+					r = p, g = q, b = v;
+					break;
+				case 4:
+					r = t, g = p, b = v;
+					break;
+				case 5:
+					r = v, g = p, b = q;
+					break;
 			}
 
-			var r = (rgb_[0] + m) * 255;
-			var g = (rgb_[1] + m) * 255;
-			var b = (rgb_[2] + m) * 255;
-			
-			return {model: "rgb", r: r, g: g, b: b, a:color.a};
+			return {
+				model : "rgb",
+				r : r * 255,
+				g : g * 255,
+				b : b * 255,
+				a : color.a
+			};
 		},
 		RGBToInt : function(color) {
-			
+
 			function norm(c) {
 				return c;
-				return (!c||c<0)?0:((c>255)?255:c);
+				return (!c || c < 0) ? 0 : ((c > 255) ? 255 : c);
 			}
+
 			var rgba = norm(color.r) || 0;
 			rgba = rgba << 8;
 			rgba |= norm(color.g);
@@ -259,23 +272,22 @@ window.l2js.files = {};
 			rgba = rgba << 8;
 			rgba |= norm(color.a);
 			rgba = rgba >>> 0;
-			
+
 			return rgba / 4294967295;
 		},
-		colorToHexString:function(colorInt) {
+		colorToHexString : function(colorInt) {
 			function hexStringToInt(str) {
 				return parseInt(str, 16);
 			};
-			var hexStrAlpha = l2js.utils.padLeft(Math.round(4294967295 * colorInt).toString(16), 0, 8); 
+			var hexStrAlpha = l2js.utils.padLeft(Math.round(4294967295 * colorInt).toString(16), 0, 8);
 			return {
-				hex : '#' + hexStrAlpha.substring(0, 6),		
+				hex : '#' + hexStrAlpha.substring(0, 6),
 				r : hexStringToInt(hexStrAlpha.substring(0, 2)),
 				g : hexStringToInt(hexStrAlpha.substring(2, 4)),
 				b : hexStringToInt(hexStrAlpha.substring(4, 6)),
-				a : hexStringToInt(hexStrAlpha.substring(6, 8))/256
+				a : hexStringToInt(hexStrAlpha.substring(6, 8)) / 256
 			};
 		}
-
 	};
 
 l2js.compiler = l2js.compiler || {};
