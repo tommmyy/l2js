@@ -301,22 +301,22 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 				return ( node instanceof lnodes.ASTModule && node.args && node.args.length) || ( node instanceof lnodes.ASTSubLSystem && node.axiom && node.axiom.length);
 			}, string);
 
-			for (var i = 0; i < parametricMods.length; i++) {
-				var mod = parametricMods[i];
+			//for (var i = 0; i < parametricMods.length; i++) {
+			var mod = this._getRandomFromArray(parametricMods);
 
-				if ( mod instanceof lnodes.ASTModule) {
-					for (var j = 0; j < mod.args.length; j++) {
-						var terms = params && this._getArgsFromParams(params) || [];
-						var arg = mod.args[j];
-						terms.push(arg);
-						mod.args[j] = this.mutateExpression(mod.args[j], terms);
-					}
-				} else if ( mod instanceof lnodes.ASTSubLSystem) {
+			if ( mod instanceof lnodes.ASTModule) {
+				for (var j = 0; j < mod.args.length; j++) {
 					var terms = params && this._getArgsFromParams(params) || [];
-					this.mutateSymbolsArgsInString(mod.axiom, terms);
+					var arg = mod.args[j];
+					terms.push(arg);
+					mod.args[j] = this.mutateExpression(mod.args[j], terms);
 				}
-
+			} else if ( mod instanceof lnodes.ASTSubLSystem) {
+				var terms = params && this._getArgsFromParams(params) || [];
+				this.mutateSymbolsArgsInString(mod.axiom, terms);
 			}
+
+			//}
 		};
 
 		/**
@@ -404,7 +404,10 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 			}
 			var args = utils.copy(params);
 			for (var i = 0; i < args.length; i++) {
-				args[i].id = "$" + args[i].id;
+				if (!new RegExp("^\\$").test(args[i].id)) {
+					args[i].id = "$" + args[i].id;
+				}
+
 				args[i].type = "param";
 			}
 			return args;
@@ -447,15 +450,15 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 			}
 
 			if (this._decide(probs.expressionsCreationMutation)) {
-				e = this._beCreativeInExpression(e, terminals);
+				e = this._creativeMutationExpression(e, terminals);
 			}
 			return e;
 		};
 
 		/**
-		 * Replace part of expression 'e' by new randomly generated expression.
+		 * Replace part of expression 'e' by new randomly generated expression
 		 */
-		Evolver.prototype._beCreativeInExpression = function(e, terminals) {
+		Evolver.prototype._creativeMutationExpression = function(e, terminals) {
 
 			if (!terminals || !terminals.length) {
 				return e;
@@ -477,8 +480,9 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 
 				var getExp = function() {
 					//return new lnodes.ASTRef(1);
-					var exp = that._createRandomExpression(terms, that._getRandomInt(that.options.maxLevelForRandomExpressions) + 1);
-					return exp;					
+					var lev = that._getRandomInt(that.options.maxLevelForRandomExpressions) + 1;
+					var exp = that._createRandomExpression(terminals, lev);
+					return exp;
 				};
 				if ( node instanceof lnodes.ASTId || node instanceof lnodes.ASTRef) {
 					e = getExp();
@@ -492,51 +496,89 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 			return this._reduceExpression(e, this.options.maxExpressionLevel);
 		};
 
-	Evolver.prototype._reduceExpression = function(exp, maxLevel) {
-		// non-terminals
-		var onTheEdge = this.EUtils.findAll(function(node, level) {
-			return level === maxLevel && ( node instanceof lnodes.ASTOperation || node instanceof lnodes.ASTBrackets );
-		}, exp);
+		Evolver.prototype._reduceExpression = function(exp, maxLevel) {
+			// non-terminals
+			var onTheEdge = this.EUtils.findAll(function(node, level) {
+				return level === maxLevel && ( node instanceof lnodes.ASTOperation || node instanceof lnodes.ASTBrackets );
+			}, exp);
 
-		for (var i = 0; i < onTheEdge.length; i++) {
-			var node = onTheEdge[i];
-			if ( node instanceof lnodes.ASTOperation) {
-				var terms = this.EUtils.findAllTerminals(node);
-				node.left = utils.copy(this._getRandomFromArray(terms));
-				node.right = utils.copy(this._getRandomFromArray(terms));
-				
+			for (var i = 0; i < onTheEdge.length; i++) {
+				var node = onTheEdge[i];
+				if ( node instanceof lnodes.ASTOperation) {
+					var terms = this.EUtils.findAllTerminals(node);
+					node.left = utils.copy(this._getRandomFromArray(terms));
+					node.right = utils.copy(this._getRandomFromArray(terms));
 
-			} else if ( node instanceof lnodes.ASTBrackets) {
-				var terms = this.EUtils.findAllTerminals(node);
-				node.e= utils.copy(this._getRandomFromArray(terms));
+				} else if ( node instanceof lnodes.ASTBrackets) {
+					var terms = this.EUtils.findAllTerminals(node);
+					node.e = utils.copy(this._getRandomFromArray(terms));
 
+				}
 			}
-		}
 
-		return exp;
-	};
-	
+			return exp;
+		};
 
 		/**
-		 * Creates random expression
+		 *	Creates random expression by randomly choosen method
 		 */
 		Evolver.prototype._createRandomExpression = function(terminals, level) {
-			if (level > 1) {// functions
-				if (this._decide(0.8)) {
-					var left = this._createRandomExpression(terminals, level - 1);
-					var right = this._createRandomExpression(terminals, level - 1);
-					return new lnodes.ASTOperation(this._getRandomFromArray(["*", "/", "+", "-"]), left, right);
-				} else {
-					return new lnodes.ASTBrackets(this._createRandomExpression(terminals, level - 1));
-				}
-			} else {// terminals
-				if (terminals && terminals.length) {
-					return utils.copy(this._getRandomFromArray(terminals));
-				} else {
-					return new lnodes.ASTRef(Math.round10(Math.random()));
-				}
+			return (this._decide(0.5) ? this._fullExpression(terminals, level) : this._growExpression(terminals, level));
+		};
+
+		/**
+		 * Creates random expression by 'full' method
+		 */
+		Evolver.prototype._fullExpression = function(terminals, level) {
+
+			var funcs = [new lnodes.ASTOperation("*"), new lnodes.ASTOperation("/"), new lnodes.ASTOperation("+"), new lnodes.ASTOperation("-"), new lnodes.ASTBrackets()];
+			if (!terminals || !terminals.length) {
+				terminals = [new lnodes.ASTRef(Math.round10(Math.random()))];
 			}
 
+			if (level > 1) {// functions
+				var item = this._getRandomFromArray(funcs);
+				if ( item instanceof lnodes.ASTOperation) {
+					item.left = this._fullExpression(terminals, level - 1);
+					item.right = this._fullExpression(terminals, level - 1);
+				} else if ( item instanceof lnodes.ASTBrackets) {
+					item.e = this._fullExpression(terminals, level - 1);
+				}
+
+				return item;
+
+			} else {// terminals
+				var term = utils.copy(this._getRandomFromArray(terminals));
+				return term;
+			}
+
+		};
+		/**
+		 * Creates random expression by 'full' method
+		 */
+		Evolver.prototype._growExpression = function(terminals, level) {
+
+			var funcs = [new lnodes.ASTOperation("*"), new lnodes.ASTOperation("/"), new lnodes.ASTOperation("+"), new lnodes.ASTOperation("-"), new lnodes.ASTBrackets()];
+			if (!terminals || !terminals.length) {
+				terminals = [new lnodes.ASTRef(Math.round10(Math.random()))];
+			}
+
+			if (level <= 0) {
+				var term = utils.copy(this._getRandomFromArray(terminals));
+				return term;
+			} else {
+				var primitiveSet = funcs.concat(terminals);
+				var item = this._getRandomFromArray(primitiveSet);
+
+				if ( item instanceof lnodes.ASTOperation) {
+					item.left = this._growExpression(terminals, level - 1);
+					item.right = this._growExpression(terminals, level - 1);
+				} else if ( item instanceof lnodes.ASTBrackets) {
+					item.e = this._growExpression(terminals, level - 1);
+				}
+
+				return item;
+			}
 		};
 
 		Evolver.prototype._variateInExpression = function(e, terminals) {
@@ -589,7 +631,7 @@ window.l2js && window.l2js.utils && window.l2js.evolver && window.l2js.compiler 
 		 *
 		 * @param {Object} color ASTFunc either __hsv or __rgb
 		 */
-		Evolver.prototype._mutateColor = function(color, terminals) { 
+		Evolver.prototype._mutateColor = function(color, terminals) {
 			var colorOpts = this.options.colorMutation, expressionMutationProb = this.options.opProbabilities.expressionsMutation;
 			var inColor = utils.copy(color);
 			var that = this;
