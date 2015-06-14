@@ -1,17 +1,18 @@
-$_step=3;
+$_step=0.9;
+$_stroke=0.05;
+$_color=__color(0, 255, 0);
+
 lscript CantorSetScript {
-	$_script=3;
-	
-	alphabet Alphabet2D {
+	alphabet Turtle2D {
 		F, f
 	};
 
-	lsystem CantorSet(F(1)) using Alphabet2D  {
+	lsystem CantorSet(F(1)) using Turtle2D  {
 		f(a) --> f($a/3) f($a/3) f($a/3);
 		F(a) --> F($a/3) f($a/3) F($a/3);
+		
+		F(a) -h> F($a, $_stroke*$a, $_color);
 	};
 	
 	main call CantorSet (F($_step), 2); 
 };
-
-derive CantorSetScript;

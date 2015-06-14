@@ -3,18 +3,18 @@
 */
 describe("Compiler", function(){
 	var Compiler;
-	
+
 	beforeEach(function(){
-		Compiler = l2js.compiler.Compiler; 
+		Compiler = l2js.compiler.Compiler;
 	});
-	
+
 	describe("supports parallel compilations", function(){
 
-		
+
 	});
-	
+
 	describe("compiles valid non-empty L2 script to JS code", function(){
-		
+
 		var cantorSetScript= '$_step=3;'+
 			'lscript CantorSetScript {'+
 			'alphabet Alphabet2D {'+
@@ -28,7 +28,7 @@ describe("Compiler", function(){
 			'main call CantorSet (F($_step), 1);'+
 		'};'+
 		'derive CantorSetScript;';
-		
+
 		var code;
 		beforeEach(function(cantorSetScriptDone){
 			var promise = new Compiler().compile(cantorSetScript);
@@ -39,27 +39,27 @@ describe("Compiler", function(){
 				cantorSetScriptDone();
 			});
 		});
-		
+
 		it('that is not empty', function(cantorSetScriptDone){
 			expect(code).toBeTruthy();
 			cantorSetScriptDone();
 		});
-		
+
 		it('that is executable', function(cantorSetScriptDone){
 			expect(function() {eval(code);}).not.toThrow();
 			cantorSetScriptDone();
 		});
-		
+
 		it('that is executable and returns derivation of lscript', function(cantorSetScriptDone){debugger
 			var derivation = eval(code);
 			expect(derivation).toBeTruthy();
 			cantorSetScriptDone();
 		});
 	});
-	
-	
+
+
 	describe("compiles rules", function(){
-	
+
 		var sublsystemAndCallScriptTemplate = '$_step=3;'+
 		'$_angle=45;'+
 		'lscript flower {'+
@@ -87,24 +87,24 @@ describe("Compiler", function(){
 
 		describe("with sub-L-Systems", function(){
 			var scriptA1 = sublsystemAndCallScriptTemplate.replace('{{AXIOM}}', 'A1($_step)');
-			
+
 			beforeEach(function(){
-				
+
 			});
-			
+
 			it("with zero iterations ", function(){
 				// so it returns axiom
-				
-				
+
+
 			});
-			
+
 		});
-		
+
 		describe("parses with calls", function(){
 
-			
+
 		});
 	});
-	
-	
+
+
 });

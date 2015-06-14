@@ -1,266 +1,285 @@
-var files = require('./files').files, path = require("path"), spawn = require('child_process').spawn;
+'use strict';
+var files = require('./files').files,
+    path = require('path'),
+    spawn = require('child_process').spawn;
 
 module.exports = function(grunt) {
-	grunt.initConfig({
-		pkg : grunt.file.readJSON('package.json'),
-		bower : {
-			install : {
-				options : {
-					targetDir : "bower_modules",
-					cleanup : true,
-					layout : function(type, component) {
-						var renamedType = type;
-						if (type == 'js')
-							renamedType = 'javascripts';
-						else if (type == 'css')
-							renamedType = 'stylesheets';
 
-						return path.join(component, renamedType);
-					}
-				}
-			}
-		},
-		jison : {
-			l : {
-				options : {
-					moduleType : 'js'
-				},
-				files : {
-					'src/compiler/lparser.js' : 'src/compiler/lgrammar.jison'
-				}
-			}
-		},
-		build : {
-			l2js : {
-				// dest : "dist/l2js-v<%= pkg.version %>.js",
-				dest : "dist/l2js.js",
-				src : wrap(files.src, "build")
+    function _toUpperFirstLetter(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    }
 
-			},
-			env : {
-				// dest : "dist/l2js-v<%= pkg.version %>.js",
-				dest : "dist/env.js",
-				src : wrap(files.env, "build")
+    function build(config, success) {
+        var files = grunt.file.expand(config.src);
 
-			}
-		},
-		tests : {
-			unit : 'karma.config.js',
-		},
-		uglify : {
-			l2js : {
-				files : {
-					// "dist/l2js-v<%= pkg.version %>.min.js" : ["dist/l2js-v<%= pkg.version %>.js"]
-					"dist/l2js.min.js" : ["dist/l2js.js"]
-				},
-				options : {
-					preserveComments : false,
-					// sourceMap : "dist/l2js-v<%= pkg.version %>.min.map",
-					// sourceMappingURL : "dist/l2js-v<%= pkg.version %>.min.map",
-					sourceMap : "dist/l2js.min.map",
-					sourceMappingURL : "dist/l2js.min.map",
-					report : "min",
-					beautify : {
-						ascii_only : true
-					},
-					banner : "/*! L2JS v<%= pkg.version %> | " + "Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz). | " + "MIT licence */",
-					compress : {
-						hoist_funs : false,
-						loops : false,
-						unused : false
-					}
-				}
-			},
-			env : {
-				files : {
-					// "dist/l2js-v<%= pkg.version %>.min.js" : ["dist/l2js-v<%= pkg.version %>.js"]
-					"dist/env.min.js" : ["dist/env.js"]
-				},
-				options : {
-					preserveComments : false,
-					// sourceMap : "dist/l2js-v<%= pkg.version %>.min.map",
-					// sourceMappingURL : "dist/l2js-v<%= pkg.version %>.min.map",
-					sourceMap : "dist/l2js.min.map",
-					sourceMappingURL : "dist/l2js.min.map",
-					report : "min",
-					beautify : {
-						ascii_only : true
-					},
-					banner : "/*! L2JS v<%= pkg.version %> | " + "Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz). | " + "MIT licence */",
-					compress : {
-						hoist_funs : false,
-						loops : false,
-						unused : false
-					}
-				}
-			}
-		},
+        // concat
+        var src = files.map(function(filepath) {
+            return processFile(grunt.file.read(filepath));
+        }).join(grunt.util.normalizelf('\n'));
 
-		clean : {
-			build : ['dist']
-		},
+        // process
+        var processed = processSource(src, grunt.config('pkg').version);
 
-		compress : {
-			build : {
-				options : {
-					// archive : 'dist/l2js-v<%= pkg.version %>.zip',
-					archive : 'dist/l2js.zip',
-					mode : 'zip'
-				},
-				src : ['**'],
-				cwd : 'dist',
-				expand : true,
-				dot : true,
-				// dest : 'l2js-v<%= pkg.version %>/'
-				dest : 'l2js/'
-			}
-		},
-	});
+        // write
+        grunt.file.write(config.dest, processed);
+        grunt.log.ok('File ' + config.dest + ' created.');
 
-	function _toUpperFirstLetter(string) {
-		return string.charAt(0).toUpperCase() + string.slice(1);
-	}
+        success();
+    }
 
-	function build(config, success) {
-		var files = grunt.file.expand(config.src);
+    /**
+     * Process contacted source. Fills metadata in the banner and removes
+     * multiple used 'use strict' expression.
+     *
+     * @param src
+     *            Contacted source
+     * @param version
+     *            Version of source
+     */
+    function processSource(src, version) {
+        // Fills in metadata to header of code
+        var processed = src.replace(/@VERSION/, version).replace(/@DATE/, new Date().toISOString());
 
-		// concat
-		var src = files.map(function(filepath) {
-			return processFile(grunt.file.read(filepath));
-		}).join(grunt.util.normalizelf('\n'));
+        processed = singleStrict(processed, '\n\n');
+        return processed;
+    }
 
-		// process
-		var processed = processSource(src, grunt.config("pkg").version);
+    /**
+     * Removes closure declarations
+     *
+     * @param src
+     *            Source of single file
+     */
+    function processFile(src) {
+        var closureRegexStart = /window\.l2js.*\(l2js\)\s*\{/;
+        var closureRegexEnd = /\}\(window.l2js\);\s*$/;
 
-		// write
-		grunt.file.write(config.dest, processed);
-		grunt.log.ok('File ' + config.dest + ' created.');
+        var processed = src.replace(closureRegexStart, '\n').replace(closureRegexEnd, '\n');
+        return processed;
+    }
 
-		success();
-	}
+    /**
+     * Adds prefix a suffix to the array files.
+     *
+     * @param name
+     *            Name of prefix/suffix combination
+     */
+    function wrap(files, name) {
+        files.unshift('src/' + name + '.prefix.js');
+        files.push('src/' + name + '.suffix.js');
+        return files;
+    }
 
-	/**
-	 * Process contacted source. Fills metadata in the banner and removes
-	 * multiple used 'use strict' expression.
-	 *
-	 * @param src
-	 *            Contacted source
-	 * @param version
-	 *            Version of source
-	 */
-	function processSource(src, version) {
-		// Fills in metadata to header of code
-		var processed = src.replace(/@VERSION/, version).replace(/@DATE/, new Date().toISOString());
+    function singleStrict(src, insert) {
+        return src
+            // remove all file-specific strict mode flags
+            .replace(/\s*('|')use strict('|');\s*/g, insert)
+            // add single strict mode flag
+            .replace(/(\(function\([^)]*\)\s*\{)/, '$1\'use strict\';');
+    }
 
-		processed = singleStrict(processed, '\n\n');
-		return processed;
-	}
+    function startKarma(config, singleRun, done) {
+        var browsers = grunt.option('browsers');
+        var reporters = grunt.option('reporters');
+        var noColor = grunt.option('no-colors');
+        var port = grunt.option('port');
+        var p = spawn('node', ['node_modules/karma/bin/karma', 'start', config,
+            singleRun ? '--single-run=true' : '', reporters ? '--reporters=' + reporters : '', browsers ? '--browsers=' + browsers : '', noColor ? '--no-colors' : '', port ? '--port=' + port : ''
+        ]);
 
-	/**
-	 * Removes closure declarations
-	 *
-	 * @param src
-	 *            Source of single file
-	 */
-	function processFile(src) {
-		var closureRegexStart = /window\.l2js.*\(l2js\)\s*\{/;
-		var closureRegexEnd = /\}\(window.l2js\);\s*$/;
+        p.stdout.pipe(process.stdout);
+        p.stderr.pipe(process.stderr);
 
-		var processed = src.replace(closureRegexStart, "\n").replace(closureRegexEnd, "\n");
-		return processed;
-	}
+        p.on('exit', function(code) {
+            if (code !== 0) {
+                grunt.fail.warn('Karma test(s) failed. Exit code: ' + code);
+            }
+            done();
+        });
+    }
 
-	/**
-	 * Adds prefix a suffix to the array files.
-	 *
-	 * @param name
-	 *            Name of prefix/suffix combination
-	 */
-	function wrap(files, name) {
-		files.unshift('src/' + name + '.prefix.js');
-		files.push('src/' + name + '.suffix.js');
-		return files;
-	}
+    /**
+     * Generate application module from JISON generated parser
+     */
+    function processGrammarFile(filepath, success) {
+        var src = grunt.file.read(filepath);
+        var names = filepath.match(/[\\\/]([^\.]+)\.js$/, filepath)[1].split('/');
+        var _lastInd = names.length - 1;
+        names[_lastInd] = _toUpperFirstLetter(names[_lastInd]);
+        var name = names.join('.');
 
-	function singleStrict(src, insert) {
-		return src
-		// remove all file-specific strict mode flags
-		.replace(/\s*("|')use strict("|');\s*/g, insert)
-		// add single strict mode flag
-		.replace(/(\(function\([^)]*\)\s*\{)/, "$1'use strict';");
-	}
+        src = src.replace(/var\s*parser\s*=\s*\(function\(\)\{/g, 'window.l2js && function(l2js) {' + '\n' + 'l2js.' + name + ' = (function(){');
+        src = src.replace(/\}\)\(\);$/g, '})();' + '\n' + '}(window.l2js);');
 
-	function startKarma(config, singleRun, done) {
-		var browsers = grunt.option('browsers');
-		var reporters = grunt.option('reporters');
-		var noColor = grunt.option('no-colors');
-		var port = grunt.option('port');
-		var p = spawn('node', ['node_modules/karma/bin/karma', 'start', config, singleRun ? '--single-run=true' : '', reporters ? '--reporters=' + reporters : '', browsers ? '--browsers=' + browsers : '', noColor ? '--no-colors' : '', port ? '--port=' + port : '']);
+        grunt.file.write(filepath, src);
+        success();
+    }
 
-		p.stdout.pipe(process.stdout);
-		p.stderr.pipe(process.stderr);
 
-		p.on('exit', function(code) {
-			if (code !== 0) {
-				grunt.fail.warn("Karma test(s) failed. Exit code: " + code);
-			}
-			done();
-		});
-	}
+    grunt.initConfig({
+        pkg: grunt.file.readJSON('package.json'),
+        bower: {
+            install: {
+                options: {
+                    targetDir: 'bower_modules',
+                    cleanup: true,
+                    layout: function(type, component) {
+                        var renamedType = type;
+                        if (type === 'js') {
+                            renamedType = 'javascripts';
+                        } else if (type === 'css') {
+                            renamedType = 'stylesheets';
+                        }
 
-	/**
-	 * Generate application module from JISON generated parser
-	 */
-	function processGrammarFile(filepath, success) {
-		var src = grunt.file.read(filepath);
-		var names = filepath.match(/[\\\/]([^\.]+)\.js$/, filepath)[1].split("/");
-		var _lastInd = names.length - 1;
-		names[_lastInd] = _toUpperFirstLetter(names[_lastInd]);
-		var name = names.join(".");
+                        return path.join(component, renamedType);
+                    }
+                }
+            }
+        },
+        jison: {
+            l: {
+                options: {
+                    moduleType: 'js'
+                },
+                files: {
+                    'src/compiler/lparser.js': 'src/compiler/lgrammar.jison'
+                }
+            }
+        },
+        build: {
+            l2js: {
+                // dest : 'dist/l2js-v<%= pkg.version %>.js',
+                dest: 'dist/l2js.js',
+                src: wrap(files.src, 'build')
 
-		src = src.replace(/var\s*parser\s*=\s*\(function\(\)\{/g, 'window.l2js && function(l2js) {' + "\n" + 'l2js.' + name + ' = (function(){');
-		src = src.replace(/\}\)\(\);$/g, '})();' + "\n" + '}(window.l2js);');
+            },
+            env: {
+                // dest : 'dist/l2js-v<%= pkg.version %>.js',
+                dest: 'dist/env.js',
+                src: wrap(files.env, 'build')
 
-		grunt.file.write(filepath, src);
-		success();
-	}
+            }
+        },
+        tests: {
+            unit: 'karma.config.js',
+        },
+        jshint: {
+            options: {
+                jshintrc: true,
+                reporter: require('jshint-stylish')
+            },
+            l2js: files.src,
+            gruntfile: ['Gruntfile.js']
+        },
+        uglify: {
+            l2js: {
+                files: {
+                    // 'dist/l2js-v<%= pkg.version %>.min.js' : ['dist/l2js-v<%= pkg.version %>.js']
+                    'dist/l2js.min.js': ['dist/l2js.js']
+                },
+                options: {
+                    preserveComments: false,
+                    // sourceMap : 'dist/l2js-v<%= pkg.version %>.min.map',
+                    // sourceMappingURL : 'dist/l2js-v<%= pkg.version %>.min.map',
+                    sourceMap: 'dist/l2js.min.map',
+                    sourceMappingURL: 'dist/l2js.min.map',
+                    report: 'min',
+                    beautify: {
+                        'ascii_only': true
+                    },
+                    banner: '/*! L2JS v<%= pkg.version %> | ' + 'Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz). | ' + 'MIT licence */',
+                    compress: {
+                        'hoist_funs': false,
+                        loops: false,
+                        unused: false
+                    }
+                }
+            },
+            env: {
+                files: {
+                    // 'dist/l2js-v<%= pkg.version %>.min.js' : ['dist/l2js-v<%= pkg.version %>.js']
+                    'dist/env.min.js': ['dist/env.js']
+                },
+                options: {
+                    preserveComments: false,
+                    // sourceMap : 'dist/l2js-v<%= pkg.version %>.min.map',
+                    // sourceMappingURL : 'dist/l2js-v<%= pkg.version %>.min.map',
+                    sourceMap: 'dist/l2js.min.map',
+                    sourceMappingURL: 'dist/l2js.min.map',
+                    report: 'min',
+                    beautify: {
+                        'ascii_only': true
+                    },
+                    banner: '/*! L2JS v<%= pkg.version %> | ' + 'Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz). | ' + 'MIT licence */',
+                    compress: {
+                        'hoist_funs': false,
+                        loops: false,
+                        unused: false
+                    }
+                }
+            }
+        },
 
-	require("load-grunt-tasks")(grunt);
+        clean: {
+            build: ['dist']
+        },
 
-	grunt.registerMultiTask('tests', '**Use `grunt test` instead**', function() {
-		startKarma(this.data, true, this.async());
-	});
+        compress: {
+            build: {
+                options: {
+                    // archive : 'dist/l2js-v<%= pkg.version %>.zip',
+                    archive: 'dist/l2js.zip',
+                    mode: 'zip'
+                },
+                src: ['**'],
+                cwd: 'dist',
+                expand: true,
+                dot: true,
+                // dest : 'l2js-v<%= pkg.version %>/'
+                dest: 'l2js/'
+            }
+        },
+    });
 
-	grunt.registerMultiTask("build", function() {
-		build(this.data, this.async);
-	});
 
-	grunt.registerTask('wrapparsers', 'wrap jison parsers to app format', function() {
-		grunt.util.async.forEach(files.parsers, processGrammarFile, this.async());
-	});
 
-	grunt.registerTask('buildall', 'buildall the JS files in parallel', function() {
-		grunt.log.writeln("Starting build all components...");
-		var builds = grunt.config('build');
-		builds = Object.keys(builds).map(function(key) {
-			return builds[key];
-		});
-		grunt.util.async.forEach(builds, build, this.async());
-	});
+    require('load-grunt-tasks')(grunt);
 
-	grunt.registerTask('uglifyall', 'uglify all the tasks it parallel', function() {
-		grunt.log.writeln("Starting uglify all tasks...");
-		var profiles = grunt.config('uglify'), tasks = Object.keys(profiles);
+    grunt.registerMultiTask('tests', '**Use `grunt test` instead**', function() {
+        startKarma(this.data, true, this.async());
+    });
 
-		grunt.util.async.forEach(tasks, function(task, success) {
-			grunt.task.run("uglify:" + task);
-			success();
-		}, this.async());
+    grunt.registerMultiTask('build', function() {
+        build(this.data, this.async);
+    });
 
-	});
-	grunt.registerTask('package', ["bower", "clean", "grammar", "buildall", "test", "uglifyall", "compress"]);
-	grunt.registerTask('dev', ["clean", "buildall"]);
-	grunt.registerTask('grammar', ['jison', 'wrapparsers']);
-	grunt.registerTask('test', ['tests:unit']);
-	grunt.registerTask('default', ['package']);
-}; 
+    grunt.registerTask('wrapparsers', 'wrap jison parsers to app format', function() {
+        grunt.util.async.forEach(files.parsers, processGrammarFile, this.async());
+    });
+
+    grunt.registerTask('buildall', 'buildall the JS files in parallel', function() {
+        grunt.log.writeln('Starting build all components...');
+        var builds = grunt.config('build');
+        builds = Object.keys(builds).map(function(key) {
+            return builds[key];
+        });
+        grunt.util.async.forEach(builds, build, this.async());
+    });
+
+    grunt.registerTask('uglifyall', 'uglify all the tasks it parallel', function() {
+        grunt.log.writeln('Starting uglify all tasks...');
+        var profiles = grunt.config('uglify'),
+            tasks = Object.keys(profiles);
+
+        grunt.util.async.forEach(tasks, function(task, success) {
+            grunt.task.run('uglify:' + task);
+            success();
+        }, this.async());
+
+    });
+    grunt.registerTask('package', ['bower', 'clean', 'grammar', 'buildall', 'test', 'uglifyall', 'compress']);
+    grunt.registerTask('dev', ['clean', 'buildall']);
+    grunt.registerTask('grammar', ['jison', 'wrapparsers']);
+    grunt.registerTask('test', ['tests:unit']);
+    grunt.registerTask('default', ['package']);
+};

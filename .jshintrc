@@ -1,0 +1,12 @@
+{
+  "camelcase" : true,
+  "undef": true,
+  "quotmark": "single",
+  "maxlen": 1000,
+  "trailing": true,
+  "curly": true,
+  "node": true,
+  "globals": {
+    "console": true
+  }
+}

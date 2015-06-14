@@ -7,52 +7,52 @@
 
 window.l2js && window.l2js.utils && window.l2js.compiler && window.l2js.compiler.env && function(l2js) {
 
-	l2js.compiler.env.SubLSystem = (function() {
+    l2js.compiler.env.SubLSystem = (function() {
 
-		/**
-		 * @param ctx context for variables
-		 * @param lsystem Prototype of lsystem for wrapping
-		 * @param axiom
-		 * @param maxIterations
-		 */
-		function SubLSystem(ctx, lsystem, axiom, maxIterations) {
-			this.ctx = ctx;
-			this.lsystem = lsystem;
+        /**
+         * @param ctx context for variables
+         * @param lsystem Prototype of lsystem for wrapping
+         * @param axiom
+         * @param maxIterations
+         */
+        function SubLSystem(ctx, lsystem, axiom, maxIterations) {
+            this.ctx = ctx;
+            this.lsystem = lsystem;
 
-			if ( typeof axiom === "number") {
-				maxIteration = axiom;
-				axiom = undefined;
-			}
+            if (typeof axiom === "number") {
+                maxIterations = axiom;
+                axiom = undefined;
+            }
 
-			this.axiom = axiom;
-			this.maxIterations = maxIterations;
-			this.type = "sublsystem";
-		}
+            this.axiom = axiom;
+            this.maxIterations = maxIterations;
+            this.type = "sublsystem";
+        }
 
 
-		SubLSystem.prototype.derive = function() {
+        SubLSystem.prototype.derive = function() {
 
-			var result;
-			if (!this.lsystemInst) {
-				this.lsystemInst = new this.lsystem(this.ctx);
-			}
-			if (this.derivation) {
-				result = this.lsystemInst.derive(this.derivation, this.maxIterations);
-			} else {
-				result = this.lsystemInst.derive(this.axiom, this.maxIterations);
-				this.axiom = result.axiom;
-				// axiom used in the first iteration
-			}
+            var result;
+            if (!this.lsystemInst) {
+                this.lsystemInst = new this.lsystem(this.ctx);
+            }
+            if (this.derivation) {
+                result = this.lsystemInst.derive(this.derivation, this.maxIterations);
+            } else {
+                result = this.lsystemInst.derive(this.axiom, this.maxIterations);
+                this.axiom = result.axiom;
+                // axiom used in the first iteration
+            }
 
-			this.derivation = result.derivation;
-			this.interpretation = result.interpretation;
+            this.derivation = result.derivation;
+            this.interpretation = result.interpretation;
 
-			return this;
+            return this;
 
-		};
+        };
 
-		return SubLSystem;
+        return SubLSystem;
 
-	})();
+    })();
 
 }(window.l2js);
