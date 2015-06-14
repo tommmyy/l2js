@@ -1,4 +1,4 @@
 L2JS
 ====
 
-Javascript library to write L-systems in L2JS language.
+Javascript library for writing L-systems in L2 language.
