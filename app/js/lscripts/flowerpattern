@@ -1,0 +1,53 @@
+$black = __rgb(0,0,0,255);
+lscript FlowerLScript {
+   alphabet Turtle2D {
+      
+   };
+
+   lsystem FlowerPetal(A(0.5, __rgb(255,255,255,255)), 10) using Turtle2D {
+      A(s, c) --> F($s, $c);
+      F(s, c) -h> F($s, $s / (5 + 2 - __random() * 4), $c);
+   };
+
+   lsystem FlowerMid(A(0.1, 1), 10) using Turtle2D {
+      A(s, n) --> [ MidBg($s) ] B($s, $n + 1);
+      B(s, n) --> [ L(__random() * 240 - 60) f(1.5 * $s * __random() / 4) MS($s / 3) ] B($s, $n + 1);
+      MidBg(s) -h> F(0.0001, $s, __hsv(51,0.59,0.82,255));
+      MS(s) -h> F(0.0001, $s, __hsv(63,0.64,0.51,120));
+   };
+
+   lsystem Flower(A(0.1, 1, $black, $black), 8) using Turtle2D {
+      A(s, n, c1, c2) --> [ MID($s / 2) ] [ PETALS($s, 1, $c1) ] [ PETALSLT($s, 1, $c2) ];
+      PETALS(s, n, c) --> [ L(90) [ PETAL($s, $c) ] L(90) [ PETAL($s, $c) ] L(90) [ PETAL($s, $c) ] L(90) [ PETAL($s, $c) ] ] L(70 - 10 * __random()) PETALS($s, $n + 1, $c);
+      PETALSLT(s, n, c) --> [ L(90) [ PETALLT($s, $c) ] L(90) [ PETALLT($s, $c) ] L(90) [ PETALLT($s, $c) ] L(90) [ PETALLT($s, $c) ] ] L(70 - 10 * __random()) PETALSLT($s, $n + 1, $c);
+      MID(s) -h> sublsystem FlowerMid(A($s, 1));
+      PETAL(s, c) -h> [ f($s / (4 + __random())) sublsystem FlowerPetal(A($s * 3 / (4 + __random()), $c)) ];
+      PETALLT(s, c) -h> [ f($s / (4 + __random())) sublsystem FlowerPetal(A($s / (1.5 + __random()), $c)) ] | 
+         [ f ];
+   };
+
+   lsystem Leave(A(1, $black), 2) using Turtle2D {
+      A(s, c) --> [ PU($c) V f($s * 2) V R(30) f($s) V R(120) f($s) V R(30) f($s * 2) V PS ];
+      PU(c) -h> PU($c);
+   };
+
+   lsystem LeavesBg(A(1, $black, $black), 8) using Turtle2D {
+      $_R = 0.707;
+      $_angle = 90;
+      A(s, c1, c2) --> [ F($s, $c1, $c2) ] R(180) [ F($s, $c1, $c2) ];
+      F(s, c1, c2) --> H($s) [ R($_angle) F($s * $_R, $c1, $c2) ] [ L($_angle) F($s * $_R, $c1, $c2) ];
+      F(s, c1, c2) -h> sublsystem Leave(A($s, $c1)) R(180) sublsystem Leave(A($s, $c2));
+      H(s) -h> f($s);
+   };
+
+   lsystem Flowers(STEP, 25) using Turtle2D {
+      STEP --> [ L(45 + __random() * 90) FLOWER(0.5) ] [ R(45 + __random() * 90) FLOWER(0.5) ] [ L(45 - __random() * 90) FLOWER(0.5) ] [ R(135 + __random() * 90) FLOWER(0.5) ] STEP;
+      B -h> [ sublsystem LeavesBg(A(0.15, __hsv(100,0.4,0.4,200), __hsv(55,0.5,0.65,200))) ];
+      FLOWER(s) -h> f($s * __random()) sublsystem Flower(A(0.07, 1, __hsv(220,0.63,0.42,250), __hsv(210,0.36,0.71,150))) : 2;
+      FLOWER(s) -h> f($s * __random()) sublsystem Flower(A(0.06, 1, __hsv(318,0.12,0.73,250), __hsv(278,0.28,0.53,150))) : 2;
+      FLOWER(s) -h> f($s * __random()) sublsystem Flower(A(0.05, 1, __hsv(43,0.12,0.93,250), __hsv(37,0.13,0.87,150))) : 5;
+   };
+   main call Flowers();
+};
+
+derive FlowerLScript;
