@@ -65,7 +65,7 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
             if (this._symbols[symbol.symbol]) {
                 this._symbols[symbol.symbol].call(this, symbol);
             } else if (!this.options.skipUnknownSymbols) {
-                this.handlerError('Unexpected symbol (\'' + symbol.symbol + '\')');
+                this._handleError('Unexpected symbol (\'' + symbol.symbol + '\')');
             }
         };
 
@@ -73,7 +73,7 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
 
             this.options = l2js.utils.extend(l2js.utils.copy(Turtle2DBuilder.options), this.options);
             if (!this.options.container) {
-                this.handlerError("Turtle2D should have set the container to draw on.");
+                this._handleError("Turtle2D should have set the container to draw on.");
             }
 
             var turtle2D = this.ctx.turtle2D = {},
