@@ -55,32 +55,26 @@ window.l2js && window.l2js.compiler.Lparser && window.l2js.compiler.lnodes && wi
 
         Compiler.prototype.compile = function(input) {
             var that = this,
-                q = l2js.core.q,
-                deferred = q.deferred(),
                 code = input;
 
-            function errCb(e) {
-                deferred.reject(e);
-            }
+            return new Promise(function(resolve, reject) {
+                setTimeout(function() {
+                    try {
+                        console.time('toAST');
+                        var ast = that.toAST(code);
+                        console.timeEnd('toAST');
 
-            setTimeout(function() {
-                try {
-                    console.time('toAST');
-                    var ast = that.toAST(code);
-                    console.timeEnd('toAST');
+                        console.time('ASTToJS');
+                        var src = that.ASTToJS(ast);
+                        console.timeEnd('ASTToJS');
 
-                    console.time('ASTToJS');
-                    var src = that.ASTToJS(ast);
-                    console.timeEnd('ASTToJS');
+                        resolve(src);
+                    } catch (e) {
+                        reject(e);
+                    }
 
-                    deferred.resolve(src);
-                } catch (e) {
-                    deferred.reject(e);
-                }
-
-            }, 0);
-
-            return deferred.promise;
+                }, 0);
+            });
         };
 
         Compiler.prototype.toAST = function(code) {

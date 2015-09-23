@@ -1,10 +1,10 @@
 /*!
-* L-System to Javascript Library v0.1.0
+* L-System to Javascript Library v0.1.2
 *
 * Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2015-06-15T05:16:17.140Z
+* Date: 2015-09-23T22:46:04.625Z
 */
 
 (function( global, factory ) {'use strict';
@@ -24,71 +24,7 @@ l2js.options = {
 };
 window.l2js.files = {};
 
-/**
- * Core of the library. Provides factory for core objects used by other modules.
- */
-
-
-    l2js.core = l2js.core || {};
-
-/**
- * Promise object inspired by {@link http://docs.angularjs.org/api/ng.$q}
- *
- */
-// TODO: chain promises, chain errors
-
-
-
-
-
-    /** Promise */
-    l2js.core.Promise = function Promise(deferred) {
-        this.deferred = deferred;
-    };
-
-    l2js.core.Promise.prototype.then = function(successCallback, errorCallback) {
-
-        this.deferred.successCallback = successCallback;
-        this.deferred.errorCallback = errorCallback;
-
-        this.result = l2js.core.q.deferred();
-        return this.result.promise;
-
-    };
-
-    l2js.core.Promise.prototype.catch = function(errorCallback) {
-        this.deferred.errorCallback = errorCallback;
-    };
-
-
-    /**
-     * Deffered
-     */
-    l2js.core.Deferred = function() {
-        this.promise = new l2js.core.Promise(this);
-    };
-
-
-    l2js.core.Deferred.prototype.reject = function(reason) {
-        if (this.errorCallback) {
-            this.promise.result.reject(this.errorCallback(reason) || reason);
-        }
-    };
-
-    l2js.core.Deferred.prototype.resolve = function(value) {
-        if (this.successCallback) {
-            this.promise.result.resolve(this.successCallback(value) || value);
-        }
-
-    };
-
-    l2js.core.q = {
-        /** Factory for deffered object */
-        deferred: function() {
-            return new l2js.core.Deferred();
-        }
-    };
-
+// globals  window
 /**
  * Utility methods
  */
@@ -147,7 +83,7 @@ window.l2js.files = {};
 
     l2js.utils = {
         copy: function(obj) {
-            if (l2js.utils.isUndefined(obj) || typeof obj !== "object" || obj === null) {
+            if (l2js.utils.isUndefined(obj) || typeof obj !== 'object' || obj === null) {
                 return obj;
             }
 
@@ -167,8 +103,9 @@ window.l2js.files = {};
 
             /* jshint newcap:false */
             for (var key in parent) {
-                if (l2js.utils.hasProp.call(parent, key))
+                if (l2js.utils.hasProp.call(parent, key)) {
                     child[key] = parent[key];
+                }
             }
 
             function ctor() {
@@ -258,7 +195,7 @@ window.l2js.files = {};
             }
 
             return {
-                model: "rgb",
+                model: 'rgb',
                 r: r * 255,
                 g: g * 255,
                 b: b * 255,
@@ -294,6 +231,121 @@ window.l2js.files = {};
                 b: hexStringToInt(hexStrAlpha.substring(4, 6)),
                 a: hexStringToInt(hexStrAlpha.substring(6, 8)) / 256
             };
+        },
+        colorHexToInt: function(hex){
+            return Number(hex.replace("#", "0x"));
+        },
+        deepEquals: function() {
+            var i, l, leftChain, rightChain;
+
+            function compare2Objects(x, y) {
+                var p;
+
+                // remember that NaN === NaN returns false
+                // and isNaN(undefined) returns true
+                if (isNaN(x) && isNaN(y) && typeof x === 'number' && typeof y === 'number') {
+                    return true;
+                }
+
+                // Compare primitives and functions.
+                // Check if both arguments link to the same object.
+                // Especially useful on step when comparing prototypes
+                if (x === y) {
+                    return true;
+                }
+
+                // Works in case when functions are created in constructor.
+                // Comparing dates is a common scenario. Another built-ins?
+                // We can even handle functions passed across iframes
+                if ((typeof x === 'function' && typeof y === 'function') ||
+                    (x instanceof Date && y instanceof Date) ||
+                    (x instanceof RegExp && y instanceof RegExp) ||
+                    (x instanceof String && y instanceof String) ||
+                    (x instanceof Number && y instanceof Number)) {
+                    return x.toString() === y.toString();
+                }
+
+                // At last checking prototypes as good a we can
+                if (!(x instanceof Object && y instanceof Object)) {
+                    return false;
+                }
+
+                if (x.isPrototypeOf(y) || y.isPrototypeOf(x)) {
+                    return false;
+                }
+
+                if (x.constructor !== y.constructor) {
+                    return false;
+                }
+
+                if (x.prototype !== y.prototype) {
+                    return false;
+                }
+
+                // Check for infinitive linking loops
+                if (leftChain.indexOf(x) > -1 || rightChain.indexOf(y) > -1) {
+                    return false;
+                }
+
+                // Quick checking of one object beeing a subset of another.
+                // todo: cache the structure of arguments[0] for performance
+                for (p in y) {
+                    if (y.hasOwnProperty(p) !== x.hasOwnProperty(p)) {
+                        return false;
+                    } else if (typeof y[p] !== typeof x[p]) {
+                        return false;
+                    }
+                }
+
+                for (p in x) {
+                    if (y.hasOwnProperty(p) !== x.hasOwnProperty(p)) {
+                        return false;
+                    } else if (typeof y[p] !== typeof x[p]) {
+                        return false;
+                    }
+
+                    switch (typeof(x[p])) {
+                        case 'object':
+                        case 'function':
+
+                            leftChain.push(x);
+                            rightChain.push(y);
+
+                            if (!compare2Objects(x[p], y[p])) {
+                                return false;
+                            }
+
+                            leftChain.pop();
+                            rightChain.pop();
+                            break;
+
+                        default:
+                            if (x[p] !== y[p]) {
+                                return false;
+                            }
+                            break;
+                    }
+                }
+
+                return true;
+            }
+
+            if (arguments.length < 1) {
+                return true; //Die silently? Don't know how to handle such case, please help...
+                // throw 'Need two or more arguments to compare';
+            }
+
+            for (i = 1, l = arguments.length; i < l; i++) {
+
+                leftChain = []; //Todo: this can be cached
+                rightChain = [];
+
+                if (!compare2Objects(arguments[0], arguments[i])) {
+                    return false;
+                }
+            }
+
+            return true;
         }
     };
 
@@ -679,40 +731,30 @@ l2js.compile = function(code) {
     };
 
     l2js.derive = function(lsystemCode) {
-        //console.log(lsystemCode);
-        //var t1 = new Date().getTime();
         var out = eval(lsystemCode);
-        //console.log((new Date().getTime() - t1)/1000);
         return out;
-
     };
 
     l2js.interpretAll = function(symbols, options) {
-
-        //var t1 = new Date().getTime();
         new l2js.interpret.Interpret(symbols, options).all();
-        //console.log((new Date().getTime() - t1) / 1000);
     };
 
     l2js.format = function(lsystemCode) {
-        var deferred = l2js.core.q.deferred();
-        setTimeout(function() {
-            var errHandler = function(err) {
-                deferred.reject(err);
-            };
-            try {
-                var compiler = new l2js.compiler.Compiler();
+        return new Promise(function(resolve, reject) {
+            setTimeout(function() {
+                try {
+                    var compiler = new l2js.compiler.Compiler();
 
-                var ast = compiler.toAST(lsystemCode);
-                var l2 = compiler.ASTToL2(ast);
-                deferred.resolve(l2);
-            } catch (e) {
-                errHandler(e);
-            }
+                    var ast = compiler.toAST(lsystemCode);
+                    var l2 = compiler.ASTToL2(ast);
+                    resolve(l2);
+                } catch (e) {
+                    reject(e);
+                }
 
-        }, 0);
+            }, 0);
+        });
 
-        return deferred.promise;
     };
 
     l2js.evolve = function(numberOfIndividuals, scripts, lscript, lsystems) {

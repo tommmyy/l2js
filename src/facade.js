@@ -16,24 +16,21 @@ window.l2js && function(l2js) {
     };
 
     l2js.format = function(lsystemCode) {
-        var deferred = l2js.core.q.deferred();
-        setTimeout(function() {
-            var errHandler = function(err) {
-                deferred.reject(err);
-            };
-            try {
-                var compiler = new l2js.compiler.Compiler();
+        return new Promise(function(resolve, reject) {
+            setTimeout(function() {
+                try {
+                    var compiler = new l2js.compiler.Compiler();
 
-                var ast = compiler.toAST(lsystemCode);
-                var l2 = compiler.ASTToL2(ast);
-                deferred.resolve(l2);
-            } catch (e) {
-                errHandler(e);
-            }
+                    var ast = compiler.toAST(lsystemCode);
+                    var l2 = compiler.ASTToL2(ast);
+                    resolve(l2);
+                } catch (e) {
+                    reject(e);
+                }
 
-        }, 0);
+            }, 0);
+        });
 
-        return deferred.promise;
     };
 
     l2js.evolve = function(numberOfIndividuals, scripts, lscript, lsystems) {

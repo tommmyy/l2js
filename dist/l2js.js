@@ -1,10 +1,10 @@
 /*!
-* L-System to Javascript Library v0.1.0
+* L-System to Javascript Library v0.1.2
 *
 * Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2015-06-15T05:16:17.119Z
+* Date: 2015-09-23T22:46:04.609Z
 */
 
 (function( global, factory ) {'use strict';
@@ -24,71 +24,7 @@ l2js.options = {
 };
 window.l2js.files = {};
 
-/**
- * Core of the library. Provides factory for core objects used by other modules.
- */
-
-
-    l2js.core = l2js.core || {};
-
-/**
- * Promise object inspired by {@link http://docs.angularjs.org/api/ng.$q}
- *
- */
-// TODO: chain promises, chain errors
-
-
-
-
-
-    /** Promise */
-    l2js.core.Promise = function Promise(deferred) {
-        this.deferred = deferred;
-    };
-
-    l2js.core.Promise.prototype.then = function(successCallback, errorCallback) {
-
-        this.deferred.successCallback = successCallback;
-        this.deferred.errorCallback = errorCallback;
-
-        this.result = l2js.core.q.deferred();
-        return this.result.promise;
-
-    };
-
-    l2js.core.Promise.prototype.catch = function(errorCallback) {
-        this.deferred.errorCallback = errorCallback;
-    };
-
-
-    /**
-     * Deffered
-     */
-    l2js.core.Deferred = function() {
-        this.promise = new l2js.core.Promise(this);
-    };
-
-
-    l2js.core.Deferred.prototype.reject = function(reason) {
-        if (this.errorCallback) {
-            this.promise.result.reject(this.errorCallback(reason) || reason);
-        }
-    };
-
-    l2js.core.Deferred.prototype.resolve = function(value) {
-        if (this.successCallback) {
-            this.promise.result.resolve(this.successCallback(value) || value);
-        }
-
-    };
-
-    l2js.core.q = {
-        /** Factory for deffered object */
-        deferred: function() {
-            return new l2js.core.Deferred();
-        }
-    };
-
+// globals  window
 /**
  * Utility methods
  */
@@ -147,7 +83,7 @@ window.l2js.files = {};
 
     l2js.utils = {
         copy: function(obj) {
-            if (l2js.utils.isUndefined(obj) || typeof obj !== "object" || obj === null) {
+            if (l2js.utils.isUndefined(obj) || typeof obj !== 'object' || obj === null) {
                 return obj;
             }
 
@@ -167,8 +103,9 @@ window.l2js.files = {};
 
             /* jshint newcap:false */
             for (var key in parent) {
-                if (l2js.utils.hasProp.call(parent, key))
+                if (l2js.utils.hasProp.call(parent, key)) {
                     child[key] = parent[key];
+                }
             }
 
             function ctor() {
@@ -258,7 +195,7 @@ window.l2js.files = {};
             }
 
             return {
-                model: "rgb",
+                model: 'rgb',
                 r: r * 255,
                 g: g * 255,
                 b: b * 255,
@@ -294,6 +231,121 @@ window.l2js.files = {};
                 b: hexStringToInt(hexStrAlpha.substring(4, 6)),
                 a: hexStringToInt(hexStrAlpha.substring(6, 8)) / 256
             };
+        },
+        colorHexToInt: function(hex){
+            return Number(hex.replace("#", "0x"));
+        },
+        deepEquals: function() {
+            var i, l, leftChain, rightChain;
+
+            function compare2Objects(x, y) {
+                var p;
+
+                // remember that NaN === NaN returns false
+                // and isNaN(undefined) returns true
+                if (isNaN(x) && isNaN(y) && typeof x === 'number' && typeof y === 'number') {
+                    return true;
+                }
+
+                // Compare primitives and functions.
+                // Check if both arguments link to the same object.
+                // Especially useful on step when comparing prototypes
+                if (x === y) {
+                    return true;
+                }
+
+                // Works in case when functions are created in constructor.
+                // Comparing dates is a common scenario. Another built-ins?
+                // We can even handle functions passed across iframes
+                if ((typeof x === 'function' && typeof y === 'function') ||
+                    (x instanceof Date && y instanceof Date) ||
+                    (x instanceof RegExp && y instanceof RegExp) ||
+                    (x instanceof String && y instanceof String) ||
+                    (x instanceof Number && y instanceof Number)) {
+                    return x.toString() === y.toString();
+                }
+
+                // At last checking prototypes as good a we can
+                if (!(x instanceof Object && y instanceof Object)) {
+                    return false;
+                }
+
+                if (x.isPrototypeOf(y) || y.isPrototypeOf(x)) {
+                    return false;
+                }
+
+                if (x.constructor !== y.constructor) {
+                    return false;
+                }
+
+                if (x.prototype !== y.prototype) {
+                    return false;
+                }
+
+                // Check for infinitive linking loops
+                if (leftChain.indexOf(x) > -1 || rightChain.indexOf(y) > -1) {
+                    return false;
+                }
+
+                // Quick checking of one object beeing a subset of another.
+                // todo: cache the structure of arguments[0] for performance
+                for (p in y) {
+                    if (y.hasOwnProperty(p) !== x.hasOwnProperty(p)) {
+                        return false;
+                    } else if (typeof y[p] !== typeof x[p]) {
+                        return false;
+                    }
+                }
+
+                for (p in x) {
+                    if (y.hasOwnProperty(p) !== x.hasOwnProperty(p)) {
+                        return false;
+                    } else if (typeof y[p] !== typeof x[p]) {
+                        return false;
+                    }
+
+                    switch (typeof(x[p])) {
+                        case 'object':
+                        case 'function':
+
+                            leftChain.push(x);
+                            rightChain.push(y);
+
+                            if (!compare2Objects(x[p], y[p])) {
+                                return false;
+                            }
+
+                            leftChain.pop();
+                            rightChain.pop();
+                            break;
+
+                        default:
+                            if (x[p] !== y[p]) {
+                                return false;
+                            }
+                            break;
+                    }
+                }
+
+                return true;
+            }
+
+            if (arguments.length < 1) {
+                return true; //Die silently? Don't know how to handle such case, please help...
+                // throw 'Need two or more arguments to compare';
+            }
+
+            for (i = 1, l = arguments.length; i < l; i++) {
+
+                leftChain = []; //Todo: this can be cached
+                rightChain = [];
+
+                if (!compare2Objects(arguments[0], arguments[i])) {
+                    return false;
+                }
+            }
+
+            return true;
         }
     };
 
@@ -2567,27 +2619,26 @@ return new Parser;
 
         Compiler.prototype.compile = function(input) {
             var that = this,
-                q = l2js.core.q,
-                deferred = q.deferred(),
                 code = input;
 
-            function errCb(e) {
-                deferred.reject(e);
-            }
+            return new Promise(function(resolve, reject) {
+                setTimeout(function() {
+                    try {
+                        console.time('toAST');
+                        var ast = that.toAST(code);
+                        console.timeEnd('toAST');
 
-            setTimeout(function() {
-                try {
-                    var ast = that.toAST(code),
-                        src = that.ASTToJS(ast);
+                        console.time('ASTToJS');
+                        var src = that.ASTToJS(ast);
+                        console.timeEnd('ASTToJS');
 
-                    deferred.resolve(src);
-                } catch (e) {
-                    deferred.reject(e);
-                }
+                        resolve(src);
+                    } catch (e) {
+                        reject(e);
+                    }
 
-            }, 0);
-
-            return deferred.promise;
+                }, 0);
+            });
         };
 
         Compiler.prototype.toAST = function(code) {
@@ -2622,15 +2673,17 @@ l2js.interpret = l2js.interpret || {};
 
 
 
-
+    var utils = window.l2js.utils;
     l2js.interpret.Turtle2DBuilder = (function() {
-        function Turtle2DBuilder(options) {
+        function Turtle2DBuilderPixi(options) {
             this.options = options;
             this.symbolsStack = [];
             this.ctx = {};
+            this._isDone = false;
+            this._isRunning = false;
         };
 
-        Turtle2DBuilder.options = {
+        Turtle2DBuilderPixi.options = {
             container: "",
             width: 100,
             height: 100,
@@ -2643,13 +2696,7 @@ l2js.interpret = l2js.interpret || {};
             }
         };
 
-        Turtle2DBuilder.turtleTransforms = {
-            left: function(angle, turtle) {
-
-            },
-            right: function(angle, turtle) {
-
-            },
+        Turtle2DBuilderPixi.turtleTransforms = {
             forward: function(step, turtle) {
                 var pos = turtle.position;
                 var orientation = turtle.orientation * Math.PI / 180;
@@ -2657,107 +2704,138 @@ l2js.interpret = l2js.interpret || {};
             }
         };
 
-        Turtle2DBuilder.prototype.interpret = function(symbol) {
-            if (!this.ctx.turtle2D) {
+        Turtle2DBuilderPixi.prototype.interpret = function(symbol) {
+            if (!this.ctx.turtle2DPixi) {
                 this._init();
             }
 
             this.symbolsStack.push(symbol);
             this._startAnimation();
         };
+        Turtle2DBuilderPixi.prototype.done = function(symbol) {
+            if (this.ctx.turtle2DPixi) {
+                console.log("Turtle2DBuilderPixi done")
+                this._isDone = true;
+            }
+        }
 
-        Turtle2DBuilder.prototype._handleError = function(err) {
+        Turtle2DBuilderPixi.prototype._handleError = function(err) {
             this._stopAnimation();
             throw new Error(err);
         };
 
-        Turtle2DBuilder.prototype._resolveNextSymbol = function() {
-            if (!this.symbolsStack.length) {
-                this._stopAnimation();
-                return;
-            }
+        Turtle2DBuilderPixi.prototype._resolveNextSymbol = function() {
             var symbol = this.symbolsStack.shift();
+
             if (this._symbols[symbol.symbol]) {
                 this._symbols[symbol.symbol].call(this, symbol);
             } else if (!this.options.skipUnknownSymbols) {
-                this.handlerError('Unexpected symbol (\'' + symbol.symbol + '\')');
+                this._handleError('Unexpected symbol (\'' + symbol.symbol + '\')');
             }
         };
 
-        Turtle2DBuilder.prototype._init = function() {
-
-            this.options = l2js.utils.extend(l2js.utils.copy(Turtle2DBuilder.options), this.options);
+        Turtle2DBuilderPixi.prototype._init = function() {
+            console.log("Init Turtle2DBuilderPixi");
+            this.options = l2js.utils.extend(l2js.utils.copy(Turtle2DBuilderPixi.options), this.options);
             if (!this.options.container) {
-                this.handlerError("Turtle2D should have set the container to draw on.");
+                this._handleError("Turtle2D should have set the container to draw on.");
             }
 
-            var turtle2D = this.ctx.turtle2D = {},
+            var turtle2DPixi = this.ctx.turtle2DPixi = {},
                 opts = this.options;
-            turtle2D.stage = new Kinetic.Stage({
-                container: opts.container,
-                width: opts.width,
-                height: opts.height
+
+            // Remderer
+            turtle2DPixi.renderer = PIXI.autoDetectRenderer(opts.width, opts.height, {
+                backgroundColor: utils.colorHexToInt(opts.bgColor)
             });
-            turtle2D.baseLayer = new Kinetic.Layer();
+            var node = document.querySelector("#" + opts.container);
 
-            var bg = new Kinetic.Rect({
-                x: 0,
-                y: 0,
-                width: opts.width,
-                height: opts.height,
-                fill: opts.bgColor
-            });
-            turtle2D.baseLayer.add(bg);
+            if (node.childNodes.length) {
+                node.removeChild(node.childNodes[0])
+            }
+            node.appendChild(turtle2DPixi.renderer.view);
 
-            turtle2D.stage.add(turtle2D.baseLayer);
-
-            turtle2D.stack = [];
-            turtle2D.turtle = {
+            turtle2DPixi.stage = new PIXI.Container();
+            turtle2DPixi.stack = [];
+            turtle2DPixi.turtle = {
                 position: opts.turtle.initPosition,
                 orientation: opts.turtle.initOrientation
             };
             this.symbolsStack = [];
-            this._initAnimation();
+            this._initAnimation(turtle2DPixi);
 
         };
 
-        Turtle2DBuilder.prototype._initAnimation = function() {
-            var that = this;
+        Turtle2DBuilderPixi.prototype._initAnimation = function() {
             this._stopAnimation();
-            this.animation = new Kinetic.Animation(function(frame) {
-                var howMany = frame.timeDiff > 1 ? frame.timeDiff * that.options.symbolsPerFrame : 1;
-                var i = 0;
-                while (howMany > i && that.symbolsStack.length) {
-                    that._resolveNextSymbol();
-                    i++;
-                }!that.symbolsStack.length && that._stopAnimation();
-
-            }, this.ctx.turtle2D.baseLayer);
         };
 
-        Turtle2DBuilder.prototype._startAnimation = function() {
-            this.animation && !this.animation.isRunning() && this.animation.start();
+        Turtle2DBuilderPixi.prototype._startAnimation = function() {
+            if (this._isRunning) {
+                return;
+            }
+
+            var that = this,
+                start = null,
+                numOfSymbols = 0,
+                turtle2DPixi = this.ctx.turtle2DPixi;
+
+            that._isRunning = true;
+            console.log("Start")
+            var step = function(timestamp) {
+                var progress, i,
+                    //TODO: Refactor to perSecond
+                    perSecond = that.options.symbolsPerFrame || 1;
+
+                if (!start) {
+                    start = timestamp;
+                }
+                progress = timestamp - start;
+                start = timestamp;
+
+                numOfSymbols += perSecond / 1000 * progress;
+
+                if (true || numOfSymbols > 1) {
+                    for (i = 0; i < 500 && that.symbolsStack.length; i++) {
+                        that._resolveNextSymbol();
+                    }
+                    numOfSymbols = numOfSymbols - parseInt(numOfSymbols, 10);
+                }
+
+                turtle2DPixi.renderer.render(turtle2DPixi.stage);
+
+                if (that._isRunning && that.symbolsStack.length) {
+                    requestAnimationFrame(step);
+                } else if (that._isDone && !that.symbolsStack.length) {
+                    that.ctx.turtle2DPixi = null;
+                }
+            }
+            requestAnimationFrame(step);
         };
 
-        Turtle2DBuilder.prototype._stopAnimation = function() {
-            this.animation && this.animation.stop();
+        Turtle2DBuilderPixi.prototype._stopAnimation = function() {
+            this._isRunning = false;
         };
 
-        Turtle2DBuilder.prototype._normalizeStep = function(step) {
+        Turtle2DBuilderPixi.prototype._normalizeStep = function(step) {
             var rough = step > 1 ? 1 : step;
 
             return rough * Math.max(this.options.width, this.options.height);
         };
 
-        Turtle2DBuilder.prototype._normalizeAngle = function(angle) {
+        Turtle2DBuilderPixi.prototype._normalizeAngle = function(angle) {
             return l2js.utils.normalizeAngle(angle);
         };
 
-        Turtle2DBuilder.prototype._colorToHexString = function(color) {
-            return l2js.utils.colorToHexString(color);
+        Turtle2DBuilderPixi.prototype._colorToHexString = function(color) {
+            return utils.colorToHexString(color);
         };
 
-        Turtle2DBuilder.prototype._symbols = {
+        Turtle2DBuilderPixi.prototype._getColorAlpha = function(a) {
+            return a / 255;
+        };
+
+        Turtle2DBuilderPixi.prototype._symbols = {
             /**
              *
              * Forward and draw line
@@ -2765,23 +2843,20 @@ l2js.interpret = l2js.interpret || {};
              * @param {Object} symbol
              */
             'F': function(symbol) {
-                var step = this._normalizeStep(symbol.arguments[0]);
-                var stroke = this._normalizeStep(symbol.arguments[1]);
-                var color = this._colorToHexString(symbol.arguments[2]);
-                var turtle2D = this.ctx.turtle2D;
-                var newPos = Turtle2DBuilder.turtleTransforms.forward(step, turtle2D.turtle);
+                var step = this._normalizeStep(symbol.arguments[0]),
+                    stroke = this._normalizeStep(symbol.arguments[1]),
+                    color = this._colorToHexString(symbol.arguments[2]),
+                    turtle2DPixi = this.ctx.turtle2DPixi,
+                    pos = turtle2DPixi.turtle.position,
+                    newPos = Turtle2DBuilderPixi.turtleTransforms.forward(step, turtle2DPixi.turtle);
 
-                turtle2D.baseLayer.add(new Kinetic.Line({
-                    points: [turtle2D.turtle.position[0], turtle2D.turtle.position[1], newPos[0], newPos[1]],
-                    stroke: color.hex,
-                    strokeWidth: stroke,
-                    lineCap: 'round',
-                    lineJoin: 'round',
-                    opacity: color.a
-                }));
+                var graphics = new PIXI.Graphics();
+                graphics.lineStyle(stroke, utils.colorHexToInt(color.hex), this._getColorAlpha(color.a));
+                graphics.moveTo(pos[0], pos[1]);
+                graphics.lineTo(newPos[0], newPos[1]);
+                turtle2DPixi.stage.addChild(graphics);
 
-                turtle2D.baseLayer.batchDraw();
-                turtle2D.turtle.position = newPos;
+                turtle2DPixi.turtle.position = newPos;
             },
             /**
              *
@@ -2791,9 +2866,9 @@ l2js.interpret = l2js.interpret || {};
              */
             'f': function(symbol) {
                 var step = this._normalizeStep(symbol.arguments[0]);
-                var turtle2D = this.ctx.turtle2D;
-                var newPos = Turtle2DBuilder.turtleTransforms.forward(step, turtle2D.turtle);
-                turtle2D.turtle.position = newPos;
+                var turtle2DPixi = this.ctx.turtle2DPixi;
+                var newPos = Turtle2DBuilderPixi.turtleTransforms.forward(step, turtle2DPixi.turtle);
+                turtle2DPixi.turtle.position = newPos;
             },
             /**
              * Turn left
@@ -2803,28 +2878,30 @@ l2js.interpret = l2js.interpret || {};
              * @param {Object} symbol
              */
             'L': function(symbol) {
-                var turtle = this.ctx.turtle2D.turtle;
+                var turtle = this.ctx.turtle2DPixi.turtle;
                 var angle = symbol.arguments[0];
                 angle && (turtle.orientation = this._normalizeAngle(turtle.orientation - angle));
 
             },
             'R': function(symbol) {
-                var turtle = this.ctx.turtle2D.turtle;
+                var turtle = this.ctx.turtle2DPixi.turtle;
                 var angle = symbol.arguments[0];
                 angle && (turtle.orientation = this._normalizeAngle(turtle.orientation + angle));
             },
+
             '[': function(symbol) {
-                var turtle2D = this.ctx.turtle2D;
-                turtle2D.stack = turtle2D.stack || [];
-                turtle2D.stack.unshift(l2js.utils.copy(turtle2D.turtle));
+                var turtle2DPixi = this.ctx.turtle2DPixi;
+                turtle2DPixi.stack = turtle2DPixi.stack || [];
+                turtle2DPixi.stack.unshift(l2js.utils.copy(turtle2DPixi.turtle));
             },
             ']': function(symbol) {
-                var turtle2D = this.ctx.turtle2D;
-                if (l2js.utils.isUndefined(turtle2D.stack) || !turtle2D.stack.length) {
+                var turtle2DPixi = this.ctx.turtle2DPixi;
+                if (l2js.utils.isUndefined(turtle2DPixi.stack) || !turtle2DPixi.stack.length) {
                     this._handleError('Cannot read from undefined of empty indices stack.');
                 }
-                turtle2D.turtle = turtle2D.stack.shift();
+                turtle2DPixi.turtle = turtle2DPixi.stack.shift();
             },
+
             /**
              * Start of polygon
              *
@@ -2832,56 +2909,77 @@ l2js.interpret = l2js.interpret || {};
              *
              * @param {Object} symbol
              */
+
             'PU': function(symbol) {
-                var turtle2D = this.ctx.turtle2D,
-                    poly, fillColor, stroke, strokeColor;
-                turtle2D.polyStack = turtle2D.polyStack || [];
-                fillColor = this._colorToHexString(symbol.arguments[0]);
-                stroke = this._normalizeStep(symbol.arguments[1]);
+                var turtle2DPixi = this.ctx.turtle2DPixi,
+                    polygon, fillColor, stroke, strokeColor, graphics;
+
+                turtle2DPixi.polygonStack = turtle2DPixi.polygonStack || [];
+                fillColor = symbol.arguments[0] && this._colorToHexString(symbol.arguments[0]);
+                stroke = symbol.arguments[1] && this._normalizeStep(symbol.arguments[1]);
                 strokeColor = symbol.arguments[2] && this._colorToHexString(symbol.arguments[2]);
 
-                poly = new Kinetic.Line({
-                    points: [],
-                    fill: fillColor.hex,
-                    stroke: stroke,
-                    strokeWidth: strokeColor && strokeColor.hex,
-                    closed: true,
-                    opacity: fillColor.a
-                });
+                graphics = new PIXI.Graphics();
 
-                turtle2D.baseLayer.add(poly);
-                turtle2D.polyStack.unshift(poly);
+                turtle2DPixi.stage.addChild(graphics);
+                polygon = {
+                    graphics: graphics,
+                    points: [],
+                    fill: utils.colorHexToInt(fillColor.hex),
+                    stroke: strokeColor ? utils.colorHexToInt(strokeColor.hex) : 0,
+                    strokeWidth: stroke,
+                    opacity: fillColor ? fillColor.a : 1
+                };
+                turtle2DPixi.polygonStack.unshift(polygon);
+                turtle2DPixi.stage.addChild(graphics);
             },
             /**
              * End of Polygon
              * @param {Object} symbol
              */
+
             'PS': function(symbol) {
-                var turtle2D = this.ctx.turtle2D;
-                if (l2js.utils.isUndefined(turtle2D.polyStack) || !turtle2D.polyStack.length) {
-                    //this._handleError('Cannot read from undefined of empty polygon stack.');
+                var turtle2DPixi = this.ctx.turtle2DPixi;
+                if (l2js.utils.isUndefined(turtle2DPixi.polygonStack) || !turtle2DPixi.polygonStack.length) {
                     return;
                 }
-                turtle2D.polyStack.shift();
+                turtle2DPixi.polygonStack.shift();
             },
+
             /**
              * Add vertex to polygon
              * @param {Object} symbol
              */
             'V': function(symbol) {
-                var turtle2D = this.ctx.turtle2D,
-                    turtle = turtle2D.turtle;
-                if (l2js.utils.isUndefined(turtle2D.polyStack) || !turtle2D.polyStack.length) {
+                var turtle2DPixi = this.ctx.turtle2DPixi,
+                    turtle = turtle2DPixi.turtle,
+                    graphics, polygon;
+
+                if (l2js.utils.isUndefined(turtle2DPixi.polygonStack) || !turtle2DPixi.polygonStack.length) {
                     //this._handleError('Cannot read from undefined of empty polygon stack.');
                     return;
                 }
-                var poly = turtle2D.polyStack[0];
-                poly.points(poly.points().concat(turtle.position));
-                turtle2D.baseLayer.batchDraw();
+                polygon = turtle2DPixi.polygonStack[0];
+                polygon.points.push(turtle.position);
+
+                graphics = polygon.graphics;
+                graphics.clear();
+                graphics.beginFill(polygon.fill, polygon.opacity);
+                graphics.lineStyle(polygon.strokeWidth, polygon.stroke, polygon.opacity);
+                polygon.points.forEach(function(point, i) {
+                    if (i === 0) {
+                        graphics.moveTo(point[0], point[1]);
+                    } else {
+                        graphics.lineTo(point[0], point[1])
+                    }
+                    return point;
+                })
+                graphics.endFill();
+
             }
         };
 
-        return Turtle2DBuilder;
+        return Turtle2DBuilderPixi;
 
     })();
 
@@ -2914,9 +3012,11 @@ l2js.interpret = l2js.interpret || {};
         };
 
         function Interpret(result, options) {
+            console.time('New interpret');
             this.result = this._clearOutEmptyLSystems(this._serializeBuffers(result));
+            console.timeEnd('New interpret');
             this.options = options && l2js.utils.extend(l2js.utils.copy(Interpret.options), options) || Interpret.options;
-        };
+        }
 
         /**
          * Factory method for builder
@@ -2925,11 +3025,12 @@ l2js.interpret = l2js.interpret || {};
          */
         Interpret.prototype.getBuilder = function(symbol) {
             switch (symbol.alphabet) {
-                case "Turtle2D":
+                case 'Turtle2D':
                     this._turtle2dBuilder || (this._turtle2dBuilder = new l2js.interpret.Turtle2DBuilder(this.options));
                     return this._turtle2dBuilder;
+
             }
-            throw new Error("Unsupported alphabet: '" + symbol.alphabet.id + "'");
+            throw new Error('Unsupported alphabet: "' + symbol.alphabet.id + '"');
         };
 
         /**
@@ -2950,13 +3051,16 @@ l2js.interpret = l2js.interpret || {};
          * Interpret all the symbols
          */
         Interpret.prototype.all = function() {
-            //var t1 = new Date().getTime();
+            console.time('all');
             while (this.hasNextSymbol()) {
                 this.next();
             }
-            //console.log((new Date().getTime() - t1) / 1000, "all");
+            console.timeEnd('all');
+            this.done();
         };
-
+        Interpret.prototype.done = function() {
+            this._turtle2dBuilder.done();
+        };
         Interpret.prototype.hasNextSymbol = function() {
             if (!this._lSysBuf) {
                 return !!(this.result && this.result.interpretation.length);
@@ -2965,7 +3069,7 @@ l2js.interpret = l2js.interpret || {};
             var bufLevel = 0;
             while (this._lSysBuf[bufLevel] && l2js.utils.isUndefined(this._lSysBuf[bufLevel].interpretation[this._indexBuf[bufLevel] + 1])) {
                 bufLevel++;
-            };
+            }
             return !!this._lSysBuf[bufLevel];
         };
 
@@ -2999,7 +3103,7 @@ l2js.interpret = l2js.interpret || {};
             this._indexBuf[0] = readIndex;
             this._lSysBuf[0] = result;
 
-            while (symbol.type && symbol.type === "sublsystem") {
+            while (symbol.type && symbol.type === 'sublsystem') {
                 this._trigger('newLSystem', symbol);
                 this._indexBuf.unshift(0);
                 this._lSysBuf.unshift(symbol);
@@ -3029,16 +3133,17 @@ l2js.interpret = l2js.interpret || {};
 
         Interpret.prototype._clearOutEmptyLSystems = function(result) {
             if (result.interpretation) {
-                var dels = [];
-                for (var i = 0; i < result.interpretation.length; i++) {
-                    if (result.interpretation[i].type && result.interpretation[i].type === "sublsystem") {
+                var dels = [],
+                    i;
+                for (i = 0; i < result.interpretation.length; i++) {
+                    if (result.interpretation[i].type && result.interpretation[i].type === 'sublsystem') {
                         result.interpretation[i] = this._clearOutEmptyLSystems(result.interpretation[i]);
                         if (!result.interpretation[i].interpretation || result.interpretation[i].interpretation.length === 0) {
                             dels.push(i);
                         }
                     }
                 }
-                for (var i = dels.length - 1; i >= 0; i--) {
+                for (i = dels.length - 1; i >= 0; i--) {
                     result.interpretation.splice(dels[i], 1);
                 }
             }
@@ -3052,11 +3157,11 @@ l2js.interpret = l2js.interpret || {};
 
                 for (var i = 0; i < result.interpretation.length; i++) {
 
-                    if (result.interpretation[i].type && result.interpretation[i].type === "sublsystem") {
+                    if (result.interpretation[i].type && result.interpretation[i].type === 'sublsystem') {
                         result.interpretation[i] = this._serializeBuffers(result.interpretation[i]);
                     }
 
-                    if (result.interpretation[i].type && result.interpretation[i].type === "stack") {
+                    if (result.interpretation[i].type && result.interpretation[i].type === 'stack') {
                         var stack = result.interpretation.splice(i, 1)[0];
                         var args = stack.string;
                         args.unshift(stack.start);
@@ -3228,6 +3333,10 @@ l2js.evolver = l2js.evolver || {};
         return RuleUtils;
     })(l2js);
 
+
+
+// globals window
+
 /**
      * Apply methods of Genetic programming to modify AST of the L2 program.
      * Evaluation of individuals should be done by user himself.
@@ -3238,7 +3347,7 @@ l2js.evolver = l2js.evolver || {};
 
         Evolver.options = {
             numberOfIndividuals: 10,
-            lscript: "", // name of root lscript, if none is passed the first one is picked
+            lscript: '', // name of root lscript, if none is passed the first one is picked
             lsystems: [], // L-systems names to evolve within individual, default is main call
             lsystemsDeps: {}, // key - name of lsystem, value - array of ids of lsystem dependecies
             opProbabilities: {
@@ -3272,7 +3381,7 @@ l2js.evolver = l2js.evolver || {};
             maxLevelForRandomExpressions: 3,
             maxExpressionLevel: 2,
             stringMutation: {
-                blackList: ["PU", "PS"]
+                blackList: ['PU', 'PS']
             }
         };
 
@@ -3311,7 +3420,7 @@ l2js.evolver = l2js.evolver || {};
 
             if (this.options.selection.elitism) {
                 var elitism = this.options.selection.elitism;
-                if(elitism > this.population.length) {
+                if (elitism > this.population.length) {
                     elitism = this.population.length;
                 }
                 nextGeneration = utils.copy(this.population.slice(-elitism));
@@ -3350,7 +3459,7 @@ l2js.evolver = l2js.evolver || {};
 
 
         Evolver.prototype._evaluateIndividual = function(offspring, parent) {
-            offspring.modified = !angular.equals(offspring.ast, parent.ast);
+            offspring.modified = !utils.deepEquals(offspring.ast, parent.ast);
         };
 
         /**
@@ -3496,17 +3605,17 @@ l2js.evolver = l2js.evolver || {};
         };
 
         Evolver.prototype.rulesMutation = function(individuals) {
+            var rule, individual;
             for (var i = 0; i < individuals.length; i++) {
-                var individual = individuals[i];
+                individual = individuals[i];
                 for (var j = 0; j < individual.lsystems.length; j++) {
-
                     if (this._decide(this.options.opProbabilities.rulesSymbolEpressionMutation)) {
-                        var rule = this._getRandomRule(individual.lsystems[j]);
+                        rule = this._getRandomRule(individual.lsystems[j]);
                         this.mutateSymbolsArgsInRule(rule);
                     }
 
                     if (this._decide(this.options.opProbabilities.rulesStringMutation)) {
-                        var rule = this._getRandomRule(individual.lsystems[j]);
+                        rule = this._getRandomRule(individual.lsystems[j]);
                         this.mutateStringInRule(individual.lsystems[j], rule);
                     }
                 }
@@ -3542,16 +3651,16 @@ l2js.evolver = l2js.evolver || {};
 
             //for (var i = 0; i < parametricMods.length; i++) {
             var mod = this._getRandomFromArray(parametricMods);
-
+            var terms;
             if (mod instanceof lnodes.ASTModule) {
                 for (var j = 0; j < mod.args.length; j++) {
-                    var terms = params && this._getArgsFromParams(params) || [];
+                    terms = params && this._getArgsFromParams(params) || [];
                     var arg = mod.args[j];
                     terms.push(arg);
                     mod.args[j] = this.mutateExpression(mod.args[j], terms);
                 }
             } else if (mod instanceof lnodes.ASTSubLSystem) {
-                var terms = params && this._getArgsFromParams(params) || [];
+                terms = params && this._getArgsFromParams(params) || [];
                 this.mutateSymbolsArgsInString(mod.axiom, terms);
             }
 
@@ -3569,9 +3678,9 @@ l2js.evolver = l2js.evolver || {};
             var terminals = [],
                 blackList = this.options.stringMutation.blackList;
 
-            if ("-" === rule.type || !rule.type) {
+            if ('-' === rule.type || !rule.type) {
                 var rules = this.ASTUtils.findAll(function(node) {
-                    return node instanceof lnodes.ASTRule && (("-" === node.type || !node.type) || (rule.type === "h" && "h" === node.type));
+                    return node instanceof lnodes.ASTRule && (('-' === node.type || !node.type) || (rule.type === 'h' && 'h' === node.type));
                 }, lsys.body);
                 for (var i = 0; i < rules.length; i++) {
                     utils.indexOf(blackList, rules[i].ancestor.symbol.id) === -1 && terminals.push(utils.copy(rules[i].ancestor));
@@ -3596,8 +3705,8 @@ l2js.evolver = l2js.evolver || {};
             for (var i = 0; i < length; i++) {
                 if (maxStackLevel > 1 && this._decide(0.1)) {
                     var stackString = this._createRandomString(terminals, length, maxStackLevel - 1);
-                    var start = new lnodes.ASTModule(new lnodes.ASTId("[", "symbol"));
-                    var end = new lnodes.ASTModule(new lnodes.ASTId("]", "symbol"));
+                    var start = new lnodes.ASTModule(new lnodes.ASTId('[', 'symbol'));
+                    var end = new lnodes.ASTModule(new lnodes.ASTId(']', 'symbol'));
                     string.push(new lnodes.ASTStack(start, end, stackString));
                 } else {
 
@@ -3644,11 +3753,11 @@ l2js.evolver = l2js.evolver || {};
             }
             var args = utils.copy(params);
             for (var i = 0; i < args.length; i++) {
-                if (!new RegExp("^\\$").test(args[i].id)) {
-                    args[i].id = "$" + args[i].id;
+                if (!new RegExp('^\\$').test(args[i].id)) {
+                    args[i].id = '$' + args[i].id;
                 }
 
-                args[i].type = "param";
+                args[i].type = 'param';
             }
             return args;
         };
@@ -3742,16 +3851,16 @@ l2js.evolver = l2js.evolver || {};
             var onTheEdge = this.EUtils.findAll(function(node, level) {
                 return level === maxLevel && (node instanceof lnodes.ASTOperation || node instanceof lnodes.ASTBrackets);
             }, exp);
-
+            var terms;
             for (var i = 0; i < onTheEdge.length; i++) {
                 var node = onTheEdge[i];
                 if (node instanceof lnodes.ASTOperation) {
-                    var terms = this.EUtils.findAllTerminals(node);
+                    terms = this.EUtils.findAllTerminals(node);
                     node.left = utils.copy(this._getRandomFromArray(terms));
                     node.right = utils.copy(this._getRandomFromArray(terms));
 
                 } else if (node instanceof lnodes.ASTBrackets) {
-                    var terms = this.EUtils.findAllTerminals(node);
+                    terms = this.EUtils.findAllTerminals(node);
                     node.e = utils.copy(this._getRandomFromArray(terms));
 
                 }
@@ -3772,7 +3881,7 @@ l2js.evolver = l2js.evolver || {};
          */
         Evolver.prototype._fullExpression = function(terminals, level) {
 
-            var funcs = [new lnodes.ASTOperation("*"), new lnodes.ASTOperation("/"), new lnodes.ASTOperation("+"), new lnodes.ASTOperation("-"), new lnodes.ASTBrackets()];
+            var funcs = [new lnodes.ASTOperation('*'), new lnodes.ASTOperation('/'), new lnodes.ASTOperation('+'), new lnodes.ASTOperation('-'), new lnodes.ASTBrackets()];
             if (!terminals || !terminals.length) {
                 terminals = [new lnodes.ASTRef(Math.round10(Math.random()))];
             }
@@ -3799,7 +3908,7 @@ l2js.evolver = l2js.evolver || {};
          */
         Evolver.prototype._growExpression = function(terminals, level) {
 
-            var funcs = [new lnodes.ASTOperation("*"), new lnodes.ASTOperation("/"), new lnodes.ASTOperation("+"), new lnodes.ASTOperation("-"), new lnodes.ASTBrackets()];
+            var funcs = [new lnodes.ASTOperation('*'), new lnodes.ASTOperation('/'), new lnodes.ASTOperation('+'), new lnodes.ASTOperation('-'), new lnodes.ASTBrackets()];
             if (!terminals || !terminals.length) {
                 terminals = [new lnodes.ASTRef(Math.round10(Math.random()))];
             }
@@ -3829,14 +3938,14 @@ l2js.evolver = l2js.evolver || {};
                     node instanceof lnodes.ASTRef ||
                     node instanceof lnodes.ASTOperation ||
                     node instanceof lnodes.ASTBrackets ||
-                    (node instanceof lnodes.ASTFunc && utils.indexOf(["__rgb", "__hsv", "__xC", "__XC", "__pow", "__random"], node.id) !== -1);
+                    (node instanceof lnodes.ASTFunc && utils.indexOf(['__rgb', '__hsv', '__xC', '__XC', '__pow', '__random'], node.id) !== -1);
             }, e);
             //@formatter:on
 
             var node = this._getRandomFromArray(nodes);
 
             if (node instanceof lnodes.ASTOperation) {
-                var functionsPool = ["*", "/", "+", "-"];
+                var functionsPool = ['*', '/', '+', '-'];
                 var functionsPoolIndex = utils.indexOf(functionsPool, node.op);
                 functionsPool.splice(functionsPoolIndex, 1);
                 node.op = this._getRandomFromArray(functionsPool);
@@ -3844,9 +3953,9 @@ l2js.evolver = l2js.evolver || {};
             } else if (node instanceof lnodes.ASTBrackets) {
                 this._variateInExpression(node.e);
 
-            } else if (node instanceof lnodes.ASTFunc && utils.indexOf(["__rgb", "__hsv"], node.id) !== -1) {
+            } else if (node instanceof lnodes.ASTFunc && utils.indexOf(['__rgb', '__hsv'], node.id) !== -1) {
                 this._mutateColor(node, terminals);
-            } else if (node instanceof lnodes.ASTFunc && utils.indexOf(["__xC", "__XC", "__pow", "__random"], node.id) !== -1) {
+            } else if (node instanceof lnodes.ASTFunc && utils.indexOf(['__xC', '__XC', '__pow', '__random'], node.id) !== -1) {
 
                 for (var i = 0; i < node.args.length; i++) {
                     node.args[i] = this._variateInExpression(node.args[i], terminals);
@@ -3882,7 +3991,7 @@ l2js.evolver = l2js.evolver || {};
                 if (outArg instanceof lnodes.ASTRef && outArg.val === 0) {
                     outArg.val = that._getRandomVariation(variation);
                 } else {
-                    outArg = new lnodes.ASTOperation("*", new lnodes.ASTRef(that._getRandomVariation(variation)), new lnodes.ASTBrackets(inArg));
+                    outArg = new lnodes.ASTOperation('*', new lnodes.ASTRef(that._getRandomVariation(variation)), new lnodes.ASTBrackets(inArg));
                     if (that._decide(expressionMutationProb)) {
                         outArg = that.mutateExpression(outArg, terminals);
                     }
@@ -3890,17 +3999,17 @@ l2js.evolver = l2js.evolver || {};
                 return outArg;
             }
 
-            if (color.id === "__hsv") {
+            if (color.id === '__hsv') {
                 var angle = this._getRandomFromArray(colorOpts.h);
                 angle = new lnodes.ASTRef(angle * this._getRandomVariation(colorOpts.hVariation));
 
-                color.args[0] = new lnodes.ASTOperation(angle < 0 ? "-" : "+", new lnodes.ASTBrackets(inColor.args[0]), angle);
+                color.args[0] = new lnodes.ASTOperation(angle < 0 ? '-' : '+', new lnodes.ASTBrackets(inColor.args[0]), angle);
                 if (this._decide(expressionMutationProb)) {
                     color.args[0] = this.mutateExpression(color.args[0], terminals);
                 }
                 color.args[1] = vary(inColor.args[1], color.args[1], colorOpts.sVariation);
                 color.args[2] = vary(inColor.args[2], color.args[2], colorOpts.vVariation);
-            } else if (color.id === "__rgb") {
+            } else if (color.id === '__rgb') {
                 color.args[0] = vary(inColor.args[0], color.args[0], colorOpts.rVariation);
                 color.args[1] = vary(inColor.args[1], color.args[1], colorOpts.gVariation);
                 color.args[2] = vary(inColor.args[2], color.args[2], colorOpts.bVariation);
@@ -3948,7 +4057,7 @@ l2js.evolver = l2js.evolver || {};
             }, ast, false);
 
             if (!lscript) {
-                throw new Error("No L-script '" + opts.lscript + "' founded.");
+                throw new Error('No L-script "' + opts.lscript + '" founded.');
             }
 
             if (opts.evolveLScriptExpressions) {
@@ -3999,40 +4108,30 @@ l2js.compile = function(code) {
     };
 
     l2js.derive = function(lsystemCode) {
-        //console.log(lsystemCode);
-        //var t1 = new Date().getTime();
         var out = eval(lsystemCode);
-        //console.log((new Date().getTime() - t1)/1000);
         return out;
-
     };
 
     l2js.interpretAll = function(symbols, options) {
-
-        //var t1 = new Date().getTime();
         new l2js.interpret.Interpret(symbols, options).all();
-        //console.log((new Date().getTime() - t1) / 1000);
     };
 
     l2js.format = function(lsystemCode) {
-        var deferred = l2js.core.q.deferred();
-        setTimeout(function() {
-            var errHandler = function(err) {
-                deferred.reject(err);
-            };
-            try {
-                var compiler = new l2js.compiler.Compiler();
+        return new Promise(function(resolve, reject) {
+            setTimeout(function() {
+                try {
+                    var compiler = new l2js.compiler.Compiler();
 
-                var ast = compiler.toAST(lsystemCode);
-                var l2 = compiler.ASTToL2(ast);
-                deferred.resolve(l2);
-            } catch (e) {
-                errHandler(e);
-            }
+                    var ast = compiler.toAST(lsystemCode);
+                    var l2 = compiler.ASTToL2(ast);
+                    resolve(l2);
+                } catch (e) {
+                    reject(e);
+                }
 
-        }, 0);
+            }, 0);
+        });
 
-        return deferred.promise;
     };
 
     l2js.evolve = function(numberOfIndividuals, scripts, lscript, lsystems) {
