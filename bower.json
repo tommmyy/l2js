@@ -4,6 +4,7 @@
 	"main": "./dist/l2js.js",
 	"devDependencies": {
 		"jquery": "~1.10.2",
-		"kineticjs": "~5.0.1"
+		"kineticjs": "~5.0.1",
+		"pixi.js": "~3.0.7"
 	}
 }

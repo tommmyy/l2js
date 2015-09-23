@@ -6,7 +6,9 @@
   "trailing": true,
   "curly": true,
   "node": true,
+  "expr": false,
   "globals": {
-    "console": true
+    "console": true,
+    "window": true
   }
 }

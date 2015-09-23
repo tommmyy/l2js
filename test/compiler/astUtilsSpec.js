@@ -12,7 +12,14 @@ describe("ASTUtils", function() {
         var ast, script;
         beforeEach(function() {
 
-            script = 'alphabet Turtle2D {};' + 'lscript TestScript {' + 'lsystem Test(A, 1) using Turtle2D {};' + 'main call Test();' + '};' + 'lscript TestScript2 {' + 'lsystem Test(A, 1) using Turtle2D {};' + 'main call Test();' + '};' + 'derive TestScript;';
+            script = 'alphabet Turtle2D {};'
+            + 'lscript TestScript {'
+            + 'lsystem Test(A, 1) using Turtle2D {};'
+            + 'main call Test();' + '};'
+            + 'lscript TestScript2 {'
+            + 'lsystem Test(A, 1) using Turtle2D {};'
+            + 'main call Test();' + '};'
+            + 'derive TestScript;';
 
             ast = l2js.compiler.Lparser.parse(script);
 
@@ -33,7 +40,7 @@ describe("ASTUtils", function() {
             expect(first.id.id).toBe("Turtle2D");
         });
 
-        it("findAdd", function() {
+        it("findAll", function() {
 
 
             var all = astUtils.findAll(function(node) {

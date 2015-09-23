@@ -6,7 +6,7 @@
  * @class
  */
 
-window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpret.Turtle2DBuilder && window.l2js.compiler && window.l2js.compiler.env && window.l2js.compiler.env.SubLSystem && function(l2js) {
+window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpret.Turtle2DBuilder && window.l2js.compiler && window.l2js.compiler.env && window.l2js.compiler.env.SubLSystem && (function(l2js) {
 
     l2js.interpret.Interpret = (function(l2js) {
 
@@ -30,7 +30,7 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
         function Interpret(result, options) {
             this.result = this._clearOutEmptyLSystems(this._serializeBuffers(result));
             this.options = options && l2js.utils.extend(l2js.utils.copy(Interpret.options), options) || Interpret.options;
-        };
+        }
 
         /**
          * Factory method for builder
@@ -39,14 +39,15 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
          */
         Interpret.prototype.getBuilder = function(symbol) {
             switch (symbol.alphabet) {
-                case "Turtle2DKinetic":
+                case 'Turtle2D':
                     this._turtle2dBuilder || (this._turtle2dBuilder = new l2js.interpret.Turtle2DBuilder(this.options));
                     return this._turtle2dBuilder;
-                case "Turtle2D":
+                    /*
+                case 'Turtle2D':
                     this._turtle2dBuilder || (this._turtle2dBuilder = new l2js.interpret.Turtle2DBuilderPixi(this.options));
-                    return this._turtle2dBuilder;
+                    return this._turtle2dBuilder;*/
             }
-            throw new Error("Unsupported alphabet: '" + symbol.alphabet.id + "'");
+            throw new Error('Unsupported alphabet: "' + symbol.alphabet.id + '"');
         };
 
         /**
@@ -67,11 +68,9 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
          * Interpret all the symbols
          */
         Interpret.prototype.all = function() {
-            //var t1 = new Date().getTime();
             while (this.hasNextSymbol()) {
                 this.next();
             }
-            //console.log((new Date().getTime() - t1) / 1000, "all");
         };
 
         Interpret.prototype.hasNextSymbol = function() {
@@ -82,7 +81,7 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
             var bufLevel = 0;
             while (this._lSysBuf[bufLevel] && l2js.utils.isUndefined(this._lSysBuf[bufLevel].interpretation[this._indexBuf[bufLevel] + 1])) {
                 bufLevel++;
-            };
+            }
             return !!this._lSysBuf[bufLevel];
         };
 
@@ -116,7 +115,7 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
             this._indexBuf[0] = readIndex;
             this._lSysBuf[0] = result;
 
-            while (symbol.type && symbol.type === "sublsystem") {
+            while (symbol.type && symbol.type === 'sublsystem') {
                 this._trigger('newLSystem', symbol);
                 this._indexBuf.unshift(0);
                 this._lSysBuf.unshift(symbol);
@@ -146,16 +145,16 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
 
         Interpret.prototype._clearOutEmptyLSystems = function(result) {
             if (result.interpretation) {
-                var dels = [];
-                for (var i = 0; i < result.interpretation.length; i++) {
-                    if (result.interpretation[i].type && result.interpretation[i].type === "sublsystem") {
+                var dels = [], i;
+                for (i = 0; i < result.interpretation.length; i++) {
+                    if (result.interpretation[i].type && result.interpretation[i].type === 'sublsystem') {
                         result.interpretation[i] = this._clearOutEmptyLSystems(result.interpretation[i]);
                         if (!result.interpretation[i].interpretation || result.interpretation[i].interpretation.length === 0) {
                             dels.push(i);
                         }
                     }
                 }
-                for (var i = dels.length - 1; i >= 0; i--) {
+                for (i = dels.length - 1; i >= 0; i--) {
                     result.interpretation.splice(dels[i], 1);
                 }
             }
@@ -169,11 +168,11 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
 
                 for (var i = 0; i < result.interpretation.length; i++) {
 
-                    if (result.interpretation[i].type && result.interpretation[i].type === "sublsystem") {
+                    if (result.interpretation[i].type && result.interpretation[i].type === 'sublsystem') {
                         result.interpretation[i] = this._serializeBuffers(result.interpretation[i]);
                     }
 
-                    if (result.interpretation[i].type && result.interpretation[i].type === "stack") {
+                    if (result.interpretation[i].type && result.interpretation[i].type === 'stack') {
                         var stack = result.interpretation.splice(i, 1)[0];
                         var args = stack.string;
                         args.unshift(stack.start);
@@ -192,4 +191,4 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
         return Interpret;
     })(l2js);
 
-}(window.l2js);
+})(window.l2js);

@@ -1,8 +1,11 @@
 {
     "name": "l2js",
     "title": "L2JS",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "main": "dist/env",
+    "scripts": {
+        "server": "http-server --p=3000"
+    },
     "devDependencies": {
         "grunt": "~0.4.1",
         "bower": "~1.2.0",
@@ -22,7 +25,8 @@
         "grunt-contrib-jshint": "~0.10.0",
         "grunt-jison": "~1.2.0",
         "load-grunt-tasks": "~0.2.0",
-        "jshint-stylish": "^1.0.0"
+        "jshint-stylish": "^1.0.0",
+        "http-server": "^0.8.4"
     },
     "dependencies": {
         "grunt-contrib-jshint": "~0.6.4"

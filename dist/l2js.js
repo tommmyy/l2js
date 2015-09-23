@@ -4,7 +4,7 @@
 * Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2015-06-14T09:43:44.647Z
+* Date: 2015-06-15T05:16:17.119Z
 */
 
 (function( global, factory ) {'use strict';
@@ -3279,7 +3279,7 @@ l2js.evolver = l2js.evolver || {};
         /**
          * @param population Initial population of l2 ASTs:
          * {
-         * 	evaluation: ...,
+         *  evaluation: ...,
          *  ast: ...
          *
          * }
@@ -3311,14 +3311,14 @@ l2js.evolver = l2js.evolver || {};
 
             if (this.options.selection.elitism) {
                 var elitism = this.options.selection.elitism;
-                elitism > this.population.length && (elitism = this.population.length);
+                if(elitism > this.population.length) {
+                    elitism = this.population.length;
+                }
                 nextGeneration = utils.copy(this.population.slice(-elitism));
             }
 
             while (nextGeneration.length < this.options.numberOfIndividuals) {
-
                 nextGeneration = nextGeneration.concat(this.breed());
-
             }
             // in case of odd number of needed individuals
             if (nextGeneration.length > this.options.numberOfIndividuals) {
@@ -3329,7 +3329,10 @@ l2js.evolver = l2js.evolver || {};
         };
 
         Evolver.prototype.breed = function() {
-            var offspring = utils.copy(this.select(2));
+            var parents = this.select(2);
+            var offspring = utils.copy(parents);
+
+
             this._initIndividual(offspring[0]);
             this._initIndividual(offspring[1]);
             offspring[0].evaluation = 0;
@@ -3340,7 +3343,14 @@ l2js.evolver = l2js.evolver || {};
             this.stringPermutation(offspring);
             this.expressionMutation(offspring);
 
+            this._evaluateIndividual(offspring[0], parents[0]);
+            this._evaluateIndividual(offspring[1], parents[1]);
             return offspring;
+        };
+
+
+        Evolver.prototype._evaluateIndividual = function(offspring, parent) {
+            offspring.modified = !angular.equals(offspring.ast, parent.ast);
         };
 
         /**
@@ -3383,44 +3393,43 @@ l2js.evolver = l2js.evolver || {};
                 if (this._decide(this.options.opProbabilities.rulesCrossover)) {
 
                     var ruleA, ruleB, successorA, successorB, lsysB;
-
-                    ruleA = this._getRandomRule(a.lsystems[i]);
-                    if (ruleA) {
-                        var j = 0;
-                        while (j < b.lsystems.length || !lsysB) {
-                            if (b.lsystems[j].id.id === a.lsystems[i].id.id) {
-                                lsysB = b.lsystems[j];
-                            }
-                            j++;
-                        }
-                        if (lsysB) {
-
-                            ruleB = this._getRandomMatchingRule(lsysB, ruleA);
-                            if (ruleB) {
-                                successorA = this._getRandomFromArray(ruleA.successors);
-                                successorB = this._getRandomFromArray(ruleB.successors);
-
-                                // result crossover probably  cause duplication
-                                if (successorA.string.length <= 1 && successorB.string.length <= 1) {
-                                    return;
-                                }
-
-                                var crossA, crossB;
-                                if (this._decide(this.options.opProbabilities.rulesCrossoverAsNewRule)) {
-                                    crossA = utils.copy(successorA);
-                                    crossB = utils.copy(successorB);
-                                    ruleA.successors.push(crossA);
-                                    ruleB.successors.push(crossB);
-                                } else {
-                                    crossA = successorA;
-                                    crossB = successorB;
-                                }
-
-                                this._crossStrings(crossA, crossB);
-
-                            }
-                        }
+                    if (!(ruleA = this._getRandomRule(a.lsystems[i]))) {
+                        continue;
                     }
+                    var j = 0;
+                    while (j < b.lsystems.length || !lsysB) {
+                        if (b.lsystems[j].id.id === a.lsystems[i].id.id) {
+                            lsysB = b.lsystems[j];
+                        }
+                        j++;
+                    }
+                    if (!lsysB) {
+                        continue;
+                    }
+
+                    if (!(ruleB = this._getRandomMatchingRule(lsysB, ruleA))) {
+                        continue;
+                    }
+                    successorA = this._getRandomFromArray(ruleA.successors);
+                    successorB = this._getRandomFromArray(ruleB.successors);
+
+                    // result crossover probably  cause duplication
+                    if (successorA.string.length <= 1 && successorB.string.length <= 1) {
+                        return;
+                    }
+
+                    var crossA, crossB;
+                    if (this._decide(this.options.opProbabilities.rulesCrossoverAsNewRule)) {
+                        crossA = utils.copy(successorA);
+                        crossB = utils.copy(successorB);
+                        ruleA.successors.push(crossA);
+                        ruleB.successors.push(crossB);
+                    } else {
+                        crossA = successorA;
+                        crossB = successorB;
+                    }
+
+                    this._crossStrings(crossA, crossB);
                 }
             }
 
@@ -3752,7 +3761,7 @@ l2js.evolver = l2js.evolver || {};
         };
 
         /**
-         *	Creates random expression by randomly choosen method
+         *  Creates random expression by randomly choosen method
          */
         Evolver.prototype._createRandomExpression = function(terminals, level) {
             return (this._decide(0.5) ? this._fullExpression(terminals, level) : this._growExpression(terminals, level));
