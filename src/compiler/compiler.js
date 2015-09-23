@@ -65,8 +65,13 @@ window.l2js && window.l2js.compiler.Lparser && window.l2js.compiler.lnodes && wi
 
             setTimeout(function() {
                 try {
-                    var ast = that.toAST(code),
-                        src = that.ASTToJS(ast);
+                    console.time('toAST');
+                    var ast = that.toAST(code);
+                    console.timeEnd('toAST');
+
+                    console.time('ASTToJS');
+                    var src = that.ASTToJS(ast);
+                    console.timeEnd('ASTToJS');
 
                     deferred.resolve(src);
                 } catch (e) {

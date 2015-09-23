@@ -7,12 +7,14 @@
  */
 
 window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
-
-    l2js.interpret.Turtle2DBuilderPixi = (function() {
+    var utils = window.l2js.utils;
+    l2js.interpret.Turtle2DBuilder = (function() {
         function Turtle2DBuilderPixi(options) {
             this.options = options;
             this.symbolsStack = [];
             this.ctx = {};
+            this._isDone = false;
+            this._isRunning = false;
         };
 
         Turtle2DBuilderPixi.options = {
@@ -44,6 +46,12 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
             this.symbolsStack.push(symbol);
             this._startAnimation();
         };
+        Turtle2DBuilderPixi.prototype.done = function(symbol) {
+            if (this.ctx.turtle2DPixi) {
+                console.log("Turtle2DBuilderPixi done")
+                this._isDone = true;
+            }
+        }
 
         Turtle2DBuilderPixi.prototype._handleError = function(err) {
             this._stopAnimation();
@@ -51,11 +59,8 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
         };
 
         Turtle2DBuilderPixi.prototype._resolveNextSymbol = function() {
-            if (!this.symbolsStack.length) {
-                this._stopAnimation();
-                return;
-            }
             var symbol = this.symbolsStack.shift();
+
             if (this._symbols[symbol.symbol]) {
                 this._symbols[symbol.symbol].call(this, symbol);
             } else if (!this.options.skipUnknownSymbols) {
@@ -64,7 +69,7 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
         };
 
         Turtle2DBuilderPixi.prototype._init = function() {
-
+            console.log("Init Turtle2DBuilderPixi");
             this.options = l2js.utils.extend(l2js.utils.copy(Turtle2DBuilderPixi.options), this.options);
             if (!this.options.container) {
                 this._handleError("Turtle2D should have set the container to draw on.");
@@ -73,55 +78,77 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
             var turtle2DPixi = this.ctx.turtle2DPixi = {},
                 opts = this.options;
 
-            turtle2DPixi.stage = new Kinetic.Stage({
-                container: opts.container,
-                width: opts.width,
-                height: opts.height
+            // Remderer
+            turtle2DPixi.renderer = PIXI.autoDetectRenderer(opts.width, opts.height, {
+                backgroundColor: utils.colorHexToInt(opts.bgColor)
             });
-            turtle2DPixi.baseLayer = new Kinetic.Layer();
+            var node = document.querySelector("#" + opts.container);
 
-            var bg = new Kinetic.Rect({
-                x: 0,
-                y: 0,
-                width: opts.width,
-                height: opts.height,
-                fill: opts.bgColor
-            });
-            turtle2DPixi.baseLayer.add(bg);
+            if (node.childNodes.length) {
+                node.removeChild(node.childNodes[0])
+            }
+            node.appendChild(turtle2DPixi.renderer.view);
 
-            turtle2DPixi.stage.add(turtle2DPixi.baseLayer);
-
+            turtle2DPixi.stage = new PIXI.Container();
             turtle2DPixi.stack = [];
             turtle2DPixi.turtle = {
                 position: opts.turtle.initPosition,
                 orientation: opts.turtle.initOrientation
             };
             this.symbolsStack = [];
-            this._initAnimation();
+            this._initAnimation(turtle2DPixi);
 
         };
 
         Turtle2DBuilderPixi.prototype._initAnimation = function() {
-            var that = this;
             this._stopAnimation();
-
-            this.animation = new Kinetic.Animation(function(frame) {
-                var howMany = frame.timeDiff > 1 ? frame.timeDiff * that.options.symbolsPerFrame : 1;
-                var i = 0;
-                while (howMany > i && that.symbolsStack.length) {
-                    that._resolveNextSymbol();
-                    i++;
-                }!that.symbolsStack.length && that._stopAnimation();
-
-            }, this.ctx.turtle2DPixi.baseLayer);
         };
 
         Turtle2DBuilderPixi.prototype._startAnimation = function() {
-            this.animation && !this.animation.isRunning() && this.animation.start();
+            if (this._isRunning) {
+                return;
+            }
+
+            var that = this,
+                start = null,
+                numOfSymbols = 0,
+                turtle2DPixi = this.ctx.turtle2DPixi;
+
+            that._isRunning = true;
+            console.log("Start")
+            var step = function(timestamp) {
+                var progress, i,
+                    //TODO: Refactor to perSecond
+                    perSecond = that.options.symbolsPerFrame || 1;
+
+                if (!start) {
+                    start = timestamp;
+                }
+                progress = timestamp - start;
+                start = timestamp;
+
+                numOfSymbols += perSecond / 1000 * progress;
+
+                if (true || numOfSymbols > 1) {
+                    for (i = 0; i < 500 && that.symbolsStack.length; i++) {
+                        that._resolveNextSymbol();
+                    }
+                    numOfSymbols = numOfSymbols - parseInt(numOfSymbols, 10);
+                }
+
+                turtle2DPixi.renderer.render(turtle2DPixi.stage);
+
+                if (that._isRunning && that.symbolsStack.length) {
+                    requestAnimationFrame(step);
+                } else if (that._isDone && !that.symbolsStack.length) {
+                    that.ctx.turtle2DPixi = null;
+                }
+            }
+            requestAnimationFrame(step);
         };
 
         Turtle2DBuilderPixi.prototype._stopAnimation = function() {
-            this.animation && this.animation.stop();
+            this._isRunning = false;
         };
 
         Turtle2DBuilderPixi.prototype._normalizeStep = function(step) {
@@ -135,7 +162,11 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
         };
 
         Turtle2DBuilderPixi.prototype._colorToHexString = function(color) {
-            return l2js.utils.colorToHexString(color);
+            return utils.colorToHexString(color);
+        };
+
+        Turtle2DBuilderPixi.prototype._getColorAlpha = function(a) {
+            return a / 255;
         };
 
         Turtle2DBuilderPixi.prototype._symbols = {
@@ -146,22 +177,19 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
              * @param {Object} symbol
              */
             'F': function(symbol) {
-                var step = this._normalizeStep(symbol.arguments[0]);
-                var stroke = this._normalizeStep(symbol.arguments[1]);
-                var color = this._colorToHexString(symbol.arguments[2]);
-                var turtle2DPixi = this.ctx.turtle2DPixi;
-                var newPos = Turtle2DBuilderPixi.turtleTransforms.forward(step, turtle2DPixi.turtle);
+                var step = this._normalizeStep(symbol.arguments[0]),
+                    stroke = this._normalizeStep(symbol.arguments[1]),
+                    color = this._colorToHexString(symbol.arguments[2]),
+                    turtle2DPixi = this.ctx.turtle2DPixi,
+                    pos = turtle2DPixi.turtle.position,
+                    newPos = Turtle2DBuilderPixi.turtleTransforms.forward(step, turtle2DPixi.turtle);
 
-                turtle2DPixi.baseLayer.add(new Kinetic.Line({
-                    points: [turtle2DPixi.turtle.position[0], turtle2DPixi.turtle.position[1], newPos[0], newPos[1]],
-                    stroke: color.hex,
-                    strokeWidth: stroke,
-                    lineCap: 'round',
-                    lineJoin: 'round',
-                    opacity: color.a
-                }));
+                var graphics = new PIXI.Graphics();
+                graphics.lineStyle(stroke, utils.colorHexToInt(color.hex), this._getColorAlpha(color.a));
+                graphics.moveTo(pos[0], pos[1]);
+                graphics.lineTo(newPos[0], newPos[1]);
+                turtle2DPixi.stage.addChild(graphics);
 
-                turtle2DPixi.baseLayer.batchDraw();
                 turtle2DPixi.turtle.position = newPos;
             },
             /**
@@ -194,6 +222,7 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
                 var angle = symbol.arguments[0];
                 angle && (turtle.orientation = this._normalizeAngle(turtle.orientation + angle));
             },
+
             '[': function(symbol) {
                 var turtle2DPixi = this.ctx.turtle2DPixi;
                 turtle2DPixi.stack = turtle2DPixi.stack || [];
@@ -206,6 +235,7 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
                 }
                 turtle2DPixi.turtle = turtle2DPixi.stack.shift();
             },
+
             /**
              * Start of polygon
              *
@@ -213,52 +243,73 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
              *
              * @param {Object} symbol
              */
+
             'PU': function(symbol) {
                 var turtle2DPixi = this.ctx.turtle2DPixi,
-                    poly, fillColor, stroke, strokeColor;
-                turtle2DPixi.polyStack = turtle2DPixi.polyStack || [];
-                fillColor = this._colorToHexString(symbol.arguments[0]);
-                stroke = this._normalizeStep(symbol.arguments[1]);
+                    polygon, fillColor, stroke, strokeColor, graphics;
+
+                turtle2DPixi.polygonStack = turtle2DPixi.polygonStack || [];
+                fillColor = symbol.arguments[0] && this._colorToHexString(symbol.arguments[0]);
+                stroke = symbol.arguments[1] && this._normalizeStep(symbol.arguments[1]);
                 strokeColor = symbol.arguments[2] && this._colorToHexString(symbol.arguments[2]);
 
-                poly = new Kinetic.Line({
-                    points: [],
-                    fill: fillColor.hex,
-                    stroke: stroke,
-                    strokeWidth: strokeColor && strokeColor.hex,
-                    closed: true,
-                    opacity: fillColor.a
-                });
+                graphics = new PIXI.Graphics();
 
-                turtle2DPixi.baseLayer.add(poly);
-                turtle2DPixi.polyStack.unshift(poly);
+                turtle2DPixi.stage.addChild(graphics);
+                polygon = {
+                    graphics: graphics,
+                    points: [],
+                    fill: utils.colorHexToInt(fillColor.hex),
+                    stroke: strokeColor ? utils.colorHexToInt(strokeColor.hex) : 0,
+                    strokeWidth: stroke,
+                    opacity: fillColor ? fillColor.a : 1
+                };
+                turtle2DPixi.polygonStack.unshift(polygon);
+                turtle2DPixi.stage.addChild(graphics);
             },
             /**
              * End of Polygon
              * @param {Object} symbol
              */
+
             'PS': function(symbol) {
                 var turtle2DPixi = this.ctx.turtle2DPixi;
-                if (l2js.utils.isUndefined(turtle2DPixi.polyStack) || !turtle2DPixi.polyStack.length) {
-                    //this._handleError('Cannot read from undefined of empty polygon stack.');
+                if (l2js.utils.isUndefined(turtle2DPixi.polygonStack) || !turtle2DPixi.polygonStack.length) {
                     return;
                 }
-                turtle2DPixi.polyStack.shift();
+                turtle2DPixi.polygonStack.shift();
             },
+
             /**
              * Add vertex to polygon
              * @param {Object} symbol
              */
             'V': function(symbol) {
                 var turtle2DPixi = this.ctx.turtle2DPixi,
-                    turtle = turtle2DPixi.turtle;
-                if (l2js.utils.isUndefined(turtle2DPixi.polyStack) || !turtle2DPixi.polyStack.length) {
+                    turtle = turtle2DPixi.turtle,
+                    graphics, polygon;
+
+                if (l2js.utils.isUndefined(turtle2DPixi.polygonStack) || !turtle2DPixi.polygonStack.length) {
                     //this._handleError('Cannot read from undefined of empty polygon stack.');
                     return;
                 }
-                var poly = turtle2DPixi.polyStack[0];
-                poly.points(poly.points().concat(turtle.position));
-                turtle2DPixi.baseLayer.batchDraw();
+                polygon = turtle2DPixi.polygonStack[0];
+                polygon.points.push(turtle.position);
+
+                graphics = polygon.graphics;
+                graphics.clear();
+                graphics.beginFill(polygon.fill, polygon.opacity);
+                graphics.lineStyle(polygon.strokeWidth, polygon.stroke, polygon.opacity);
+                polygon.points.forEach(function(point, i) {
+                    if (i === 0) {
+                        graphics.moveTo(point[0], point[1]);
+                    } else {
+                        graphics.lineTo(point[0], point[1])
+                    }
+                    return point;
+                })
+                graphics.endFill();
+
             }
         };
 

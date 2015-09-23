@@ -6,7 +6,7 @@
  * @class
  */
 
-window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpret.Turtle2DBuilder && window.l2js.compiler && window.l2js.compiler.env && window.l2js.compiler.env.SubLSystem && (function(l2js) {
+window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpret.Turtle2DBuilder && window.l2js.compiler && window.l2js.compiler.env && window.l2js.compiler.env.SubLSystem && function(l2js) {
 
     l2js.interpret.Interpret = (function(l2js) {
 
@@ -28,7 +28,9 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
         };
 
         function Interpret(result, options) {
+            console.time('New interpret');
             this.result = this._clearOutEmptyLSystems(this._serializeBuffers(result));
+            console.timeEnd('New interpret');
             this.options = options && l2js.utils.extend(l2js.utils.copy(Interpret.options), options) || Interpret.options;
         }
 
@@ -42,10 +44,7 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
                 case 'Turtle2D':
                     this._turtle2dBuilder || (this._turtle2dBuilder = new l2js.interpret.Turtle2DBuilder(this.options));
                     return this._turtle2dBuilder;
-                    /*
-                case 'Turtle2D':
-                    this._turtle2dBuilder || (this._turtle2dBuilder = new l2js.interpret.Turtle2DBuilderPixi(this.options));
-                    return this._turtle2dBuilder;*/
+
             }
             throw new Error('Unsupported alphabet: "' + symbol.alphabet.id + '"');
         };
@@ -68,11 +67,16 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
          * Interpret all the symbols
          */
         Interpret.prototype.all = function() {
+            console.time('all');
             while (this.hasNextSymbol()) {
                 this.next();
             }
+            console.timeEnd('all');
+            this.done();
         };
-
+        Interpret.prototype.done = function() {
+            this._turtle2dBuilder.done();
+        };
         Interpret.prototype.hasNextSymbol = function() {
             if (!this._lSysBuf) {
                 return !!(this.result && this.result.interpretation.length);
@@ -145,7 +149,8 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
 
         Interpret.prototype._clearOutEmptyLSystems = function(result) {
             if (result.interpretation) {
-                var dels = [], i;
+                var dels = [],
+                    i;
                 for (i = 0; i < result.interpretation.length; i++) {
                     if (result.interpretation[i].type && result.interpretation[i].type === 'sublsystem') {
                         result.interpretation[i] = this._clearOutEmptyLSystems(result.interpretation[i]);
@@ -191,4 +196,4 @@ window.l2js && window.l2js.utils && window.l2js.interpret && window.l2js.interpr
         return Interpret;
     })(l2js);
 
-})(window.l2js);
+}(window.l2js);

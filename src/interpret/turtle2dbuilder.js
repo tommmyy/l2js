@@ -115,7 +115,9 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
                 while (howMany > i && that.symbolsStack.length) {
                     that._resolveNextSymbol();
                     i++;
-                }!that.symbolsStack.length && that._stopAnimation();
+                }
+
+                !that.symbolsStack.length && that._stopAnimation();
 
             }, this.ctx.turtle2D.baseLayer);
         };

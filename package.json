@@ -1,10 +1,10 @@
 {
     "name": "l2js",
     "title": "L2JS",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "main": "dist/env",
     "scripts": {
-        "server": "http-server --p=3000"
+        "server": "http-server --p=3001"
     },
     "devDependencies": {
         "grunt": "~0.4.1",

@@ -206,6 +206,9 @@ window.l2js && function(l2js) {
                 a: hexStringToInt(hexStrAlpha.substring(6, 8)) / 256
             };
         },
+        colorHexToInt: function(hex){
+            return Number(hex.replace("#", "0x"));
+        },
         deepEquals: function() {
             var i, l, leftChain, rightChain;
 
