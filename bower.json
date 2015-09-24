@@ -1,10 +1,9 @@
 {
 	"name": "L2JS",
-	"version": "0.1.0",
+	"version": "0.1.2",
 	"main": "./dist/l2js.js",
 	"devDependencies": {
 		"jquery": "~1.10.2",
-		"kineticjs": "~5.0.1",
 		"pixi.js": "~3.0.7"
 	}
 }

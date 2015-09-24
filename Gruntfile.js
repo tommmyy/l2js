@@ -1,7 +1,5 @@
-'use strict';
-var files = require('./files').files,
-    path = require('path'),
-    spawn = require('child_process').spawn;
+'use strict'; var files = require('./files').files,     path =
+require('path'),     spawn = require('child_process').spawn;
 
 module.exports = function(grunt) {
 
