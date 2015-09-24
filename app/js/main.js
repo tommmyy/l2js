@@ -82,8 +82,9 @@
         var code = $("#toCompile").val();
 
         t1 = new Date().getTime();
-
+        console.time('compile');
         l2js.compile(code).then(function(js) {
+            console.timeEnd('compile');
             compiled(js, "script_output");
         }, handleError);
     }
@@ -99,7 +100,7 @@
                 container: containerId,
                 width: 800,
                 height: 600,
-                symbolsPerFrame: 50,
+                symbolsPerFrame: 10000,
                 turtle: {
                     initPosition: [400, 300],
                     initOrientation: -90

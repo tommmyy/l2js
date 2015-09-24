@@ -7,7 +7,9 @@ window.l2js && function(l2js) {
     };
 
     l2js.derive = function(lsystemCode) {
+        console.time('Derive');
         var out = eval(lsystemCode);
+        console.timeEnd('Derive');
         return out;
     };
 

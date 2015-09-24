@@ -4,7 +4,8 @@
     "version": "0.1.2",
     "main": "dist/env",
     "scripts": {
-        "server": "http-server --p=3001"
+        "server": "http-server --p=3001",
+        "start": "npm run server"
     },
     "devDependencies": {
         "grunt": "~0.4.1",

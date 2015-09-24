@@ -112,31 +112,37 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
             var that = this,
                 start = null,
                 numOfSymbols = 0,
+                progress = 0,
+                diff = 0,
                 turtle2DPixi = this.ctx.turtle2DPixi;
 
             that._isRunning = true;
             console.log("Start")
             var step = function(timestamp) {
-                var progress, i,
+                var i,
                     //TODO: Refactor to perSecond
                     perSecond = that.options.symbolsPerFrame || 1;
 
                 if (!start) {
                     start = timestamp;
                 }
-                progress = timestamp - start;
+                diff = timestamp - start;
+                progress += diff;
                 start = timestamp;
+                numOfSymbols += perSecond / 1000 * diff;
 
-                numOfSymbols += perSecond / 1000 * progress;
-
-                if (true || numOfSymbols > 1) {
-                    for (i = 0; i < 500 && that.symbolsStack.length; i++) {
+                if (numOfSymbols > 1) {
+                    for (i = 0; i < numOfSymbols && that.symbolsStack.length; i++) {
                         that._resolveNextSymbol();
                     }
                     numOfSymbols = numOfSymbols - parseInt(numOfSymbols, 10);
                 }
 
-                turtle2DPixi.renderer.render(turtle2DPixi.stage);
+                if (progress > 100) {
+                    turtle2DPixi.renderer.render(turtle2DPixi.stage);
+                    progress = 0;
+                }
+
 
                 if (that._isRunning && that.symbolsStack.length) {
                     requestAnimationFrame(step);
@@ -166,7 +172,7 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
         };
 
         Turtle2DBuilderPixi.prototype._getColorAlpha = function(a) {
-            return a / 255;
+            return a * 255;
         };
 
         Turtle2DBuilderPixi.prototype._symbols = {
@@ -185,12 +191,33 @@ window.l2js && window.l2js.utils && window.l2js.interpret && function(l2js) {
                     newPos = Turtle2DBuilderPixi.turtleTransforms.forward(step, turtle2DPixi.turtle);
 
                 var graphics = new PIXI.Graphics();
-                graphics.lineStyle(stroke, utils.colorHexToInt(color.hex), this._getColorAlpha(color.a));
+                graphics.lineStyle(stroke, utils.colorHexToInt(color.hex), color.a);
                 graphics.moveTo(pos[0], pos[1]);
                 graphics.lineTo(newPos[0], newPos[1]);
                 turtle2DPixi.stage.addChild(graphics);
 
                 turtle2DPixi.turtle.position = newPos;
+            },
+            'C': function(symbol) {
+                var radius = symbol.arguments[0] ? this._normalizeStep(symbol.arguments[0]) : null,
+                    color = symbol.arguments[1] ? this._colorToHexString(symbol.arguments[1]) : null,
+                    turtle2DPixi = this.ctx.turtle2DPixi,
+                    pos = turtle2DPixi.turtle.position,
+                    graphics,
+                    fill,
+                    alpha;
+
+                if (radius == null) {
+                    return;
+                }
+                fill = color != null ? utils.colorHexToInt(color.hex) : 0;
+                alpha = color != null ? color.a : 1;
+                graphics = new PIXI.Graphics();
+                graphics.lineStyle(0);
+                graphics.beginFill(fill, alpha);
+                graphics.drawCircle(pos[0], pos[1], radius / 2);
+                graphics.endFill();
+                turtle2DPixi.stage.addChild(graphics);
             },
             /**
              *

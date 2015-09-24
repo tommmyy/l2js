@@ -96,7 +96,7 @@ window.l2js && window.l2js.utils && window.l2js.compiler.env.SubLSystem && funct
                     successor.push(new l2js.compiler.env.Stack(ancestor[j].start, ancestor[j].end, this.deriveString(ancestor[j].string, type)));
                 } else {
                     var symbol = ancestor[j];
-                    this.checkAlphabetSymbol(symbol.symbol);
+                    //this.checkAlphabetSymbol(symbol.symbol);
                     successor = successor.concat(this.findDerivation(symbol, type));
                 }
             }
