@@ -4,7 +4,7 @@
 * Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2015-09-24T00:02:53.819Z
+* Date: 2015-09-24T20:19:21.780Z
 */
 
 (function( global, factory ) {'use strict';
@@ -542,7 +542,7 @@ l2js.compiler.env.Stack = (function() {
                     successor.push(new l2js.compiler.env.Stack(ancestor[j].start, ancestor[j].end, this.deriveString(ancestor[j].string, type)));
                 } else {
                     var symbol = ancestor[j];
-                    this.checkAlphabetSymbol(symbol.symbol);
+                    //this.checkAlphabetSymbol(symbol.symbol);
                     successor = successor.concat(this.findDerivation(symbol, type));
                 }
             }
@@ -2778,31 +2778,37 @@ l2js.interpret = l2js.interpret || {};
             var that = this,
                 start = null,
                 numOfSymbols = 0,
+                progress = 0,
+                diff = 0,
                 turtle2DPixi = this.ctx.turtle2DPixi;
 
             that._isRunning = true;
             console.log("Start")
             var step = function(timestamp) {
-                var progress, i,
+                var i,
                     //TODO: Refactor to perSecond
                     perSecond = that.options.symbolsPerFrame || 1;
 
                 if (!start) {
                     start = timestamp;
                 }
-                progress = timestamp - start;
+                diff = timestamp - start;
+                progress += diff;
                 start = timestamp;
+                numOfSymbols += perSecond / 1000 * diff;
 
-                numOfSymbols += perSecond / 1000 * progress;
-
-                if (true || numOfSymbols > 1) {
-                    for (i = 0; i < 500 && that.symbolsStack.length; i++) {
+                if (numOfSymbols > 1) {
+                    for (i = 0; i < numOfSymbols && that.symbolsStack.length; i++) {
                         that._resolveNextSymbol();
                     }
                     numOfSymbols = numOfSymbols - parseInt(numOfSymbols, 10);
                 }
 
-                turtle2DPixi.renderer.render(turtle2DPixi.stage);
+                if (progress > 100) {
+                    turtle2DPixi.renderer.render(turtle2DPixi.stage);
+                    progress = 0;
+                }
+
 
                 if (that._isRunning && that.symbolsStack.length) {
                     requestAnimationFrame(step);
@@ -2832,7 +2838,7 @@ l2js.interpret = l2js.interpret || {};
         };
 
         Turtle2DBuilderPixi.prototype._getColorAlpha = function(a) {
-            return a / 255;
+            return a * 255;
         };
 
         Turtle2DBuilderPixi.prototype._symbols = {
@@ -2851,12 +2857,33 @@ l2js.interpret = l2js.interpret || {};
                     newPos = Turtle2DBuilderPixi.turtleTransforms.forward(step, turtle2DPixi.turtle);
 
                 var graphics = new PIXI.Graphics();
-                graphics.lineStyle(stroke, utils.colorHexToInt(color.hex), this._getColorAlpha(color.a));
+                graphics.lineStyle(stroke, utils.colorHexToInt(color.hex), color.a);
                 graphics.moveTo(pos[0], pos[1]);
                 graphics.lineTo(newPos[0], newPos[1]);
                 turtle2DPixi.stage.addChild(graphics);
 
                 turtle2DPixi.turtle.position = newPos;
+            },
+            'C': function(symbol) {
+                var radius = symbol.arguments[0] ? this._normalizeStep(symbol.arguments[0]) : null,
+                    color = symbol.arguments[1] ? this._colorToHexString(symbol.arguments[1]) : null,
+                    turtle2DPixi = this.ctx.turtle2DPixi,
+                    pos = turtle2DPixi.turtle.position,
+                    graphics,
+                    fill,
+                    alpha;
+
+                if (radius == null) {
+                    return;
+                }
+                fill = color != null ? utils.colorHexToInt(color.hex) : 0;
+                alpha = color != null ? color.a : 1;
+                graphics = new PIXI.Graphics();
+                graphics.lineStyle(0);
+                graphics.beginFill(fill, alpha);
+                graphics.drawCircle(pos[0], pos[1], radius / 2);
+                graphics.endFill();
+                turtle2DPixi.stage.addChild(graphics);
             },
             /**
              *
@@ -4108,7 +4135,9 @@ l2js.compile = function(code) {
     };
 
     l2js.derive = function(lsystemCode) {
+        console.time('Derive');
         var out = eval(lsystemCode);
+        console.timeEnd('Derive');
         return out;
     };
 

@@ -4,7 +4,7 @@
 * Copyright 2014, 2014 Tomáš Konrády (tomas.konrady@uhk.cz)
 * Released under the MIT license
 *
-* Date: 2015-09-24T00:02:53.836Z
+* Date: 2015-09-24T20:19:21.793Z
 */
 
 (function( global, factory ) {'use strict';
@@ -542,7 +542,7 @@ l2js.compiler.env.Stack = (function() {
                     successor.push(new l2js.compiler.env.Stack(ancestor[j].start, ancestor[j].end, this.deriveString(ancestor[j].string, type)));
                 } else {
                     var symbol = ancestor[j];
-                    this.checkAlphabetSymbol(symbol.symbol);
+                    //this.checkAlphabetSymbol(symbol.symbol);
                     successor = successor.concat(this.findDerivation(symbol, type));
                 }
             }
@@ -731,7 +731,9 @@ l2js.compile = function(code) {
     };
 
     l2js.derive = function(lsystemCode) {
+        console.time('Derive');
         var out = eval(lsystemCode);
+        console.timeEnd('Derive');
         return out;
     };
 
