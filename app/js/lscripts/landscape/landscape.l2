@@ -1,0 +1,171 @@
+$skyHue = 200;
+$skyAlpha = 50;
+$sunHue = 60;
+$sunAlpha = 50;
+$cloudsAlpha = 90;
+$grassHue = 190;
+$grassAlpha = 60;
+$grass2Hue = 200;
+$grass2Alpha = 90;
+alphabet Turtle2D {
+   
+};
+
+lscript Landscape {
+   lsystem Spiral(A(0.03), 6) using Turtle2D {
+      $angle = 70.23168000000001;
+      $inc = 1.1891;
+      A(f) --> [ f(2 * $f) C($f) ] A($f + $f + ($f)) [ A($f) A($f * $f - $f - $f + $f + ($f)) ] L($angle) A($f * $inc);
+      C(f) -h> C($f, __hsv($skyHue,1,1,$skyAlpha));
+      C(f) -h> C($f, __hsv($skyHue - 10,0.95,0.95,$skyAlpha));
+   };
+
+   lsystem Hilbert(A(0.02), 5) using Turtle2D {
+      $angle = 90;
+      A(f) --> L($angle) B($f) F($f) R($angle) A($f) F($f) A($f) R($angle) F($f) B($f) L($angle);
+      B(f) --> R($angle) A($f) F($f) L($angle) B($f) F($f) B($f) L($angle) F($f) A($f) R($angle);
+      F(f) -h> f($f) [ F($f * 4, $f, __hsv($grassHue,1,1,$grassAlpha)) ];
+      F(f) -h> f($f) [ F($f * 4, $f, __hsv($grassHue + 50,1,1,$grassAlpha)) ];
+   };
+
+   lsystem Hg1c4(A(0.01), 5) using Turtle2D {
+      $angle = 86.31;
+      A(f) --> L($angle) B($f) F($f) R($angle) A($f) F($f) A($f) R($angle) F($f) B($f) L($angle);
+      B(f) --> R($angle) A($f) F($f) L($angle) B($f) F($f) A($f) A(($f)) A($f) B($f) L($angle) F($f) A($f) R($angle);
+      F(f) -h> f($f + $f) [ F($f * 4, $f, __hsv($grassHue,1,1,$grassAlpha)) ];
+      F(f) -h> f($f) [ F($f * 4, $f, __hsv($grassHue + 50,1,1,$grassAlpha)) ];
+   };
+
+   lsystem Hg3c1(A(0.003), 6) using Turtle2D {
+      $angle = 94.22999999999999;
+      A(f) --> L($angle) B($f) F($f) R($angle) A($f) F($f) A($f) R($angle) F($f) B($f) L($angle);
+      B(f) --> R($angle) A($f) F($f) L($angle) B($f) F($f) B($f) L($angle) F($f) A($f) R($angle);
+      F(f) -h> F($f * 4, $f, __hsv($grassHue,1,1,$grassAlpha)) [ F($f * 4, $f, __hsv($grassHue,1,1,$grassAlpha)) ];
+      F(f) -h> F($f * 4, $f, __hsv(($grassHue) + 44.13,0.941 * (1),0.828 * (1),1.067 * ($grassAlpha))) [ F($f * 4, $f, __hsv($grassHue + 50,1,1,$grassAlpha)) ];
+   };
+
+   lsystem Hg4c1(A(0.003), 6) using Turtle2D {
+      $angle = 88.17651;
+      A(f) --> L($angle) B($f) F($f) R($angle) A($f) F($f) B($f) L($angle) F($f) A($f) R($angle) F($f) B($f) L($angle);
+      B(f) --> R($angle) A($f) F($f) L($angle) B($f) F($f) B($f) L($angle) F($f) A($f) R($angle);
+      F(f) -h> f($f) [ F($f * 4, $f, __hsv($grass2Hue,1,1,$grass2Alpha)) ];
+      F(f) -h> f($f) [ F($f * 4, $f, __hsv($grass2Hue + 50,1,1,$grass2Alpha)) ] | 
+         F($f * 4, $f, __hsv($grass2Hue,1,1,$grass2Alpha)) [ f($f) ];
+   };
+
+   lsystem g2c2sparkscolorstochastic(A(0.03), 5) using Turtle2D {
+      $angle = 63.34897536000001;
+      $inc = 1.1660124344;
+      A(f) --> [ f(2 * $f) C($f) ] A($f + $f + ($f)) [ f(2 * $f) A($f * $f - $f - $f + $f + ($f)) ] L($angle) A($f * $inc);
+      C(f) -h> C($f, __hsv($skyHue,1,1,$skyAlpha));
+      C(f) -h> C(($f - $f - $f - $f), __hsv(($skyHue - 10) + 99.45,0.511 * (0.95),1.395 * (0.95),1.067 * ($skyAlpha)));
+   };
+
+   lsystem g3c1sparks(A(0.01), 6) using Turtle2D {
+      $angle = 63.34897536000001;
+      $inc = 1.1415261732776;
+      A(f) --> [ f(2 * $f) C($f) ] A($f + $f + ($f)) [ f(2 * $f) A($f * $f - $f - $f + $f + ($f)) ] L($angle) A($f * $inc);
+      C(f) -h> C($f, __hsv($skyHue,1,1,$skyAlpha));
+      C(f) -h> C(($f - $f - $f - $f), __hsv((($skyHue - 10) + 99.45) + 117.44999999999999,1.077 * (0.511 * (0.95)),0.973 * (1.395 * (0.95)),1.076 * (1.067 * ($skyAlpha))));
+   };
+
+   lsystem g3c2sparks(A(0.03), 4) using Turtle2D {
+      $angle = 67.21171776000001;
+      $inc = 1.0540087272;
+      A(f) --> [ f(2 * $f) C($f) ] A($f + $f + ($f)) [ A($f) A($f * $f - $f - $f + $f + ($f)) ] L($angle) A($f * $inc) | 
+         [ f(2 * $f) C($f) ] A($f + $f + ($f)) A($f - $f - $f * $f) A($f * $f - ($f) + ($f) - $f + $f) A((($f))) [ A($f) A($f * $f - $f - $f + $f + ($f)) ] L($angle) A($f * $inc) : 0.5 | 
+         [ f(2 * $f) C($f) ] A($f + $f + ($f)) A($f - $f - $f * $f) A($f * $f - ($f) + ($f) - $f + $f) A((($f))) [ f(2 * $f) A($f * $f - $f - $f + $f + ($f)) ] L($angle) A($f * $inc) : 0.5;
+      C(f) -h> C($f, __hsv($skyHue,1,1,$skyAlpha)) | 
+         C($f, __hsv($skyHue,1,1,$skyAlpha)) : 0.5 | 
+         C($f, __hsv($skyHue,1,1,$skyAlpha)) : 0.5;
+      C(f) -h> C(($f) + $f + $f, __hsv((($skyHue - 10) + 52.74) + 110.43,1.08 * (0.813 * (0.95)),0.761 * (1.255 * (0.95)),0.984 * (1.079 * ($skyAlpha)))) | 
+         C(($f) + $f + $f, __hsv((($skyHue - 10) + 52.74) + 40.71,0.608 * (0.813 * (0.95)),1.382 * (1.255 * (0.95)),1.087 * (1.079 * ($skyAlpha)))) : 0.5;
+   };
+
+   lsystem g2c5sky(A(0.03), 4) using Turtle2D {
+      $angle = 67.16978944704002;
+      $inc = 1.2105038000000001;
+      A(f) --> [ f(2 * $f) C($f) ] A($f + $f + ($f)) [ A($f) A($f * $f - $f - $f + $f + ($f)) ] L($angle) A(($f + $f)) A($f * $f / $f + $f) A($f) A($f * $inc);
+      C(f) -h> C($f, __hsv($skyHue,1,1,$skyAlpha));
+      C(f) -h> C($f, __hsv($skyHue - 10,0.95,0.95,$skyAlpha));
+   };
+
+   lsystem g1c1(A(0.05), 6) using Turtle2D {
+      $angle = 70.23168000000001;
+      $inc = 1.2984972000000001;
+      A(f) --> [ f(2 * $f) C($f) ] A($f + $f + ($f)) [ A($f) A($f * $f - $f - $f + $f + ($f)) ] L($angle) A($f * $inc);
+      C(f) -h> C($f, __hsv($skyHue - 100,1,1,$skyAlpha));
+   };
+
+   lsystem g1sun(A(0.02), 4) using Turtle2D {
+      $angle = 70.23168000000001;
+      $inc = 1.1891;
+      A(f) --> [ A($f) C($f) ] A($f + $f + ($f)) [ A($f) A($f * $f - $f - $f + $f + ($f)) ] L($angle) A($f * $inc);
+      C(f) -h> C($f, __hsv($sunHue,1,1,$sunAlpha));
+      C(f) -h> C($f, __hsv($sunHue - 10,0.95,0.95,$sunAlpha)) | 
+         C($f, __hsv($sunHue - 10,0.95,0.95,$sunAlpha)) : 0.5;
+   };
+
+   lsystem g4c1sky(A(0.03), 4) using Turtle2D {
+      $angle = 69.31866816000002;
+      $inc = 1.1891;
+      A(f) --> [ f(2 * $f) C($f) ] A($f + $f + ($f)) [ A($f) A($f * $f - $f - $f + $f + ($f)) ] L($angle) A(($f + $f)) A($f * $f / $f + $f) A($f) A($f * $inc) | 
+         [ f(2 * $f) C($f) ] A($f + $f + ($f)) A($f * $f + $f * $f) A(($f) - $f + $f) A($f - $f + $f - $f / $f) [ A($f) A($f * $f - $f - $f + $f + ($f)) ] L($angle) A(($f + $f)) A($f * $f / $f + $f) A($f) A($f * $inc) : 0.5;
+      C(f) -h> C($f, __hsv($skyHue,1,1,$skyAlpha));
+      C(f) -h> C($f, __hsv($skyHue - 10,0.95,0.95,$skyAlpha));
+   };
+
+   lsystem g2c6clouds(A(0.01), 4) using Turtle2D {
+      $angle = 67.45844165184;
+      $inc = 1.1891;
+      A(f) --> [ A($f / $f * $f + $f) ] [ f(2 * $f) C($f) ] A($f + $f + ($f)) A($f + $f - ($f) * $f) A($f - $f + $f + $f * $f / $f / $f) [ A($f) A($f * $f - $f - $f + $f + ($f)) ] L($angle) A($f * $inc);
+      C(f) -h> C($f, __hsv(0,0,1,$cloudsAlpha));
+   };
+
+   lsystem g4c2clouds(A(0.03), 4) using Turtle2D {
+      $angle = 69.88376054461826;
+      $inc = 1.2235839;
+      A(f) --> [ A($f / $f * $f + $f) ] [ f(2 * $f) C($f) ] A($f + $f + ($f)) [ A($f) A($f * $f - $f - $f + $f + ($f)) ] L($angle) A($f * $inc);
+      C(f) -h> C($f, __hsv(0,0,1,$cloudsAlpha));
+   };
+
+   lsystem g4c3clouds(A(0.03), 4) using Turtle2D {
+      $angle = 73.02704132736001;
+      $inc = 1.1956828576;
+      A(f) --> [ f(2 * $f) C($f) ] A($f + $f + ($f)) [ A($f) A($f * $f - $f - $f + $f + ($f)) ] L($angle) A($f * $inc) | 
+         [ f(2 * $f) C($f) ] A(($f) - (($f))) A(($f - $f)) A((($f * $f))) A($f + $f + ($f)) [ A($f) A($f * $f - $f - $f + $f + ($f)) ] L($angle) A($f * $inc) : 0.5;
+      C(f) -h> C($f, __hsv(0,0,1,$cloudsAlpha));
+   };
+
+   lsystem Composition(A, 1) using Turtle2D {
+      A --> [ sublsystem orig() ] [ sublsystem orig() ] [ sublsystem g2c6clouds() ];
+   };
+
+   lsystem Composition1(A, 1) using Turtle2D {
+      A --> [ sublsystem g2c5sky() ] [ sublsystem g3c1sparks() ] [ sublsystem g1sun() ] [ sublsystem g2c6clouds() ];
+   };
+
+   lsystem Composition2(A, 1) using Turtle2D {
+      A --> [ sublsystem g2c5sky() ] [ sublsystem g2c2sparkscolorstochastic() ] [ sublsystem g1sun() ] [ sublsystem g2c6clouds() ];
+   };
+
+   lsystem Composition3(A, 1) using Turtle2D {
+      A --> [ sublsystem g4c1sky() ] [ sublsystem g3c2sparks() ] [ sublsystem g1sun() ] [ sublsystem g4c2clouds() ];
+   };
+
+   lsystem Composition4(A, 1) using Turtle2D {
+      A --> [ sublsystem g4c1sky() ] [ sublsystem g3c2sparks() ] [ sublsystem g1sun() ] [ sublsystem g4c3clouds() ] L(180) f(0.1) R(180) [ L(90) sublsystem Hg1c4() ] [ R(180) sublsystem Hg1c4() ];
+   };
+
+   lsystem Composition5(A, 1) using Turtle2D {
+      A --> [ sublsystem g4c1sky() ] [ sublsystem g3c2sparks() ] [ sublsystem g1sun() ] L(180) f(0.15) R(180) [ L(90) sublsystem Hg3c1() ] [ R(180) sublsystem Hg3c1() ] [ sublsystem g4c3clouds() ];
+   };
+
+   lsystem Composition6(A, 1) using Turtle2D {
+      A --> [ sublsystem g4c1sky() ] [ sublsystem g3c2sparks() ] [ sublsystem g1sun() ] L(180) f(0.18) R(180) [ L(90) sublsystem Hg3c1() ] [ R(180) sublsystem Hg3c1() ] [ f(0.05) L(45) sublsystem Hg4c1() ] [ f(0.05) R(45) sublsystem Hg4c1() ] [ sublsystem g4c3clouds() ];
+   };
+
+   main call Composition6();
+};
+
+derive Landscape;
